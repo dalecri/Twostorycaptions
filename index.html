@@ -98,7 +98,7 @@
     letter-spacing: 1.5px;
     color: var(--moss-dark);
   }
-  .entry-form textarea, .entry-form select {
+  .entry-form textarea, .entry-form select, .audio-input {
     width: 100%;
     font-family: 'Source Serif 4', serif;
     font-size: 16px;
@@ -110,6 +110,12 @@
     margin-bottom: 10px;
     resize: vertical;
   }
+  .audio-input {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    border-color: var(--spark);
+  }
+  .audio-input::placeholder { color: color-mix(in srgb, var(--spark) 70%, var(--ink-soft)); }
   .entry-form select {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
@@ -117,6 +123,95 @@
     display: inline-block;
     margin-right: 10px;
   }
+  .audio-watchlist {
+    margin-bottom: 16px;
+  }
+  .audio-watchlist-toggle {
+    background: var(--paper-light);
+    border: 1px dashed var(--spark);
+    color: var(--spark-dark);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 11.5px;
+    letter-spacing: 0.4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .audio-watchlist-toggle:hover { background: color-mix(in srgb, var(--spark) 10%, transparent); }
+  #audioWatchlistCount {
+    background: var(--spark);
+    color: #fff;
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-size: 10px;
+  }
+  .audio-watchlist-body {
+    background: var(--paper-light);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 10px;
+  }
+  .audio-add-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .audio-add-row input {
+    flex: 1;
+    min-width: 140px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink);
+  }
+  .audio-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .audio-item.used { opacity: 0.5; }
+  .audio-item-text { flex: 1; }
+  .audio-item-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 12.5px;
+    color: var(--spark-dark);
+  }
+  .audio-item-note {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+  }
+  .audio-item-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .audio-item-actions button {
+    padding: 4px 8px;
+    font-size: 9.5px;
+    min-height: 0;
+  }
+  .audio-use-btn { background: var(--spark); }
+  .audio-use-btn:hover { background: var(--spark-dark); }
+  .audio-del-btn {
+    background: transparent;
+    border: 1px solid var(--rust);
+    color: var(--rust);
+  }
+  .audio-del-btn:hover { background: var(--rust); color: #fff; }
   .new-clip-date-row {
     display: flex;
     align-items: center;
@@ -1097,12 +1192,25 @@
     </div>
   </header>
 
+  <div class="audio-watchlist" id="audioWatchlist">
+    <button class="audio-watchlist-toggle" id="audioWatchlistToggle">🎵 Trending Audio Watchlist <span id="audioWatchlistCount"></span></button>
+    <div class="audio-watchlist-body" id="audioWatchlistBody" style="display:none;">
+      <div class="audio-add-row">
+        <input type="text" id="newAudioNameInput" placeholder="Audio/sound name or link">
+        <input type="text" id="newAudioNoteInput" placeholder="Why it's funny / how to use it">
+        <button id="addAudioBtn">Add</button>
+      </div>
+      <div id="audioWatchlistList"></div>
+    </div>
+  </div>
+
   <div class="entry-form" id="entryForm">
     <div class="sheet-header">
       <span>New specimen</span>
       <button class="sheet-close" id="sheetCloseBtn">✕</button>
     </div>
     <textarea id="descInput" rows="2" placeholder="e.g. Diego knocked a mug off the counter, then stared directly at the camera for four seconds"></textarea>
+    <input type="text" id="newClipAudioInput" class="audio-input" placeholder="🎵 Trending audio to voiceover (optional)">
     <div class="tone-row" id="newClipToneRow"></div>
     <div class="platform-row" id="newClipPlatformRow"></div>
     <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; gap:10px;">
@@ -1280,6 +1388,121 @@ document.addEventListener('click', () => {
 });
 
 let newClipPlatform = 'Both';
+let audioWatchlist = [];
+let audioWatchlistOpen = false;
+
+async function loadAudioWatchlist() {
+  try {
+    const { data, error } = await sb.from('ttt_audio').select('*').order('created', { ascending: false });
+    if (error) throw error;
+    audioWatchlist = data || [];
+  } catch (e) {
+    console.error('Audio watchlist load error:', (e && e.message) || e);
+  }
+  renderAudioWatchlist();
+}
+
+async function addAudio() {
+  const name = document.getElementById('newAudioNameInput').value.trim();
+  const note = document.getElementById('newAudioNoteInput').value.trim();
+  if (!name) return;
+  const item = { id: 'a' + Date.now(), name, note, created: new Date().toISOString(), used: false };
+  audioWatchlist.unshift(item);
+  document.getElementById('newAudioNameInput').value = '';
+  document.getElementById('newAudioNoteInput').value = '';
+  renderAudioWatchlist();
+  try {
+    await sb.from('ttt_audio').insert(item);
+  } catch (e) {
+    console.error('Audio save error:', (e && e.message) || e);
+  }
+}
+
+async function toggleAudioUsed(id) {
+  const item = audioWatchlist.find(a => a.id === id);
+  if (!item) return;
+  item.used = !item.used;
+  renderAudioWatchlist();
+  try {
+    await sb.from('ttt_audio').update({ used: item.used }).eq('id', id);
+  } catch (e) {
+    console.error('Audio update error:', (e && e.message) || e);
+  }
+}
+
+async function deleteAudio(id) {
+  audioWatchlist = audioWatchlist.filter(a => a.id !== id);
+  renderAudioWatchlist();
+  try {
+    await sb.from('ttt_audio').delete().eq('id', id);
+  } catch (e) {
+    console.error('Audio delete error:', (e && e.message) || e);
+  }
+}
+
+function useAudioForNewClip(name) {
+  audioWatchlistOpen = false;
+  renderAudioWatchlist();
+  openEntrySheet();
+  setTimeout(() => {
+    const input = document.getElementById('newClipAudioInput');
+    if (input) input.value = name;
+  }, 50);
+}
+
+function renderAudioWatchlist() {
+  const countEl = document.getElementById('audioWatchlistCount');
+  const activeCount = audioWatchlist.filter(a => !a.used).length;
+  countEl.textContent = activeCount > 0 ? activeCount : '';
+
+  const body = document.getElementById('audioWatchlistBody');
+  body.style.display = audioWatchlistOpen ? 'block' : 'none';
+
+  const list = document.getElementById('audioWatchlistList');
+  list.innerHTML = '';
+  if (audioWatchlist.length === 0) {
+    list.innerHTML = '<div style="font-size:12.5px; color:var(--ink-soft); padding:6px 2px;">No audios logged yet — jot down trending sounds here as you spot them.</div>';
+    return;
+  }
+  audioWatchlist.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'audio-item' + (item.used ? ' used' : '');
+    const textDiv = document.createElement('div');
+    textDiv.className = 'audio-item-text';
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'audio-item-name';
+    nameDiv.textContent = item.name + (item.used ? ' (used)' : '');
+    textDiv.appendChild(nameDiv);
+    if (item.note) {
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'audio-item-note';
+      noteDiv.textContent = item.note;
+      textDiv.appendChild(noteDiv);
+    }
+    row.appendChild(textDiv);
+
+    const actions = document.createElement('div');
+    actions.className = 'audio-item-actions';
+    const useBtn = document.createElement('button');
+    useBtn.className = 'audio-use-btn';
+    useBtn.textContent = 'Use';
+    useBtn.onclick = () => useAudioForNewClip(item.name);
+    const doneBtn = document.createElement('button');
+    doneBtn.className = 'ghost';
+    doneBtn.textContent = item.used ? 'Unmark' : 'Mark used';
+    doneBtn.onclick = () => toggleAudioUsed(item.id);
+    const delBtn = document.createElement('button');
+    delBtn.className = 'audio-del-btn';
+    delBtn.textContent = '🗑';
+    delBtn.onclick = () => deleteAudio(item.id);
+    actions.appendChild(useBtn);
+    actions.appendChild(doneBtn);
+    actions.appendChild(delBtn);
+    row.appendChild(actions);
+    list.appendChild(row);
+  });
+}
+
 let newClipDate = '';
 let newClipDateEditing = false;
 
@@ -1410,7 +1633,8 @@ function rowToClip(row) {
     selectedTones: row.selected_tones || ['Deadpan nature-doc'],
     platform: row.platform || 'Both',
     captionTones: row.caption_tones || [],
-    captions: row.captions || null
+    captions: row.captions || null,
+    audio: row.audio || ''
   };
 }
 
@@ -1425,6 +1649,7 @@ function clipToRow(clip) {
     platform: clip.platform || 'Both',
     caption_tones: clip.captionTones || [],
     captions: clip.captions || null,
+    audio: clip.audio || null,
     updated_at: new Date().toISOString()
   };
 }
@@ -1494,6 +1719,7 @@ function addClip() {
   const desc = document.getElementById('descInput').value.trim();
   if (!desc) return;
   const dateVal = newClipDate;
+  const audioVal = document.getElementById('newClipAudioInput').value.trim();
   clips.unshift({
     id: uid(),
     desc,
@@ -1502,9 +1728,11 @@ function addClip() {
     captions: null,
     selectedTones: newClipTones.length ? [...newClipTones] : ['Deadpan nature-doc'],
     platform: newClipPlatform,
-    scheduledDate: dateVal || ''
+    scheduledDate: dateVal || '',
+    audio: audioVal || ''
   });
   document.getElementById('descInput').value = '';
+  document.getElementById('newClipAudioInput').value = '';
   newClipDate = '';
   newClipDateEditing = false;
   renderNewClipDateRow();
@@ -1569,9 +1797,14 @@ async function generateCaptions(id) {
     'Both': 'Write for cross-posting to Instagram and TikTok. Hashtags: 8-10 tags, a balanced mix of broad reach tags and a couple of niche ones that work on either platform. Keep captions short enough to work as an on-screen TikTok caption but complete enough to stand alone on Instagram.'
   };
 
+  const audioContext = clip.audio ? `
+
+This clip is a VOICEOVER of a trending/viral audio: "${clip.audio}". This is the account's top-performing content format. The hook and captions must work WITH the established joke/format of that trending audio, not against it — reference the meme's setup/punchline structure if you recognize it, and write the on-screen hook to match how that trend is typically captioned. Do not treat this like generic original content; the audio's existing context is doing a lot of the comedic work already.` : '';
+
   const systemPrompt = `You write social captions for a cat content account. The account features four cats: Cali and Neo (domestic shorthairs, downstairs territory) and Ramses (Savannah) and Diego (Bengal, upstairs territory).
 
 Critical rule: never include the account's own name or handle anywhere in the hook, captions, or hashtags. The account is small and growing, so its own name has no search reach — do not waste a hashtag or caption line on it. Every hashtag must be a real, widely-searched tag relevant to cats, pets, the specific breeds involved, or cat humor/behavior — chosen purely to maximize discoverability for people who don't yet follow the account.
+${audioContext}
 
 Platform: ${platform}
 ${platformGuide[platform]}
@@ -1599,7 +1832,7 @@ Each caption should be 1-3 sentences. Label-free — just the caption text itsel
       },
       body: JSON.stringify({
         systemPrompt,
-        userMessage: `Clip description: ${clip.desc}`
+        userMessage: `Clip description: ${clip.desc}` + (clip.audio ? `\nTrending audio being voiced over: ${clip.audio}` : '')
       })
     });
     const data = await response.json();
@@ -1751,6 +1984,21 @@ function buildFullCard(clip, forceExpanded) {
   meta.className = 'card-meta';
   meta.textContent = 'Logged ' + timeAgo(clip.created);
   card.appendChild(meta);
+
+  const audioLabel = document.createElement('div');
+  audioLabel.className = 'field-label';
+  audioLabel.textContent = 'Trending audio (optional)';
+  card.appendChild(audioLabel);
+  const audioInput = document.createElement('input');
+  audioInput.type = 'text';
+  audioInput.className = 'audio-input';
+  audioInput.placeholder = '🎵 Audio/sound name or link';
+  audioInput.value = clip.audio || '';
+  audioInput.onchange = () => {
+    clip.audio = audioInput.value.trim();
+    saveClips();
+  };
+  card.appendChild(audioInput);
 
   const platformLabel = document.createElement('div');
   platformLabel.className = 'field-label';
@@ -2151,6 +2399,13 @@ renderNewClipPlatform();
 renderNewClipDateRow();
 loadTheme();
 loadClips();
+loadAudioWatchlist();
+
+document.getElementById('audioWatchlistToggle').addEventListener('click', () => {
+  audioWatchlistOpen = !audioWatchlistOpen;
+  renderAudioWatchlist();
+});
+document.getElementById('addAudioBtn').addEventListener('click', addAudio);
 
 document.getElementById('syncNowBtn').addEventListener('click', () => {
   if (document.getElementById('cardModalOverlay').classList.contains('open')) closeCardModal();
@@ -2160,9 +2415,9 @@ document.getElementById('syncNowBtn').addEventListener('click', () => {
 // Auto-refresh from the cloud whenever the tab/app regains focus or visibility,
 // so switching back from another device's changes shows up without manual action.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') loadClips();
+  if (document.visibilityState === 'visible') { loadClips(); loadAudioWatchlist(); }
 });
-window.addEventListener('focus', () => loadClips());
+window.addEventListener('focus', () => { loadClips(); loadAudioWatchlist(); });
 
 </script>
 </body>
