@@ -1053,7 +1053,13 @@ function setPlatform(clipId, platform) {
 
 const SUPABASE_URL = 'https://kumlmoecgnpkhgpxuopk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_qQZRlaTbMm3kEs5n2Fikfg_K5OaciqO';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false
+  }
+});
 
 function setSyncStatus(text, isError) {
   const el = document.getElementById('syncStatus');
