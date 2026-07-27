@@ -1103,7 +1103,12 @@ const NETWORK_HINT = isLikelyArtifactPreview()
   ? ' (Claude\'s artifact preview blocks calls to Supabase — this works once deployed, e.g. on GitHub Pages)'
   : ' — check your connection';
 
+let isLoadingClips = false;
+
 async function loadClips() {
+  if (isLoadingClips) return;
+  isLoadingClips = true;
+  const hadDataBefore = clips.length > 0;
   setSyncStatus('Syncing…');
   try {
     const { data, error } = await sb.from('ttt_clips').select('*').order('created', { ascending: false });
@@ -1112,10 +1117,13 @@ async function loadClips() {
     setSyncStatus('Synced ✓');
   } catch (e) {
     console.error('Load error:', (e && (e.message || e.toString && e.toString())) || 'unknown error');
-    clips = [];
     isOfflinePreview = isLikelyArtifactPreview();
+    // Don't wipe already-displayed data just because a background refresh failed —
+    // only show empty state if we genuinely have nothing yet.
+    if (!hadDataBefore) clips = [];
     setSyncStatus('Offline' + NETWORK_HINT, true);
   }
+  isLoadingClips = false;
   render();
 }
 
