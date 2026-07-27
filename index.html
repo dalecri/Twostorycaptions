@@ -235,18 +235,43 @@
     line-height: 1.5;
     position: relative;
   }
+  .caption-opt-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
   .caption-opt .copy-tag {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 9px;
     color: var(--moss-dark);
     text-transform: uppercase;
     letter-spacing: 1px;
-    display: block;
-    margin-bottom: 4px;
-    cursor: pointer;
   }
+  .copy-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--moss);
+    background: transparent;
+    color: var(--moss-dark);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.12s ease;
+  }
+  .copy-btn:hover { background: var(--moss); color: #fff; }
+  .copy-btn.just-copied { background: var(--moss); color: #fff; border-color: var(--moss); }
   .hook-line { font-style: italic; color: var(--moss-dark); font-family: 'Fraunces', serif; }
-  .hashtags { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); margin-top: 6px; }
+  .hashtags-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .hashtags { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); flex: 1; }
 
   .tone-row {
     display: flex;
@@ -793,6 +818,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:16px;">
       <div class="catalog-num" id="catalogNum">No. ——</div>
+      <button class="theme-btn" id="syncNowBtn" title="Refresh from cloud">⟳ Sync</button>
       <div class="theme-picker">
         <button class="theme-btn" id="themeBtn"><span class="theme-swatch-dot" id="themeBtnDot"></span> Theme</button>
         <div class="theme-dropdown" id="themeDropdown"></div>
@@ -844,6 +870,7 @@ let newClipTones = ['Deadpan nature-doc'];
 let currentView = 'log';
 let calMonthOffset = 0;
 let currentTheme = 'berry';
+let isOfflinePreview = false;
 
 const THEMES = {
   berry: {
@@ -1064,6 +1091,18 @@ function clipToRow(clip) {
   };
 }
 
+function isLikelyArtifactPreview() {
+  try {
+    return window.self !== window.top;
+  } catch (e) {
+    return true;
+  }
+}
+
+const NETWORK_HINT = isLikelyArtifactPreview()
+  ? ' (Claude\'s artifact preview blocks calls to Supabase — this works once deployed, e.g. on GitHub Pages)'
+  : ' — check your connection';
+
 async function loadClips() {
   setSyncStatus('Syncing…');
   try {
@@ -1072,9 +1111,10 @@ async function loadClips() {
     clips = (data || []).map(rowToClip);
     setSyncStatus('Synced ✓');
   } catch (e) {
-    console.error('Load error', e);
+    console.error('Load error:', (e && (e.message || e.toString && e.toString())) || 'unknown error');
     clips = [];
-    setSyncStatus('Offline — changes will retry', true);
+    isOfflinePreview = isLikelyArtifactPreview();
+    setSyncStatus('Offline' + NETWORK_HINT, true);
   }
   render();
 }
@@ -1088,7 +1128,7 @@ async function saveClips() {
     setSyncStatus('Synced ✓');
   } catch (e) {
     console.error('Save error', e);
-    setSyncStatus('Sync failed — check connection', true);
+    setSyncStatus('Sync failed' + NETWORK_HINT, true);
   }
 }
 
@@ -1098,7 +1138,7 @@ async function deleteClipRemote(id) {
     if (error) throw error;
   } catch (e) {
     console.error('Delete error', e);
-    setSyncStatus('Delete failed — check connection', true);
+    setSyncStatus('Delete failed' + NETWORK_HINT, true);
   }
 }
 
@@ -1225,18 +1265,74 @@ Each caption should be 1-3 sentences. Label-free — just the caption text itsel
     saveClips();
   } catch (e) {
     console.error('Caption generation failed', e);
-    clip.captions = { hook: '', captions: ['Could not generate captions — try again.'], hashtags: '' };
+    if (isLikelyArtifactPreview()) {
+      clip.captions = buildPlaceholderCaptions(clip, tones, platform);
+      clip.captionTones = tones.length > 1 ? tones : [];
+      if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
+      saveClips();
+    } else {
+      clip.captions = { hook: '', captions: ['Could not generate captions' + NETWORK_HINT + '.'], hashtags: '' };
+    }
   }
   loadingCaptions[id] = false;
   render();
 }
 
+function buildPlaceholderCaptions(clip, tones, platform) {
+  const toneCaptionMap = {
+    'Deadpan nature-doc': 'Observed: the subject pauses mid-task, assesses the room, and resumes as if nothing occurred.',
+    'Funny': 'The audacity. The confidence. The complete lack of remorse.',
+    'Educational': 'Cats do this to reset their sense of territory — it\'s a normal behavioral marker, not mischief.',
+    'Meme-style': 'no thoughts. just vibes. and chaos.',
+    'Relatable': 'when you do something unhinged and immediately act like it never happened',
+    'Multi-cat tie-in': 'One cat causes the chaos, the other watches from a safe distance judging silently.',
+    'Wholesome': 'Just a small, ordinary moment that made the whole day better.'
+  };
+  const list = (tones && tones.length ? tones : ['Deadpan nature-doc']).map(t => toneCaptionMap[t] || toneCaptionMap['Deadpan nature-doc']);
+  while (list.length < 3) list.push(list[0]);
+
+  const hashtagsByPlatform = {
+    'Instagram': '#catsofinstagram #catbehavior #bengalcat #savannahcat #catcontent #petsofinstagram #catlovers #catmom #indoorcat #catlife',
+    'TikTok': '#catsoftiktok #fyp #cats #catbehavior',
+    'Both': '#catsofinstagram #catsoftiktok #catbehavior #petcontent #catlovers #fyp #bengalcat #savannahcat'
+  };
+
+  return {
+    hook: '(placeholder — preview mode)',
+    captions: list.slice(0, 3),
+    hashtags: hashtagsByPlatform[platform] || hashtagsByPlatform['Both']
+  };
+}
+
 function copyText(text, el) {
-  navigator.clipboard.writeText(text).then(() => {
+  const showCopied = () => {
     const orig = el.textContent;
-    el.textContent = 'Copied';
-    setTimeout(() => { el.textContent = orig; }, 1200);
-  }).catch(() => {});
+    el.textContent = 'Copied ✓';
+    el.classList.add('just-copied');
+    setTimeout(() => { el.textContent = orig; el.classList.remove('just-copied'); }, 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopy(text, showCopied));
+  } else {
+    fallbackCopy(text, showCopied);
+  }
+}
+
+function fallbackCopy(text, onSuccess) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    onSuccess();
+  } catch (e) {
+    console.error('Copy failed', e);
+  }
 }
 
 function timeAgo(iso) {
@@ -1362,12 +1458,18 @@ function buildFullCard(clip) {
     (clip.captions.captions || []).forEach((cap, i) => {
       const optDiv = document.createElement('div');
       optDiv.className = 'caption-opt';
+      const topRow = document.createElement('div');
+      topRow.className = 'caption-opt-top';
       const tag = document.createElement('span');
       tag.className = 'copy-tag';
-      const label = usedTones[i] ? usedTones[i] + ' — tap to copy' : 'Option ' + (i+1) + ' — tap to copy';
-      tag.textContent = label;
-      tag.onclick = () => copyText(cap, tag);
-      optDiv.appendChild(tag);
+      tag.textContent = usedTones[i] ? usedTones[i] : 'Option ' + (i+1);
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.onclick = () => copyText(cap, copyBtn);
+      topRow.appendChild(tag);
+      topRow.appendChild(copyBtn);
+      optDiv.appendChild(topRow);
       const capText = document.createElement('div');
       capText.textContent = cap;
       optDiv.appendChild(capText);
@@ -1375,10 +1477,18 @@ function buildFullCard(clip) {
     });
 
     if (clip.captions.hashtags) {
+      const hashWrap = document.createElement('div');
+      hashWrap.className = 'hashtags-wrap';
       const hashDiv = document.createElement('div');
       hashDiv.className = 'hashtags';
       hashDiv.textContent = clip.captions.hashtags;
-      box.appendChild(hashDiv);
+      const hashCopyBtn = document.createElement('button');
+      hashCopyBtn.className = 'copy-btn';
+      hashCopyBtn.textContent = 'Copy';
+      hashCopyBtn.onclick = () => copyText(clip.captions.hashtags, hashCopyBtn);
+      hashWrap.appendChild(hashDiv);
+      hashWrap.appendChild(hashCopyBtn);
+      box.appendChild(hashWrap);
     }
 
     card.appendChild(box);
@@ -1506,7 +1616,9 @@ function render() {
   const filtered = activeFilter === 'all' ? clips : clips.filter(c => c.status === activeFilter);
 
   if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty-state">No specimens logged yet. The field is quiet.</div>';
+    list.innerHTML = isOfflinePreview
+      ? '<div class="empty-state">Preview mode: can\'t reach the cloud database here, so nothing\'s loaded. Add a specimen to test the UI — it\'ll stay local to this preview. Your real data is safe and will show up on the deployed site.</div>'
+      : '<div class="empty-state">No specimens logged yet. The field is quiet.</div>';
   } else {
     filtered.forEach(clip => {
       const node = currentView === 'grid' ? buildGridTile(clip) : buildFullCard(clip);
@@ -1619,6 +1731,19 @@ renderNewClipTones();
 renderNewClipPlatform();
 loadTheme();
 loadClips();
+
+document.getElementById('syncNowBtn').addEventListener('click', () => {
+  if (document.getElementById('cardModalOverlay').classList.contains('open')) closeCardModal();
+  loadClips();
+});
+
+// Auto-refresh from the cloud whenever the tab/app regains focus or visibility,
+// so switching back from another device's changes shows up without manual action.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') loadClips();
+});
+window.addEventListener('focus', () => loadClips());
+
 </script>
 </body>
 </html>
