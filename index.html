@@ -29,6 +29,8 @@
     --stamp-captioned: #b08a4a;
     --stamp-scheduled: #4a7a8a;
     --stamp-posted: #4d5943;
+    --spark: #C98A2E;
+    --spark-dark: #A66F1F;
   }
   * { box-sizing: border-box; }
   body {
@@ -78,15 +80,17 @@
   .entry-form {
     background: var(--paper-light);
     border: 1px solid var(--line);
-    padding: 18px;
+    border-radius: 20px;
+    padding: 20px;
     margin-bottom: 30px;
     position: relative;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
   }
   .entry-form::before {
     content: "NEW SPECIMEN";
     position: absolute;
     top: -10px;
-    left: 14px;
+    left: 20px;
     background: var(--paper);
     padding: 0 8px;
     font-family: 'IBM Plex Mono', monospace;
@@ -98,8 +102,9 @@
     width: 100%;
     font-family: 'Source Serif 4', serif;
     font-size: 16px;
-    padding: 10px;
+    padding: 12px 14px;
     border: 1px solid var(--line);
+    border-radius: 14px;
     background: #fff;
     color: var(--ink);
     margin-bottom: 10px;
@@ -112,6 +117,47 @@
     display: inline-block;
     margin-right: 10px;
   }
+  .new-clip-date-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .new-clip-date-row input[type="date"] {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink);
+  }
+  .date-pill-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px dashed var(--line);
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .date-pill-btn:hover { border-color: var(--stamp-scheduled); color: var(--stamp-scheduled); transform: none; box-shadow: none; }
+  .date-pill-btn.confirmed {
+    border: 1px solid var(--stamp-scheduled);
+    color: var(--stamp-scheduled);
+    background: color-mix(in srgb, var(--stamp-scheduled) 8%, transparent);
+  }
+  .date-pill-clear {
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 11px;
+    padding: 6px 8px;
+    opacity: 0.6;
+  }
+  .date-pill-clear:hover { opacity: 1; background: transparent; transform: none; box-shadow: none; }
   button {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
@@ -120,18 +166,20 @@
     background: var(--ink);
     color: var(--paper-light);
     border: none;
-    padding: 10px 16px;
+    border-radius: 999px;
+    padding: 10px 18px;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
   }
-  button:hover { background: var(--moss-dark); }
+  button:hover { background: var(--moss-dark); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+  button:active { transform: translateY(0); box-shadow: none; }
   button.ghost {
     background: transparent;
     color: var(--ink);
     border: 1px solid var(--ink);
   }
   button.ghost:hover { background: var(--ink); color: var(--paper-light); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
   .filter-row {
     display: flex;
@@ -155,16 +203,62 @@
     background: var(--paper-light);
     border: 1px solid var(--line);
     border-left: 4px solid var(--moss);
+    border-radius: 4px 16px 16px 4px;
     padding: 16px 18px;
     margin-bottom: 14px;
     position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: box-shadow 0.15s ease;
   }
+  .card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.07); }
   .card-top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
   }
+  .card-top-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .trash-btn {
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    line-height: 1;
+    padding: 2px 4px;
+    cursor: pointer;
+    opacity: 0.55;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+  .trash-btn:hover { opacity: 1; transform: scale(1.1); }
+  .date-display-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--stamp-scheduled);
+    background: transparent;
+    border: 1px dashed var(--stamp-scheduled);
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .date-display-btn:hover { background: color-mix(in srgb, var(--stamp-scheduled) 10%, transparent); }
+  .captions-toggle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--moss-dark);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 0 2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .captions-toggle:hover { text-decoration: underline; }
   .card-desc {
     font-size: 16px;
     line-height: 1.45;
@@ -206,21 +300,50 @@
     color: var(--ink-soft);
     margin-top: 8px;
   }
+  .card-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
   .card-actions {
     display: flex;
     gap: 8px;
-    margin-top: 12px;
     flex-wrap: wrap;
     align-items: center;
   }
   .card-actions select {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
-    padding: 5px 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
     border: 1px solid var(--line);
     background: #fff;
   }
   .card-actions button { padding: 6px 10px; font-size: 10.5px; }
+  .gen-caption-btn {
+    background: var(--spark);
+    color: #fff;
+    font-weight: 600;
+    padding: 9px 18px;
+    font-size: 11.5px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--spark) 45%, transparent);
+  }
+  .gen-caption-btn:hover {
+    background: var(--spark-dark);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--spark) 55%, transparent);
+  }
+  .gen-caption-btn:disabled {
+    background: var(--spark);
+    opacity: 0.75;
+    box-shadow: none;
+  }
   .remove-btn {
     background: transparent;
     color: var(--rust);
@@ -236,7 +359,8 @@
   .caption-opt {
     background: #fff;
     border: 1px solid var(--line);
-    padding: 10px 12px;
+    border-radius: 12px;
+    padding: 10px 14px;
     margin-bottom: 8px;
     font-size: 14px;
     line-height: 1.5;
@@ -291,24 +415,30 @@
     font-size: 10px;
     letter-spacing: 0.6px;
     text-transform: uppercase;
-    padding: 5px 10px;
+    padding: 6px 12px;
+    border-radius: 999px;
     border: 1px solid var(--line);
     background: #fff;
     color: var(--ink-soft);
     cursor: pointer;
     transition: all 0.12s ease;
   }
-  .tone-chip:hover { border-color: var(--moss); }
+  .tone-chip:hover { border-color: var(--moss); transform: translateY(-1px); }
   .tone-chip.selected {
     background: var(--moss);
     border-color: var(--moss);
     color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
   }
 
   .platform-row {
-    display: flex;
-    gap: 6px;
+    display: inline-flex;
+    gap: 0;
     margin-top: 6px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
   }
   .platform-chip {
     font-family: 'IBM Plex Mono', monospace;
@@ -316,39 +446,52 @@
     font-weight: 600;
     letter-spacing: 0.8px;
     text-transform: uppercase;
-    padding: 5px 12px;
+    padding: 6px 14px;
     border-radius: 999px;
-    border: 1.5px dashed var(--rust);
+    border: none;
     background: transparent;
-    color: var(--rust);
+    color: var(--ink-soft);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 5px;
     transition: all 0.12s ease;
   }
-  .platform-chip:hover { background: color-mix(in srgb, var(--rust) 12%, transparent); }
+  .platform-chip:hover { background: color-mix(in srgb, var(--rust) 10%, transparent); }
   .platform-chip.selected {
     background: var(--rust);
-    border-style: solid;
-    border-color: var(--rust);
     color: #fff;
   }
+  .platform-chip.selected:hover { background: var(--rust); }
 
   .view-toggle {
-    display: flex;
-    gap: 6px;
+    display: inline-flex;
+    gap: 0;
     margin-bottom: 18px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
   }
   .view-toggle button {
     background: transparent;
-    border: 1px solid var(--ink);
-    color: var(--ink);
-    padding: 7px 14px;
+    border: none;
+    color: var(--ink-soft);
+    padding: 7px 16px;
+    font-weight: 500;
+    box-shadow: none;
+  }
+  .view-toggle button:hover {
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    transform: none;
+    box-shadow: none;
   }
   .view-toggle button.active {
-    background: var(--ink);
-    color: var(--paper-light);
+    background: var(--moss);
+    color: #fff;
+  }
+  .view-toggle button.active:hover {
+    background: var(--moss);
   }
 
   .cal-header {
@@ -427,7 +570,8 @@
   .date-picker-row input[type="date"] {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
-    padding: 5px 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
     border: 1px solid var(--line);
     background: #fff;
     color: var(--ink);
@@ -472,7 +616,7 @@
     background: var(--paper-light);
     border: 1px solid var(--ink);
     width: 250px;
-    z-index: 20;
+    z-index: 200;
     box-shadow: 4px 4px 0 rgba(0,0,0,0.08);
   }
   .theme-dropdown.open { display: block; }
@@ -565,16 +709,20 @@
   .modal-box {
     background: var(--paper-light);
     border: 1px solid var(--ink);
+    border-radius: 20px;
     max-width: 560px;
     width: 100%;
     max-height: 85vh;
     overflow-y: auto;
     padding: 50px 26px 26px;
     position: relative;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
   }
   .modal-box .card {
     border: none;
     border-left: none;
+    border-radius: 0;
+    box-shadow: none;
     padding: 0;
     margin: 0;
   }
@@ -599,11 +747,17 @@
     font-size: 12px;
     letter-spacing: 0.5px;
   }
-  .loading-dots::after {
-    content: '...';
-    animation: dots 1.2s steps(4, end) infinite;
+  .spinner {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: -1px;
   }
-  @keyframes dots { 0%,20%{content:'.'} 40%{content:'..'} 60%,100%{content:'...'} }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   footer.tally {
     margin-top: 30px;
@@ -680,9 +834,9 @@
       padding: 4px 8px;
     }
     .entry-form textarea { font-size: 16px; }
-    .entry-form > div:last-child { flex-direction: column; }
-    .entry-form > div:last-child button { width: 100%; min-height: 44px; }
-    .tone-row, .platform-row { gap: 5px; }
+    .entry-form > div:last-child { flex-direction: column; align-items: stretch; }
+    .entry-form > div:last-child #addBtn { width: 100%; min-height: 44px; }
+    .tone-row { gap: 5px; }
     .tone-chip, .platform-chip { font-size: 9.5px; padding: 6px 10px; }
 
     .sheet-backdrop {
@@ -764,11 +918,13 @@
     .card-top { flex-direction: column; align-items: flex-start; gap: 8px; }
     .card-desc { font-size: 15px; }
 
+    .card-bottom-row { flex-direction: column; align-items: stretch; }
     .card-actions { flex-direction: column; align-items: stretch; }
     .card-actions select, .card-actions button, .date-picker-row { width: 100%; }
     .card-actions select { min-height: 42px; font-size: 15px; }
     .card-actions button { min-height: 42px; }
     .date-picker-row input[type="date"] { flex: 1; min-height: 42px; font-size: 15px; }
+    .gen-caption-btn { width: 100%; min-height: 44px; }
 
     .caption-opt { font-size: 13.5px; }
 
@@ -777,7 +933,7 @@
     .modal-box { padding: 60px 18px 20px; max-height: 90vh; }
     .modal-box h3 { font-size: 19px; padding-right: 50px; }
     .modal-overlay { padding: 0; align-items: flex-end; z-index: 94; }
-    .modal-box { max-width: 100%; border-left: none; border-right: none; border-bottom: none; }
+    .modal-box { max-width: 100%; border-left: none; border-right: none; border-bottom: none; border-radius: 20px 20px 0 0; }
 
     #calendarView {
       margin: 0 -12px;
@@ -841,8 +997,11 @@
     <textarea id="descInput" rows="2" placeholder="e.g. Diego knocked a mug off the counter, then stared directly at the camera for four seconds"></textarea>
     <div class="tone-row" id="newClipToneRow"></div>
     <div class="platform-row" id="newClipPlatformRow"></div>
-    <div style="display:flex; align-items:center; justify-content:flex-end; margin-top:10px;">
-      <button id="addBtn">Log specimen</button>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px; gap:10px;">
+      <div class="new-clip-date-row" id="newClipDateRow">
+        <button type="button" class="date-pill-btn" id="newClipDateToggle">📅 Add a date</button>
+      </div>
+      <button id="addBtn">Log Entry</button>
     </div>
   </div>
 
@@ -874,10 +1033,12 @@ let clips = [];
 let activeFilter = 'all';
 let loadingCaptions = {};
 let newClipTones = ['Deadpan nature-doc'];
-let currentView = 'log';
+let currentView = 'grid';
 let calMonthOffset = 0;
 let currentTheme = 'berry';
 let isOfflinePreview = false;
+let editingDateIds = new Set();
+let collapsedCaptionIds = new Set();
 
 const THEMES = {
   berry: {
@@ -896,7 +1057,9 @@ const THEMES = {
       '--stamp-filmed': '#8C5468',
       '--stamp-captioned': '#B2724A',
       '--stamp-scheduled': '#7A5A8C',
-      '--stamp-posted': '#4E1226'
+      '--stamp-posted': '#4E1226',
+      '--spark': '#D9A441',
+      '--spark-dark': '#B3831F'
     }
   },
   citrus: {
@@ -915,7 +1078,9 @@ const THEMES = {
       '--stamp-filmed': '#C77A2F',
       '--stamp-captioned': '#D9A73E',
       '--stamp-scheduled': '#8C6B3F',
-      '--stamp-posted': '#B34F35'
+      '--stamp-posted': '#B34F35',
+      '--spark': '#3E7C74',
+      '--spark-dark': '#2C5D56'
     }
   },
   nautical: {
@@ -934,7 +1099,9 @@ const THEMES = {
       '--stamp-filmed': '#4A6C8C',
       '--stamp-captioned': '#B08A4F',
       '--stamp-scheduled': '#274F8B',
-      '--stamp-posted': '#1B3A66'
+      '--stamp-posted': '#1B3A66',
+      '--spark': '#D9A441',
+      '--spark-dark': '#B3831F'
     }
   },
   forest: {
@@ -953,7 +1120,9 @@ const THEMES = {
       '--stamp-filmed': '#4C7A50',
       '--stamp-captioned': '#9C8A3F',
       '--stamp-scheduled': '#3F6B7A',
-      '--stamp-posted': '#173626'
+      '--stamp-posted': '#173626',
+      '--spark': '#B5504F',
+      '--spark-dark': '#8F3D3C'
     }
   }
 };
@@ -1002,6 +1171,53 @@ document.addEventListener('click', () => {
 });
 
 let newClipPlatform = 'Both';
+let newClipDate = '';
+let newClipDateEditing = false;
+
+function renderNewClipDateRow() {
+  const row = document.getElementById('newClipDateRow');
+  row.innerHTML = '';
+  if (newClipDateEditing) {
+    const input = document.createElement('input');
+    input.type = 'date';
+    input.id = 'newClipDateInput';
+    input.value = newClipDate;
+    input.autofocus = true;
+    input.onchange = () => {
+      newClipDate = input.value;
+      newClipDateEditing = false;
+      renderNewClipDateRow();
+    };
+    input.onblur = () => {
+      newClipDateEditing = false;
+      renderNewClipDateRow();
+    };
+    row.appendChild(input);
+  } else if (newClipDate) {
+    const pill = document.createElement('button');
+    pill.type = 'button';
+    pill.className = 'date-pill-btn confirmed';
+    pill.innerHTML = '📅 ' + formatDateLong(newClipDate);
+    pill.title = 'Tap to change';
+    pill.onclick = () => { newClipDateEditing = true; renderNewClipDateRow(); };
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'date-pill-clear';
+    clearBtn.innerHTML = '✕';
+    clearBtn.title = 'Remove date';
+    clearBtn.onclick = (e) => { e.stopPropagation(); newClipDate = ''; renderNewClipDateRow(); };
+    row.appendChild(pill);
+    row.appendChild(clearBtn);
+  } else {
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'date-pill-btn';
+    addBtn.textContent = '📅 Add a date';
+    addBtn.onclick = () => { newClipDateEditing = true; renderNewClipDateRow(); };
+    row.appendChild(addBtn);
+  }
+}
+
 
 function toggleNewClipTone(tone) {
   const idx = newClipTones.indexOf(tone);
@@ -1168,16 +1384,21 @@ function uid() { return 'c' + Date.now() + Math.floor(Math.random()*1000); }
 function addClip() {
   const desc = document.getElementById('descInput').value.trim();
   if (!desc) return;
+  const dateVal = newClipDate;
   clips.unshift({
     id: uid(),
     desc,
-    status: 'idea',
+    status: dateVal ? 'scheduled' : 'idea',
     created: new Date().toISOString(),
     captions: null,
     selectedTones: newClipTones.length ? [...newClipTones] : ['Deadpan nature-doc'],
-    platform: newClipPlatform
+    platform: newClipPlatform,
+    scheduledDate: dateVal || ''
   });
   document.getElementById('descInput').value = '';
+  newClipDate = '';
+  newClipDateEditing = false;
+  renderNewClipDateRow();
   saveClips();
   render();
   closeEntrySheet();
@@ -1380,24 +1601,26 @@ function buildFullCard(clip) {
   const desc = document.createElement('div');
   desc.className = 'card-desc';
   desc.textContent = clip.desc;
+  const topRight = document.createElement('div');
+  topRight.className = 'card-top-right';
   const stamp = document.createElement('div');
   stamp.className = 'stamp ' + clip.status;
   stamp.textContent = STATUS_LABELS[clip.status];
+  const trashBtn = document.createElement('button');
+  trashBtn.className = 'trash-btn';
+  trashBtn.innerHTML = '🗑';
+  trashBtn.title = 'Remove';
+  trashBtn.onclick = () => { removeClip(clip.id); closeCardModal(); };
+  topRight.appendChild(stamp);
+  topRight.appendChild(trashBtn);
   top.appendChild(desc);
-  top.appendChild(stamp);
+  top.appendChild(topRight);
   card.appendChild(top);
 
   const meta = document.createElement('div');
   meta.className = 'card-meta';
   meta.textContent = 'Logged ' + timeAgo(clip.created);
   card.appendChild(meta);
-
-  if (clip.scheduledDate) {
-    const schedTag = document.createElement('div');
-    schedTag.className = 'scheduled-tag';
-    schedTag.textContent = '📅 Scheduled for ' + formatDateLong(clip.scheduledDate);
-    card.appendChild(schedTag);
-  }
 
   if (!clip.platform) clip.platform = 'Both';
   const platformRow = document.createElement('div');
@@ -1423,6 +1646,9 @@ function buildFullCard(clip) {
   });
   card.appendChild(toneRow);
 
+  const bottomRow = document.createElement('div');
+  bottomRow.className = 'card-bottom-row';
+
   const actions = document.createElement('div');
   actions.className = 'card-actions';
 
@@ -1439,34 +1665,58 @@ function buildFullCard(clip) {
 
   const dateRow = document.createElement('div');
   dateRow.className = 'date-picker-row';
-  const dateInput = document.createElement('input');
-  dateInput.type = 'date';
-  dateInput.value = clip.scheduledDate || '';
-  dateInput.onchange = () => { setScheduledDate(clip.id, dateInput.value); refreshOpenModal(); };
-  dateRow.appendChild(dateInput);
+  const isEditingDate = editingDateIds.has(clip.id);
+  if (clip.scheduledDate && !isEditingDate) {
+    const dateDisplay = document.createElement('button');
+    dateDisplay.className = 'date-display-btn';
+    dateDisplay.innerHTML = '📅 ' + formatDateLong(clip.scheduledDate);
+    dateDisplay.title = 'Tap to edit date';
+    dateDisplay.onclick = () => { editingDateIds.add(clip.id); render(); };
+    dateRow.appendChild(dateDisplay);
+  } else {
+    const dateInput = document.createElement('input');
+    dateInput.type = 'date';
+    dateInput.value = clip.scheduledDate || '';
+    dateInput.autofocus = isEditingDate;
+    dateInput.onchange = () => {
+      setScheduledDate(clip.id, dateInput.value);
+      editingDateIds.delete(clip.id);
+      refreshOpenModal();
+    };
+    dateInput.onblur = () => {
+      if (clip.scheduledDate) { editingDateIds.delete(clip.id); render(); }
+    };
+    dateRow.appendChild(dateInput);
+  }
   actions.appendChild(dateRow);
+  bottomRow.appendChild(actions);
 
   const genBtn = document.createElement('button');
-  genBtn.className = 'ghost';
-  genBtn.textContent = loadingCaptions[clip.id] ? 'Writing' : (clip.captions ? 'Regenerate captions' : 'Generate captions');
+  genBtn.className = 'gen-caption-btn';
+  genBtn.innerHTML = loadingCaptions[clip.id] ? '' : (clip.captions ? 'Regenerate captions' : 'Generate captions');
   if (loadingCaptions[clip.id]) {
     genBtn.disabled = true;
-    genBtn.innerHTML = 'Writing<span class="loading-dots"></span>';
+    genBtn.innerHTML = 'Writing <span class="spinner"></span>';
   }
   genBtn.onclick = () => generateCaptions(clip.id);
-  actions.appendChild(genBtn);
+  bottomRow.appendChild(genBtn);
 
-  const delBtn = document.createElement('button');
-  delBtn.className = 'remove-btn';
-  delBtn.textContent = 'Remove';
-  delBtn.onclick = () => { removeClip(clip.id); closeCardModal(); };
-  actions.appendChild(delBtn);
-
-  card.appendChild(actions);
+  card.appendChild(bottomRow);
 
   if (clip.captions) {
+    const isCollapsed = collapsedCaptionIds.has(clip.id);
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'captions-toggle';
+    toggleBtn.innerHTML = isCollapsed ? '▸ Show captions' : '▾ Hide captions';
+    toggleBtn.onclick = () => {
+      if (isCollapsed) collapsedCaptionIds.delete(clip.id); else collapsedCaptionIds.add(clip.id);
+      render();
+    };
+    card.appendChild(toggleBtn);
+
     const box = document.createElement('div');
     box.className = 'captions-box';
+    if (isCollapsed) box.style.display = 'none';
 
     if (clip.captions.hook) {
       const hookP = document.createElement('div');
@@ -1748,8 +1998,13 @@ function loadTheme() {
   applyTheme(THEMES[saved] ? saved : 'berry', true);
 }
 
+if (window.matchMedia('(max-width: 600px)').matches) {
+  currentView = 'log';
+}
+
 renderNewClipTones();
 renderNewClipPlatform();
+renderNewClipDateRow();
 loadTheme();
 loadClips();
 
