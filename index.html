@@ -1942,10 +1942,11 @@ function renderBottomTabs() {
   const bar = document.getElementById('bottomTabBar');
   if (!bar) return;
   bar.innerHTML = '';
-  ['log','calendar'].forEach(v => {
+  ['log','grid','calendar'].forEach(v => {
     const btn = document.createElement('button');
     btn.className = 'bottom-tab' + (currentView === v ? ' active' : '');
-    btn.innerHTML = '<span class="bottom-tab-icon">' + VIEW_META[v].icon + '</span><span class="bottom-tab-label">' + (v === 'log' ? 'Log' : 'Calendar') + '</span>';
+    const labels = { log: 'Log', grid: 'Grid', calendar: 'Calendar' };
+    btn.innerHTML = '<span class="bottom-tab-icon">' + VIEW_META[v].icon + '</span><span class="bottom-tab-label">' + labels[v] + '</span>';
     btn.onclick = () => { currentView = v; render(); };
     bar.appendChild(btn);
   });
