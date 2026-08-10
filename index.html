@@ -100,6 +100,40 @@
     margin-bottom: 10px;
     resize: vertical;
   }
+  input.app-input, .entry-form input[type="url"] {
+    width: 100%;
+    font-family: inherit;
+    font-size: 15px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--ink);
+  }
+  .link-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .link-open-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    border: 1px solid var(--moss);
+    background: transparent;
+    color: var(--moss-dark);
+    border-radius: 999px;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+  }
+  .link-open-btn:hover { background: var(--moss); color: #fff; }
+  .note-link-icon { font-size: 12px; color: var(--ink-soft); flex-shrink: 0; }
+  .grid-tile-link { font-size: 11px; }
   .field-group { margin: 16px 0; }
   .field-label {
     font-family: 'IBM Plex Mono', monospace;
@@ -633,6 +667,165 @@
   }
   .note-chevron { color: var(--ink-soft); font-size: 16px; flex-shrink: 0; }
 
+  /* ===== Outreach / brand partnership board ===== */
+  .ot-stats {
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .ot-stat {
+    flex: 1;
+    min-width: 110px;
+    padding: 14px 16px;
+    border-right: 1px solid var(--line);
+    background: var(--paper-light);
+  }
+  .ot-stat:last-child { border-right: none; }
+  .ot-num { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; }
+  .ot-lbl {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .ot-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .ot-quickadd { display: none; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .ot-quickadd.open { display: flex; }
+  .ot-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    background: var(--paper-light);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .ot-chip:hover { border-color: var(--moss); color: var(--moss-dark); transform: none; }
+
+  .ot-panel {
+    background: var(--paper-light);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 22px;
+    display: none;
+    position: relative;
+  }
+  .ot-panel.open { display: block; }
+  .ot-panel::before {
+    content: "BRAND";
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: var(--paper);
+    padding: 0 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--moss-dark);
+  }
+  .ot-panel h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 15px;
+    margin: 0 0 14px;
+  }
+  .ot-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ot-panel label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .ot-panel input, .ot-panel select, .ot-panel textarea {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .ot-panel textarea { resize: vertical; min-height: 52px; }
+
+  .ot-board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(200px, 1fr));
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+  .ot-col { background: var(--paper-light); border: 1px solid var(--line); border-radius: 12px; padding: 12px; min-height: 100px; }
+  .ot-col-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .ot-col-title { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .ot-col-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    background: var(--paper);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .ot-col.researching .ot-col-title { color: var(--stamp-scheduled); }
+  .ot-col.applied .ot-col-title { color: var(--spark-dark); }
+  .ot-col.waiting .ot-col-title { color: var(--stamp-captioned); }
+  .ot-col.partnered .ot-col-title { color: var(--moss); }
+  .ot-col.passed .ot-col-title { color: var(--rust); }
+
+  .ot-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--stamp-scheduled);
+    border-radius: 10px;
+    padding: 11px 12px;
+    margin-bottom: 10px;
+  }
+  .ot-col.applied .ot-card { border-left-color: var(--spark); }
+  .ot-col.waiting .ot-card { border-left-color: var(--stamp-captioned); }
+  .ot-col.partnered .ot-card { border-left-color: var(--moss); }
+  .ot-col.passed .ot-card { border-left-color: var(--rust); opacity: 0.7; }
+  .ot-card-name { font-weight: 600; font-size: 13.5px; }
+  .ot-card-cat { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-soft); margin-top: 3px; }
+  .ot-card-notes { font-size: 12px; color: var(--ink-soft); margin-top: 7px; line-height: 1.4; }
+  .ot-card-date { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-soft); margin-top: 7px; }
+  .ot-card-actions { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+  .ot-mini-btn {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: 10.5px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .ot-mini-btn:hover { color: var(--ink); border-color: var(--ink-soft); transform: none; }
+  .ot-mini-select {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 10.5px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .ot-empty { text-align: center; padding: 16px 6px; color: var(--ink-soft); font-size: 11px; font-family: 'IBM Plex Mono', monospace; }
+
+  @media (max-width: 900px) {
+    .ot-board { grid-template-columns: 1fr; }
+    .ot-grid2 { grid-template-columns: 1fr; }
+  }
+
   @media (max-width: 900px) {
     .cardlist-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
     .grid-tile-desc { font-size: 12px; -webkit-line-clamp: 4; }
@@ -893,6 +1086,8 @@
     .card-bottom-row { flex-direction: column; align-items: stretch; margin-top: 18px; }
     .card-actions { flex-direction: column; align-items: stretch; gap: 10px; }
     .card-actions select, .card-actions button, .date-pill-row { width: 100%; }
+    .link-row { flex-direction: column; align-items: stretch; }
+    .link-open-btn { justify-content: center; }
     .card-actions select { min-height: 44px; font-size: 15px; }
     .card-actions button { min-height: 44px; }
     .date-pill-row input[type="date"] { flex: 1; min-height: 44px; font-size: 15px; }
@@ -970,6 +1165,11 @@
       <div class="date-pill-row" id="newClipDateRow"></div>
     </div>
 
+    <div class="field-group">
+      <div class="field-label">Video link</div>
+      <input type="url" id="newClipLinkInput" class="app-input" placeholder="🔗 Google Photos link (optional)">
+    </div>
+
     <div style="display:flex; justify-content:flex-end;">
       <button id="addBtn">Log Entry</button>
     </div>
@@ -983,6 +1183,63 @@
 
   <div id="cardList"></div>
   <div id="calendarView" style="display:none;"></div>
+
+  <div id="outreachView" style="display:none;">
+    <div class="ot-stats" id="otStats"></div>
+    <div class="ot-toolbar">
+      <button id="otOpenForm">+ Add brand</button>
+      <button class="ghost" id="otToggleQuick">Quick-add suggestions</button>
+    </div>
+    <div class="ot-quickadd" id="otQuickadd"></div>
+
+    <div class="ot-panel" id="otPanel">
+      <h3 id="otPanelTitle">Add a brand</h3>
+      <div class="ot-grid2">
+        <div>
+          <label>Brand name</label>
+          <input id="ot-f-name" placeholder="e.g. kin+Kind">
+        </div>
+        <div>
+          <label>Category</label>
+          <input id="ot-f-category" placeholder="e.g. Supplements, Litter, Toys">
+        </div>
+      </div>
+      <div class="ot-grid2">
+        <div>
+          <label>Status</label>
+          <select id="ot-f-status">
+            <option value="researching">Researching</option>
+            <option value="applied">Applied</option>
+            <option value="waiting">Waiting to hear back</option>
+            <option value="partnered">Partnered</option>
+            <option value="passed">Passed / declined</option>
+          </select>
+        </div>
+        <div>
+          <label>Contact method</label>
+          <input id="ot-f-contact" placeholder="e.g. Ambassador form, email, DM">
+        </div>
+      </div>
+      <div class="ot-grid2">
+        <div>
+          <label>Product you use</label>
+          <input id="ot-f-product" placeholder="e.g. Organic Pumpkin Powder">
+        </div>
+        <div>
+          <label>Date contacted</label>
+          <input id="ot-f-date" type="date">
+        </div>
+      </div>
+      <label>Notes / code / link</label>
+      <textarea id="ot-f-notes" placeholder="Application link, discount code, who you talked to, follow-up date..."></textarea>
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <button id="otSaveBtn">Save</button>
+        <button class="ghost" id="otCancelBtn">Cancel</button>
+      </div>
+    </div>
+
+    <div class="ot-board" id="otBoard"></div>
+  </div>
 
   <div class="modal-overlay" id="cardModalOverlay">
     <div class="modal-box" id="cardModalBox"></div>
@@ -1002,7 +1259,8 @@ const PLATFORMS = ['Instagram', 'TikTok', 'Both'];
 const VIEW_META = {
   log: { label: 'Log view', icon: '📋' },
   grid: { label: 'Grid view', icon: '▦' },
-  calendar: { label: 'Calendar view', icon: '📅' }
+  calendar: { label: 'Calendar view', icon: '📅' },
+  outreach: { label: 'Outreach view', icon: '🤝' }
 };
 let clips = [];
 let activeFilter = 'all';
@@ -1015,6 +1273,62 @@ let isOfflinePreview = false;
 let editingDateIds = new Set();
 let collapsedCaptionIds = new Set();
 let compactCardIds = new Set();
+
+let brands = [];
+let editingBrandId = '';
+
+const BRAND_STATUSES = [
+  { key: 'researching', label: 'Researching' },
+  { key: 'applied', label: 'Applied' },
+  { key: 'waiting', label: 'Waiting' },
+  { key: 'partnered', label: 'Partnered' },
+  { key: 'passed', label: 'Passed' }
+];
+
+const SUGGESTED_BRANDS = [
+  'FELIWAY', 'kin+Kind', 'Boxie', 'N-Bone', 'Feline Greenies', "Hill's Science Diet",
+  'Purina Pro Plan', 'Silverquine', 'Petsters', 'C.E.T.'
+];
+
+const SEED_STRATEGY_NOTE = {
+  name: '★ Strategy reminders',
+  category: 'Pinned',
+  status: 'researching',
+  contact: '',
+  product: '',
+  date: '',
+  notes: 'Tag brands organically in regular posts BEFORE pitching — gives you something to reference in the outreach email. Use a weekly round-up slot for "what\'s actually in our lineup," it reads as authentic recs. Pitch = who you are + stats + why their product fits + the ask (affiliate code / ambassador program / product-for-content).'
+};
+
+const SEED_BRANDS = [
+  { name: 'Amazon Associates', category: 'Affiliate program', status: 'applied', contact: 'affiliate-program.amazon.com',
+    product: "Everything you've bought & reviewed", date: '',
+    notes: "Apply first, but only once you're ready to post — 3 qualifying sales needed within 180 days or they close the account. Start with repeat-purchase items: Boxie litter (x3), Feline Greenies (x2), Hill's Science Diet (x2)." },
+  { name: 'FELIWAY', category: 'Calming / behavior', status: 'researching', contact: '',
+    product: 'Optimum 30-Day Starter Kit', date: '',
+    notes: 'Repeat-adjacent, established brand — check IG bio / site footer for ambassador form first.' },
+  { name: 'kin+Kind', category: 'Supplements', status: 'researching', contact: '',
+    product: 'Organic Pumpkin Powder', date: '',
+    notes: 'Small-to-mid brand, likely has an active ambassador program — good early target.' },
+  { name: 'Boxie', category: 'Litter', status: 'researching', contact: '',
+    product: 'Unscented Clumping Clay Litter', date: '',
+    notes: 'Ordered 3x (Dec 2025, Jan 2026, Feb 2026) — strong repeat-use angle for the pitch.' },
+  { name: 'N-Bone', category: 'Treats', status: 'researching', contact: '',
+    product: 'Get Naked Furball Relief + Urinary Health Treats', date: '', notes: '' },
+  { name: 'Feline Greenies', category: 'Dental treats', status: 'researching', contact: '',
+    product: 'Dental Treats, Chicken & Salmon', date: '',
+    notes: "Bigger brand — go through their marketing/PR team or 'pet influencer partnerships' page, not a cold DM." },
+  { name: "Hill's Science Diet", category: 'Food', status: 'researching', contact: '',
+    product: 'Dry Cat Food, Urinary & Hairball Control', date: '',
+    notes: "Big brand — email PR team directly, cold DMs likely ignored at this size." },
+  { name: 'Purina Pro Plan', category: 'Food', status: 'researching', contact: '',
+    product: 'Urinary Tract Health Cat Food', date: '',
+    notes: "Big brand — same approach as Hill's, look up their partnerships contact page." },
+  { name: 'Silverquine', category: 'Wound / itch care', status: 'researching', contact: '', product: 'Pet Wound & Itch Care Hydrogel', date: '', notes: '' },
+  { name: 'Petsters', category: 'Dental / grooming', status: 'researching', contact: '', product: 'Silicone 360° Pet Finger Toothbrush', date: '', notes: '' },
+  { name: 'ZuHucpts', category: 'Litter box / enclosures', status: 'researching', contact: '', product: 'Stainless Steel Litter Box, Foldable Playpen', date: '', notes: '' },
+  { name: 'C.E.T.', category: 'Dental', status: 'researching', contact: '', product: 'Enzymatic Toothpaste, Beef', date: '', notes: '' }
+];
 
 const THEMES = {
   berry: {
@@ -1297,7 +1611,8 @@ function rowToClip(row) {
     selectedTones: row.selected_tones || ['Deadpan nature-doc'],
     platform: row.platform || 'Both',
     captionTones: row.caption_tones || [],
-    captions: row.captions || null
+    captions: row.captions || null,
+    videoLink: row.video_link || ''
   };
 }
 
@@ -1312,6 +1627,7 @@ function clipToRow(clip) {
     platform: clip.platform || 'Both',
     caption_tones: clip.captionTones || [],
     captions: clip.captions || null,
+    video_link: clip.videoLink || null,
     updated_at: new Date().toISOString()
   };
 }
@@ -1370,11 +1686,84 @@ async function deleteClipRemote(id) {
 }
 
 function uid() { return 'c' + Date.now() + Math.floor(Math.random()*1000); }
+function uidBrand() { return 'b' + Date.now() + Math.floor(Math.random()*1000); }
+
+function rowToBrand(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category || '',
+    status: row.status || 'researching',
+    contact: row.contact || '',
+    product: row.product || '',
+    date: row.date_contacted || '',
+    notes: row.notes || ''
+  };
+}
+
+function brandToRow(b) {
+  return {
+    id: b.id,
+    name: b.name,
+    category: b.category || null,
+    status: b.status || 'researching',
+    contact: b.contact || null,
+    product: b.product || null,
+    date_contacted: b.date || null,
+    notes: b.notes || null,
+    updated_at: new Date().toISOString()
+  };
+}
+
+let isLoadingBrands = false;
+
+async function loadBrands() {
+  if (isLoadingBrands) return;
+  isLoadingBrands = true;
+  try {
+    const { data, error } = await sb.from('ttt_brands').select('*').order('created_at', { ascending: true });
+    if (error) throw error;
+    if (data && data.length) {
+      brands = data.map(rowToBrand);
+    } else if (!brands.length) {
+      brands = [
+        { id: uidBrand(), ...SEED_STRATEGY_NOTE },
+        ...SEED_BRANDS.map(b => ({ id: uidBrand(), ...b }))
+      ];
+      await saveBrands();
+    }
+  } catch (e) {
+    console.error('Brand load error:', (e && e.message) || e);
+  }
+  isLoadingBrands = false;
+  if (currentView === 'outreach') renderOutreach();
+}
+
+async function saveBrands() {
+  if (!brands.length) return;
+  try {
+    const rows = brands.map(brandToRow);
+    const { error } = await sb.from('ttt_brands').upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
+  } catch (e) {
+    console.error('Brand save error:', (e && e.message) || e);
+  }
+}
+
+async function deleteBrandRemote(id) {
+  try {
+    const { error } = await sb.from('ttt_brands').delete().eq('id', id);
+    if (error) throw error;
+  } catch (e) {
+    console.error('Brand delete error:', (e && e.message) || e);
+  }
+}
 
 function addClip() {
   const desc = document.getElementById('descInput').value.trim();
   if (!desc) return;
   const dateVal = newClipDate;
+  const linkVal = document.getElementById('newClipLinkInput').value.trim();
   clips.unshift({
     id: uid(),
     desc,
@@ -1383,9 +1772,11 @@ function addClip() {
     captions: null,
     selectedTones: newClipTones.length ? [...newClipTones] : ['Deadpan nature-doc'],
     platform: newClipPlatform,
-    scheduledDate: dateVal || ''
+    scheduledDate: dateVal || '',
+    videoLink: linkVal || ''
   });
   document.getElementById('descInput').value = '';
+  document.getElementById('newClipLinkInput').value = '';
   newClipDate = '';
   newClipDateEditing = false;
   renderNewClipDateRow();
@@ -1580,6 +1971,141 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function renderOutreach() {
+  renderOutreachStats();
+  renderQuickAddBrands();
+  renderBrandBoard();
+}
+
+function renderOutreachStats() {
+  const total = brands.length;
+  const applied = brands.filter(b => ['applied','waiting','partnered'].includes(b.status)).length;
+  const waiting = brands.filter(b => b.status === 'waiting').length;
+  const partnered = brands.filter(b => b.status === 'partnered').length;
+  const el = document.getElementById('otStats');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="ot-stat"><div class="ot-num">${total}</div><div class="ot-lbl">Total brands</div></div>
+    <div class="ot-stat"><div class="ot-num">${applied}</div><div class="ot-lbl">Applied so far</div></div>
+    <div class="ot-stat"><div class="ot-num">${waiting}</div><div class="ot-lbl">Awaiting reply</div></div>
+    <div class="ot-stat"><div class="ot-num">${partnered}</div><div class="ot-lbl">Partnered</div></div>
+  `;
+}
+
+function renderQuickAddBrands() {
+  const el = document.getElementById('otQuickadd');
+  if (!el) return;
+  const existing = new Set(brands.map(b => b.name.toLowerCase()));
+  const remaining = SUGGESTED_BRANDS.filter(n => !existing.has(n.toLowerCase()));
+  el.innerHTML = remaining.length
+    ? remaining.map(n => `<button type="button" class="ot-chip" data-name="${escapeHtml(n)}">+ ${escapeHtml(n)}</button>`).join('')
+    : '<span style="font-family:\'IBM Plex Mono\',monospace; font-size:11.5px; color:var(--ink-soft);">All suggestions added</span>';
+  el.querySelectorAll('.ot-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      brands.push({ id: uidBrand(), name: chip.dataset.name, category: '', status: 'researching', contact: '', product: '', date: '', notes: '' });
+      saveBrands();
+      renderOutreach();
+    });
+  });
+}
+
+function renderBrandBoard() {
+  const board = document.getElementById('otBoard');
+  if (!board) return;
+  board.innerHTML = BRAND_STATUSES.map(col => {
+    const items = brands.filter(b => b.status === col.key);
+    return `
+      <div class="ot-col ${col.key}">
+        <div class="ot-col-head">
+          <div class="ot-col-title">${col.label}</div>
+          <div class="ot-col-count">${items.length}</div>
+        </div>
+        ${items.length ? items.map(brandCardHtml).join('') : '<div class="ot-empty">Nothing here yet</div>'}
+      </div>
+    `;
+  }).join('');
+
+  board.querySelectorAll('[data-brand-edit]').forEach(b => b.addEventListener('click', () => openBrandEdit(b.dataset.brandEdit)));
+  board.querySelectorAll('[data-brand-del]').forEach(b => b.addEventListener('click', () => deleteBrand(b.dataset.brandDel)));
+  board.querySelectorAll('[data-brand-move]').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      const b = brands.find(x => x.id === sel.dataset.brandMove);
+      if (b) { b.status = e.target.value; saveBrands(); renderOutreach(); }
+    });
+  });
+}
+
+function brandCardHtml(b) {
+  const statusOptions = BRAND_STATUSES.map(c => `<option value="${c.key}" ${c.key === b.status ? 'selected' : ''}>${c.label}</option>`).join('');
+  return `
+    <div class="ot-card">
+      <div class="ot-card-name">${escapeHtml(b.name)}</div>
+      ${b.category ? `<div class="ot-card-cat">${escapeHtml(b.category)}</div>` : ''}
+      ${b.product ? `<div class="ot-card-notes">Uses: ${escapeHtml(b.product)}</div>` : ''}
+      ${b.notes ? `<div class="ot-card-notes">${escapeHtml(b.notes)}</div>` : ''}
+      ${b.date ? `<div class="ot-card-date">${escapeHtml(b.date)}</div>` : ''}
+      <div class="ot-card-actions">
+        <select class="ot-mini-select" data-brand-move="${b.id}">${statusOptions}</select>
+        <button type="button" class="ot-mini-btn" data-brand-edit="${b.id}">Edit</button>
+        <button type="button" class="ot-mini-btn" data-brand-del="${b.id}">Delete</button>
+      </div>
+    </div>
+  `;
+}
+
+function deleteBrand(id) {
+  brands = brands.filter(b => b.id !== id);
+  deleteBrandRemote(id);
+  renderOutreach();
+}
+
+function openBrandEdit(id) {
+  const b = brands.find(x => x.id === id);
+  if (!b) return;
+  editingBrandId = id;
+  document.getElementById('otPanelTitle').textContent = 'Edit brand';
+  document.getElementById('ot-f-name').value = b.name;
+  document.getElementById('ot-f-category').value = b.category;
+  document.getElementById('ot-f-status').value = b.status;
+  document.getElementById('ot-f-contact').value = b.contact;
+  document.getElementById('ot-f-product').value = b.product;
+  document.getElementById('ot-f-date').value = b.date;
+  document.getElementById('ot-f-notes').value = b.notes;
+  document.getElementById('otPanel').classList.add('open');
+  document.getElementById('otPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetBrandForm() {
+  editingBrandId = '';
+  document.getElementById('otPanelTitle').textContent = 'Add a brand';
+  ['ot-f-name','ot-f-category','ot-f-contact','ot-f-product','ot-f-date','ot-f-notes'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('ot-f-status').value = 'researching';
+}
+
+function saveBrandForm() {
+  const name = document.getElementById('ot-f-name').value.trim();
+  if (!name) { alert('Give the brand a name first'); return; }
+  const data = {
+    name,
+    category: document.getElementById('ot-f-category').value.trim(),
+    status: document.getElementById('ot-f-status').value,
+    contact: document.getElementById('ot-f-contact').value.trim(),
+    product: document.getElementById('ot-f-product').value.trim(),
+    date: document.getElementById('ot-f-date').value,
+    notes: document.getElementById('ot-f-notes').value.trim()
+  };
+  if (editingBrandId) {
+    const b = brands.find(x => x.id === editingBrandId);
+    if (b) Object.assign(b, data);
+  } else {
+    brands.push({ id: uidBrand(), ...data });
+  }
+  saveBrands();
+  document.getElementById('otPanel').classList.remove('open');
+  resetBrandForm();
+  renderOutreach();
+}
+
 function buildFullCard(clip, forceExpanded) {
   const card = document.createElement('div');
   card.className = 'card';
@@ -1674,6 +2200,36 @@ function buildFullCard(clip, forceExpanded) {
   dateLabel.textContent = 'Date';
   card.appendChild(dateLabel);
   card.appendChild(buildDatePillForClip(clip));
+
+  const linkLabel = document.createElement('div');
+  linkLabel.className = 'field-label';
+  linkLabel.style.marginTop = '16px';
+  linkLabel.textContent = 'Video link';
+  card.appendChild(linkLabel);
+
+  const linkRow = document.createElement('div');
+  linkRow.className = 'link-row';
+  const linkInput = document.createElement('input');
+  linkInput.type = 'url';
+  linkInput.className = 'app-input';
+  linkInput.placeholder = '🔗 Google Photos link (optional)';
+  linkInput.value = clip.videoLink || '';
+  linkInput.onchange = () => {
+    clip.videoLink = linkInput.value.trim();
+    saveClips();
+    refreshOpenModal();
+  };
+  linkRow.appendChild(linkInput);
+  if (clip.videoLink) {
+    const openLink = document.createElement('a');
+    openLink.className = 'link-open-btn';
+    openLink.href = clip.videoLink;
+    openLink.target = '_blank';
+    openLink.rel = 'noopener noreferrer';
+    openLink.textContent = 'Open ↗';
+    linkRow.appendChild(openLink);
+  }
+  card.appendChild(linkRow);
 
   const bottomRow = document.createElement('div');
   bottomRow.className = 'card-bottom-row';
@@ -1791,13 +2347,16 @@ function buildGridTile(clip) {
 
   const footer = document.createElement('div');
   footer.className = 'grid-tile-footer';
+  let footerText;
   if (clip.scheduledDate) {
-    footer.textContent = '📅 ' + formatDateLong(clip.scheduledDate);
+    footerText = '📅 ' + formatDateLong(clip.scheduledDate);
   } else if (clip.captions) {
-    footer.textContent = '💬 tap to see all captions';
+    footerText = '💬 tap to see all captions';
   } else {
-    footer.textContent = timeAgo(clip.created);
+    footerText = timeAgo(clip.created);
   }
+  if (clip.videoLink) footerText = '🔗 ' + footerText;
+  footer.textContent = footerText;
   tile.appendChild(footer);
 
   tile.onclick = () => openCardModal(clip.id);
@@ -1817,6 +2376,13 @@ function buildNoteRow(clip) {
   title.className = 'note-title';
   title.textContent = (clip.captions && clip.captions.captions && clip.captions.captions[0]) || clip.desc;
   row.appendChild(title);
+
+  if (clip.videoLink) {
+    const linkIcon = document.createElement('span');
+    linkIcon.className = 'note-link-icon';
+    linkIcon.textContent = '🔗';
+    row.appendChild(linkIcon);
+  }
 
   const chevron = document.createElement('span');
   chevron.className = 'note-chevron';
@@ -1870,7 +2436,7 @@ function render() {
 
   const toggle = document.getElementById('viewToggle');
   toggle.innerHTML = '';
-  ['log','grid','calendar'].forEach(v => {
+  ['log','grid','calendar','outreach'].forEach(v => {
     const btn = document.createElement('button');
     btn.textContent = VIEW_META[v].icon;
     btn.title = VIEW_META[v].label;
@@ -1879,6 +2445,17 @@ function render() {
     toggle.appendChild(btn);
   });
   renderBottomTabs();
+
+  document.getElementById('entryForm').style.display = currentView === 'outreach' ? 'none' : '';
+  document.getElementById('outreachView').style.display = currentView === 'outreach' ? 'block' : 'none';
+
+  if (currentView === 'outreach') {
+    document.getElementById('cardList').style.display = 'none';
+    document.getElementById('calendarView').style.display = 'none';
+    document.getElementById('filterRow').style.display = 'none';
+    renderOutreach();
+    return;
+  }
 
   const showList = currentView === 'log' || currentView === 'grid';
   document.getElementById('cardList').style.display = showList ? (currentView === 'grid' ? 'grid' : 'block') : 'none';
@@ -1942,10 +2519,10 @@ function renderBottomTabs() {
   const bar = document.getElementById('bottomTabBar');
   if (!bar) return;
   bar.innerHTML = '';
-  ['log','grid','calendar'].forEach(v => {
+  ['log','grid','calendar','outreach'].forEach(v => {
     const btn = document.createElement('button');
     btn.className = 'bottom-tab' + (currentView === v ? ' active' : '');
-    const labels = { log: 'Log', grid: 'Grid', calendar: 'Calendar' };
+    const labels = { log: 'Log', grid: 'Grid', calendar: 'Calendar', outreach: 'Brands' };
     btn.innerHTML = '<span class="bottom-tab-icon">' + VIEW_META[v].icon + '</span><span class="bottom-tab-label">' + labels[v] + '</span>';
     btn.onclick = () => { currentView = v; render(); };
     bar.appendChild(btn);
@@ -2018,12 +2595,33 @@ function renderCalendar() {
 }
 
 document.getElementById('addBtn').addEventListener('click', addClip);
-document.getElementById('fabAddBtn').addEventListener('click', openEntrySheet);
+document.getElementById('fabAddBtn').addEventListener('click', () => {
+  if (currentView === 'outreach') {
+    resetBrandForm();
+    document.getElementById('otPanel').classList.add('open');
+    document.getElementById('otPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    openEntrySheet();
+  }
+});
 document.getElementById('sheetCloseBtn').addEventListener('click', closeEntrySheet);
 document.getElementById('sheetBackdrop').addEventListener('click', closeEntrySheet);
 document.getElementById('descInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.metaKey) addClip();
 });
+
+document.getElementById('otOpenForm').addEventListener('click', () => {
+  resetBrandForm();
+  document.getElementById('otPanel').classList.add('open');
+});
+document.getElementById('otToggleQuick').addEventListener('click', () => {
+  document.getElementById('otQuickadd').classList.toggle('open');
+});
+document.getElementById('otCancelBtn').addEventListener('click', () => {
+  document.getElementById('otPanel').classList.remove('open');
+  resetBrandForm();
+});
+document.getElementById('otSaveBtn').addEventListener('click', saveBrandForm);
 
 function loadTheme() {
   let saved = 'berry';
@@ -2040,11 +2638,12 @@ renderNewClipPlatform();
 renderNewClipDateRow();
 loadTheme();
 loadClips();
+loadBrands();
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') loadClips();
+  if (document.visibilityState === 'visible') { loadClips(); loadBrands(); }
 });
-window.addEventListener('focus', () => { loadClips(); });
+window.addEventListener('focus', () => { loadClips(); loadBrands(); });
 window.addEventListener('resize', () => { render(); });
 
 </script>
