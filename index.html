@@ -1560,6 +1560,12 @@ function setSyncStatus(text, isError) {
   el.style.color = isError ? 'var(--rust)' : '';
 }
 
+function safeParseJSON(val, fallback) {
+  if (val === null || val === undefined || val === '') return fallback;
+  if (typeof val === 'object') return val; // already decoded (jsonb column)
+  try { return JSON.parse(val); } catch (e) { return fallback; }
+}
+
 function rowToClip(row) {
   return {
     id: row.id,
@@ -1567,10 +1573,10 @@ function rowToClip(row) {
     status: row.status,
     created: row.created,
     scheduledDate: row.scheduled_date || '',
-    selectedTones: row.selected_tones || ['Deadpan nature-doc'],
+    selectedTones: safeParseJSON(row.selected_tones, ['Deadpan nature-doc']),
     platform: row.platform || 'Both',
-    captionTones: row.caption_tones || [],
-    captions: row.captions || null,
+    captionTones: safeParseJSON(row.caption_tones, []),
+    captions: safeParseJSON(row.captions, null),
     videoLink: row.video_link || ''
   };
 }
@@ -1582,10 +1588,13 @@ function clipToRow(clip) {
     status: clip.status,
     created: clip.created,
     scheduled_date: clip.scheduledDate || null,
-    selected_tones: clip.selectedTones || ['Deadpan nature-doc'],
+    // Stringified explicitly: works whether the DB column is jsonb or plain text,
+    // which avoids a silent type-mismatch failure on the one field (captions)
+    // that's actually an object instead of a plain string/number.
+    selected_tones: JSON.stringify(clip.selectedTones || ['Deadpan nature-doc']),
     platform: clip.platform || 'Both',
-    caption_tones: clip.captionTones || [],
-    captions: clip.captions || null,
+    caption_tones: JSON.stringify(clip.captionTones || []),
+    captions: clip.captions ? JSON.stringify(clip.captions) : null,
     video_link: clip.videoLink || null,
     updated_at: new Date().toISOString()
   };
@@ -1627,22 +1636,20 @@ async function saveClips(clipId) {
   if (!clips.length) return true;
   pendingClipSaves++;
   try {
-    const rows = clips.map(clipToRow);
+    const targets = clipId ? clips.filter(c => c.id === clipId) : clips;
+    if (!targets.length) return true;
+    const rows = targets.map(clipToRow);
     const { error } = await sb.from('ttt_clips').upsert(rows, { onConflict: 'id' });
     if (error) throw error;
     setSyncStatus('Synced ✓');
-    if (clipId) {
-      const c = clips.find(x => x.id === clipId);
-      if (c) c.unsynced = false;
-    }
+    targets.forEach(c => { c.unsynced = false; c.saveError = ''; });
     return true;
   } catch (e) {
+    const msg = (e && e.message) || (e && e.toString && e.toString()) || 'unknown error';
     console.error('Save error', e);
     setSyncStatus('Sync failed' + NETWORK_HINT, true);
-    if (clipId) {
-      const c = clips.find(x => x.id === clipId);
-      if (c) c.unsynced = true;
-    }
+    const targets = clipId ? clips.filter(c => c.id === clipId) : clips;
+    targets.forEach(c => { c.unsynced = true; c.saveError = msg; });
     return false;
   } finally {
     pendingClipSaves--;
@@ -1745,8 +1752,9 @@ function addClip() {
   if (!desc) return;
   const dateVal = newClipDate;
   const linkVal = document.getElementById('newClipLinkInput').value.trim();
+  const newId = uid();
   clips.unshift({
-    id: uid(),
+    id: newId,
     desc,
     status: dateVal ? 'scheduled' : 'idea',
     created: new Date().toISOString(),
@@ -1761,7 +1769,7 @@ function addClip() {
   newClipDate = '';
   newClipDateEditing = false;
   renderNewClipDateRow();
-  saveClips();
+  saveClips(newId);
   render();
   closeEntrySheet();
 }
@@ -2247,10 +2255,10 @@ function buildFullCard(clip, forceExpanded) {
     warn.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding:8px 12px; border:1px solid var(--rust); border-radius:10px; background:color-mix(in srgb, var(--rust) 10%, transparent);';
     const warnText = document.createElement('span');
     warnText.style.cssText = 'font-family:\'IBM Plex Mono\',monospace; font-size:10.5px; color:var(--rust);';
-    warnText.textContent = '⚠ Not saved to the cloud yet';
+    warnText.textContent = '⚠ Not saved: ' + (clip.saveError || 'unknown error');
     const retryBtn = document.createElement('button');
     retryBtn.className = 'ghost';
-    retryBtn.style.cssText = 'padding:5px 10px; font-size:10px;';
+    retryBtn.style.cssText = 'padding:5px 10px; font-size:10px; flex-shrink:0;';
     retryBtn.textContent = 'Retry';
     retryBtn.onclick = async () => { await saveClips(clip.id); refreshOpenModal(); render(); };
     warn.appendChild(warnText);
@@ -2325,6 +2333,13 @@ function buildGridTile(clip) {
   stamp.className = 'stamp ' + clip.status;
   stamp.textContent = STATUS_LABELS[clip.status];
   tile.appendChild(stamp);
+
+  if (clip.unsynced) {
+    const unsyncedBadge = document.createElement('div');
+    unsyncedBadge.style.cssText = 'font-family:\'IBM Plex Mono\',monospace; font-size:9px; color:var(--rust); margin-top:4px;';
+    unsyncedBadge.textContent = '⚠ not saved';
+    tile.appendChild(unsyncedBadge);
+  }
 
   const desc = document.createElement('div');
   desc.className = 'grid-tile-desc';
