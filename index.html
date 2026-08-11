@@ -821,6 +821,65 @@
   }
   .ot-empty { text-align: center; padding: 16px 6px; color: var(--ink-soft); font-size: 11px; font-family: 'IBM Plex Mono', monospace; }
 
+  .ot-subnav {
+    display: inline-flex;
+    gap: 0;
+    margin-bottom: 18px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  .ot-subtab {
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    padding: 8px 16px;
+    font-size: 11px;
+  }
+  .ot-subtab:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); transform: none; }
+  .ot-subtab.active { background: var(--moss); color: #fff; }
+  .ot-subtab.active:hover { background: var(--moss); }
+
+  .tpl-format-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--moss-dark);
+    margin: 18px 0 8px;
+  }
+  .tpl-format-title:first-child { margin-top: 0; }
+  .tpl-pillar-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--moss-dark);
+    margin: 16px 0 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tpl-pillar-title:first-child { margin-top: 0; }
+  .tpl-idea-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .tpl-idea-row:last-child { border-bottom: none; }
+  .tpl-subject {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
   @media (max-width: 900px) {
     .ot-board { grid-template-columns: 1fr; }
     .ot-grid2 { grid-template-columns: 1fr; }
@@ -1185,60 +1244,161 @@
   <div id="calendarView" style="display:none;"></div>
 
   <div id="outreachView" style="display:none;">
-    <div class="ot-stats" id="otStats"></div>
-    <div class="ot-toolbar">
-      <button id="otOpenForm">+ Add brand</button>
-      <button class="ghost" id="otToggleQuick">Quick-add suggestions</button>
-    </div>
-    <div class="ot-quickadd" id="otQuickadd"></div>
-
-    <div class="ot-panel" id="otPanel">
-      <h3 id="otPanelTitle">Add a brand</h3>
-      <div class="ot-grid2">
-        <div>
-          <label>Brand name</label>
-          <input id="ot-f-name" placeholder="e.g. kin+Kind">
-        </div>
-        <div>
-          <label>Category</label>
-          <input id="ot-f-category" placeholder="e.g. Supplements, Litter, Toys">
-        </div>
-      </div>
-      <div class="ot-grid2">
-        <div>
-          <label>Status</label>
-          <select id="ot-f-status">
-            <option value="researching">Researching</option>
-            <option value="applied">Applied</option>
-            <option value="waiting">Waiting to hear back</option>
-            <option value="partnered">Partnered</option>
-            <option value="passed">Passed / declined</option>
-          </select>
-        </div>
-        <div>
-          <label>Contact method</label>
-          <input id="ot-f-contact" placeholder="e.g. Ambassador form, email, DM">
-        </div>
-      </div>
-      <div class="ot-grid2">
-        <div>
-          <label>Product you use</label>
-          <input id="ot-f-product" placeholder="e.g. Organic Pumpkin Powder">
-        </div>
-        <div>
-          <label>Date contacted</label>
-          <input id="ot-f-date" type="date">
-        </div>
-      </div>
-      <label>Notes / code / link</label>
-      <textarea id="ot-f-notes" placeholder="Application link, discount code, who you talked to, follow-up date..."></textarea>
-      <div style="display:flex; gap:10px; margin-top:4px;">
-        <button id="otSaveBtn">Save</button>
-        <button class="ghost" id="otCancelBtn">Cancel</button>
-      </div>
+    <div class="ot-subnav" id="otSubnav">
+      <button type="button" class="ot-subtab active" id="otTabPipeline">Pipeline</button>
+      <button type="button" class="ot-subtab" id="otTabTemplates">Templates</button>
     </div>
 
-    <div class="ot-board" id="otBoard"></div>
+    <div id="otPipelineSection">
+      <div class="ot-stats" id="otStats"></div>
+      <div class="ot-toolbar">
+        <button id="otOpenForm">+ Add brand</button>
+        <button class="ghost" id="otToggleQuick">Quick-add suggestions</button>
+      </div>
+      <div class="ot-quickadd" id="otQuickadd"></div>
+
+      <div class="ot-panel" id="otPanel">
+        <h3 id="otPanelTitle">Add a brand</h3>
+        <div class="ot-grid2">
+          <div>
+            <label>Brand name</label>
+            <input id="ot-f-name" placeholder="e.g. kin+Kind">
+          </div>
+          <div>
+            <label>Category</label>
+            <input id="ot-f-category" placeholder="e.g. Supplements, Litter, Toys">
+          </div>
+        </div>
+        <div class="ot-grid2">
+          <div>
+            <label>Status</label>
+            <select id="ot-f-status">
+              <option value="researching">Researching</option>
+              <option value="applied">Applied</option>
+              <option value="waiting">Waiting to hear back</option>
+              <option value="partnered">Partnered</option>
+              <option value="passed">Passed / declined</option>
+            </select>
+          </div>
+          <div>
+            <label>Contact method</label>
+            <input id="ot-f-contact" placeholder="e.g. Ambassador form, email, DM">
+          </div>
+        </div>
+        <div class="ot-grid2">
+          <div>
+            <label>Product you use</label>
+            <input id="ot-f-product" placeholder="e.g. Organic Pumpkin Powder">
+          </div>
+          <div>
+            <label>Date contacted</label>
+            <input id="ot-f-date" type="date">
+          </div>
+        </div>
+        <label>Notes / code / link</label>
+        <textarea id="ot-f-notes" placeholder="Application link, discount code, who you talked to, follow-up date..."></textarea>
+        <div style="display:flex; gap:10px; margin-top:4px;">
+          <button id="otSaveBtn">Save</button>
+          <button class="ghost" id="otCancelBtn">Cancel</button>
+        </div>
+      </div>
+
+      <div class="ot-board" id="otBoard"></div>
+    </div>
+
+    <div id="otTemplatesSection" style="display:none;">
+      <div class="ot-panel open">
+        <h3>Fill in the details</h3>
+        <div class="ot-grid2">
+          <div>
+            <label>Load from brand (optional)</label>
+            <select id="tplBrandSelect"><option value="">— none / custom —</option></select>
+          </div>
+          <div>
+            <label>Brand name</label>
+            <input id="tplBrandName" placeholder="e.g. kin+Kind">
+          </div>
+        </div>
+        <div class="ot-grid2">
+          <div>
+            <label>Product</label>
+            <input id="tplProduct" placeholder="e.g. Organic Pumpkin Powder">
+          </div>
+          <div>
+            <label>Category</label>
+            <input id="tplCategory" placeholder="e.g. Litter, Dental, Supplements">
+          </div>
+        </div>
+        <div class="ot-grid2">
+          <div>
+            <label>Time used</label>
+            <input id="tplDuration" placeholder="e.g. 3 months">
+          </div>
+          <div>
+            <label>Your name (sign-off)</label>
+            <input id="tplName" value="Cris">
+          </div>
+        </div>
+        <div class="ot-grid2">
+          <div>
+            <label>Cat (single-cat templates)</label>
+            <select id="tplCat">
+              <option>Cali</option>
+              <option>Neo</option>
+              <option>Ramses</option>
+              <option>Diego</option>
+            </select>
+          </div>
+          <div></div>
+        </div>
+        <div class="ot-grid2">
+          <div>
+            <label>Upstairs cat (two-floor templates)</label>
+            <select id="tplUpstairsCat">
+              <option>Ramses</option>
+              <option>Diego</option>
+              <option>Cali</option>
+              <option>Neo</option>
+            </select>
+          </div>
+          <div>
+            <label>Downstairs cat (two-floor templates)</label>
+            <select id="tplDownstairsCat">
+              <option>Cali</option>
+              <option>Neo</option>
+              <option>Ramses</option>
+              <option>Diego</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="ot-panel open">
+        <h3>Pitch email / DM</h3>
+        <label>Pitch type</label>
+        <select id="tplPitchType">
+          <option value="smallMid">Small/Mid brand (casual DM or email)</option>
+          <option value="bigBrand">Big brand (formal email)</option>
+          <option value="followUp">Follow-up (after 1–2 weeks silence)</option>
+        </select>
+        <div style="margin-top:10px;">
+          <button type="button" id="tplGeneratePitchBtn">Generate pitch</button>
+        </div>
+        <div id="tplPitchOutput" style="margin-top:14px;"></div>
+      </div>
+
+      <div class="ot-panel open">
+        <h3>Caption templates</h3>
+        <button type="button" id="tplGenerateCaptionsBtn">Fill in captions below</button>
+        <div id="tplCaptionOutput" style="margin-top:14px;"></div>
+      </div>
+
+      <div class="ot-panel open">
+        <h3>Carousel idea bank</h3>
+        <input id="tplCarouselFilter" placeholder="Search ideas or pillars (e.g. litter, grooming, exotic)...">
+        <div id="tplCarouselOutput" style="margin-top:14px;"></div>
+      </div>
+    </div>
   </div>
 
   <div class="modal-overlay" id="cardModalOverlay">
@@ -1328,6 +1488,155 @@ const SEED_BRANDS = [
   { name: 'ZuHucpts', category: 'Litter box / enclosures', status: 'researching', contact: '', product: 'Stainless Steel Litter Box, Foldable Playpen', date: '', notes: '' },
   { name: 'C.E.T.', category: 'Dental', status: 'researching', contact: '', product: 'Enzymatic Toothpaste, Beef', date: '', notes: '' }
 ];
+
+const CAPTION_TEMPLATES = [
+  {
+    format: 'Format A — Meme/Relatable (primary, most plug-friendly)',
+    lines: [
+      'POV: your cat discovers [PRODUCT] and now acts like you personally invented joy 💀 @[BRAND]',
+      "the way [CAT] sprints across the house the second she hears the [PRODUCT] bag crinkle 😭",
+      "we don't do mornings without [PRODUCT]. @[BRAND] said 'make the chaos more manageable' and they meant it",
+      'not [CAT] treating [PRODUCT] like it\'s a personality trait now',
+      "[CAT] really said 'this is mine now' about the [PRODUCT] and honestly, fair"
+    ]
+  },
+  {
+    format: 'Format B — Inner monologue',
+    lines: [
+      'they upgraded me to [PRODUCT]. honestly? i respect the effort. — [CAT], probably (@[BRAND])',
+      'day 47 of guarding the [PRODUCT] like it\'s mine. because it is.',
+      'new [PRODUCT] just dropped. i have not left its side since. @[BRAND]'
+    ]
+  },
+  {
+    format: 'Format C — Two-floor contrast',
+    lines: [
+      "upstairs: [CAT] destroying the [PRODUCT] like it personally wronged him. downstairs: [CAT] refusing to acknowledge it exists. @[BRAND] really said 'something for everyone'",
+      "one floor is obsessed with [PRODUCT]. the other floor doesn't know what a [PRODUCT] is. this is the divide @[BRAND] built"
+    ]
+  },
+  {
+    format: 'Format D — CTA / question (great for reach + tags)',
+    lines: [
+      "[CAT] has been staring at the [PRODUCT] for ten minutes deciding if it's a threat or a gift. does your cat overthink everything too? (ps @[BRAND] sent us this one)",
+      "we've been using [PRODUCT] for [X weeks] and [CAT] is a changed man. anyone else's cat get weirdly attached to something new?"
+    ]
+  },
+  {
+    format: 'Format E — Nature doc (rare, use sparingly)',
+    lines: [
+      'the [CATEGORY] approaches the [PRODUCT] with caution. he has learned that new objects require a full investigation before enjoyment can begin. @[BRAND]'
+    ]
+  }
+];
+
+const CAROUSEL_IDEAS = [
+  { pillar: 'Litter & hygiene', ideas: [
+    'things nobody tells you about owning 2 litter boxes vs 4',
+    'why your cat is side-eyeing their new litter (and what actually changes their mind)',
+    'litter mat vs no mat: the tracking experiment',
+    "how often you actually need to scoop (it's more than you think)",
+    "signs your litter box setup is stressing your cat out",
+    'covered vs uncovered litter boxes: what our 4 cats taught us',
+    'the "one box per cat plus one" rule, explained',
+    "what litter tracking says about your cat's paw sensitivity"
+  ]},
+  { pillar: 'Grooming', ideas: [
+    'brushing tools ranked by how much our cats tolerated them',
+    'why your exotic cat sheds differently than your domestic shorthair',
+    'self-cleaning brushes: worth it or gimmick?',
+    'dental care for cats nobody actually does (until now)',
+    'how to introduce toothbrushing without losing a finger',
+    "signs your cat needs a grooming routine upgrade",
+    'matting 101: what causes it and how to prevent it'
+  ]},
+  { pillar: 'Diet, food & treats', ideas: [
+    'why we switched to urinary health food (and what changed)',
+    'wet vs dry food: what our 4 cats each prefer and why',
+    'treat rotation: how we keep 4 cats from getting bored',
+    'reading a cat food label like you actually know what it means',
+    'hairball control food: does it really work?',
+    "how much water your cat should actually be drinking",
+    'dental treats vs actual brushing: the real difference',
+    'why Ramses and Diego eat differently than Cali and Neo'
+  ]},
+  { pillar: 'Enrichment & play', ideas: [
+    'toy rotation schedule that actually keeps cats engaged',
+    'why your cat ignores the $40 toy and loves the box it came in',
+    'enrichment ideas for high-energy breeds (Savannah/Bengal edition)',
+    'window perches: the most underrated cat purchase',
+    'cat tunnels ranked by chaos-per-dollar',
+    'interactive feeders: do they actually slow down eating?',
+    "signs your cat is understimulated (and what to do about it)",
+    'heartbeat toys and separation anxiety: what actually helps'
+  ]},
+  { pillar: 'Health & wellness', ideas: [
+    'supplements we actually give our cats and why',
+    "how to tell if your cat's \"being dramatic\" is actually pain",
+    'salmon oil, pumpkin powder, and other add-ins explained',
+    'wound care basics every cat owner should have on hand',
+    'urinary tract health: what every cat owner should watch for',
+    'the vet visit checklist we wish we had before owning 4 cats',
+    'hydration tricks for cats who ignore their water bowl'
+  ]},
+  { pillar: 'Home setup & gear', ideas: [
+    'carrier vs backpack vs stroller: which one for which situation',
+    'cat-proofing a two-story home, room by room',
+    'screen doors and enclosures: how we gave our indoor cats "outside"',
+    'litter furniture that actually hides the box',
+    'setting up a multi-cat household without the turf wars',
+    "our full gear list by category (and what we'd actually rebuy)"
+  ]},
+  { pillar: 'Exotic cat specific (Savannah / Bengal)', ideas: [
+    'things we wish we knew before getting an F2 Savannah',
+    'Bengal cat energy levels: what to expect before you get one',
+    'exotic breed vs domestic shorthair: real differences in care, not just looks',
+    'why Ramses and Diego need more vertical space than Cali and Neo',
+    'hybrid cat myths we get asked about constantly'
+  ]},
+  { pillar: 'General cat parenting', ideas: [
+    'loot our cats would drop in a video game (gear breakdown, meme format but ties every product back to a slide)'
+  ]}
+];
+
+const PITCH_TEMPLATES = {
+  smallMid: {
+    label: 'Small/Mid brand (casual DM or email)',
+    subject: null,
+    body: "Hi [BRAND]! We run TwoStoryTails on Instagram/TikTok, a cat account following our 4 cats (2 domestic shorthairs downstairs, a Savannah and Bengal upstairs). We've been using [PRODUCT] with [CAT] for [X months] and it's genuinely one of the only [CATEGORY] products all 4 of them will actually use, so we wanted to reach out. We post daily with a bonus carousel M/W/F and would love to know if you have an ambassador or affiliate program we could be part of. Happy to send examples of past content!\n\n— [NAME], @twostorytails"
+  },
+  bigBrand: {
+    label: 'Big brand (formal email to PR/Partnerships)',
+    subject: 'TwoStoryTails x [BRAND] — partnership inquiry',
+    body: 'Hi [Name/Team],\n\nMy name is [NAME] and I run TwoStoryTails, a multi-platform cat content account following 4 cats across two breeds — domestic shorthairs and exotic Savannah/Bengal cats — with a two-floor "two worlds, one house" format that\'s become our core hook.\n\nWe post [frequency] across Instagram and TikTok, with [follower/view stats if strong]. We\'ve used [PRODUCT] regularly with [CAT] and it\'s held up as one of the more reliable products in our routine.\n\nI\'d love to learn more about any influencer, ambassador, or affiliate partnerships [BRAND] currently runs. Happy to share our media kit and past content examples.\n\nThanks for your time,\n[NAME]\n@twostorytails · [IG link] · [TikTok link]'
+  },
+  followUp: {
+    label: 'Follow-up (after 1–2 weeks of silence)',
+    subject: 'Re: TwoStoryTails x [BRAND] — partnership inquiry',
+    body: "Hi again! Just following up on my note below in case it got buried — still would love to connect on a potential partnership with [BRAND]. Let me know if there's someone else I should reach out to instead!\n\n— [NAME], @twostorytails"
+  }
+};
+
+function fillTemplate(text, vars) {
+  return text
+    .replace(/\[BRAND\]/gi, vars.brand || '[BRAND]')
+    .replace(/\[PRODUCT\]/gi, vars.product || '[PRODUCT]')
+    .replace(/\[CATEGORY\]/gi, vars.category || '[CATEGORY]')
+    .replace(/\[X\s*(MONTHS|WEEKS)\]/gi, vars.duration || '[X $1]')
+    .replace(/\[NAME\]/gi, vars.name || '[NAME]')
+    .replace(/\[CAT\]/gi, vars.cat || '[CAT]');
+}
+
+// Format C alternates upstairs/downstairs cat per [CAT] occurrence (order in the source text is upstairs, then downstairs)
+function fillTwoFloorTemplate(text, vars) {
+  let occurrence = 0;
+  let filled = text.replace(/\[CAT\]/gi, () => {
+    occurrence++;
+    return occurrence === 1 ? (vars.upstairsCat || '[CAT]') : (vars.downstairsCat || '[CAT]');
+  });
+  return fillTemplate(filled, vars);
+}
+
 
 const THEMES = {
   berry: {
@@ -1964,6 +2273,16 @@ function renderOutreach() {
   renderOutreachStats();
   renderQuickAddBrands();
   renderBrandBoard();
+  refreshTplBrandOptions();
+}
+
+function refreshTplBrandOptions() {
+  const select = document.getElementById('tplBrandSelect');
+  if (!select) return;
+  const prevValue = select.value;
+  select.innerHTML = '<option value="">— none / custom —</option>' +
+    brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  if (brands.some(b => b.id === prevValue)) select.value = prevValue;
 }
 
 function renderOutreachStats() {
@@ -2069,6 +2388,141 @@ function resetBrandForm() {
   document.getElementById('otPanelTitle').textContent = 'Add a brand';
   ['ot-f-name','ot-f-category','ot-f-contact','ot-f-product','ot-f-date','ot-f-notes'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('ot-f-status').value = 'researching';
+}
+
+// ===== Outreach Templates sub-view =====
+
+function switchOutreachSubView(view) {
+  const showPipeline = view === 'pipeline';
+  document.getElementById('otPipelineSection').style.display = showPipeline ? '' : 'none';
+  document.getElementById('otTemplatesSection').style.display = showPipeline ? 'none' : '';
+  document.getElementById('otTabPipeline').classList.toggle('active', showPipeline);
+  document.getElementById('otTabTemplates').classList.toggle('active', !showPipeline);
+}
+
+function onTplBrandSelectChange() {
+  const id = document.getElementById('tplBrandSelect').value;
+  const b = brands.find(x => x.id === id);
+  if (!b) return;
+  document.getElementById('tplBrandName').value = b.name || '';
+  document.getElementById('tplProduct').value = b.product || '';
+  document.getElementById('tplCategory').value = b.category || '';
+}
+
+function getTplContext() {
+  return {
+    brand: document.getElementById('tplBrandName').value.trim(),
+    product: document.getElementById('tplProduct').value.trim(),
+    category: document.getElementById('tplCategory').value.trim(),
+    duration: document.getElementById('tplDuration').value.trim(),
+    name: document.getElementById('tplName').value.trim(),
+    cat: document.getElementById('tplCat').value,
+    upstairsCat: document.getElementById('tplUpstairsCat').value,
+    downstairsCat: document.getElementById('tplDownstairsCat').value
+  };
+}
+
+function makeCopyableBlock(text, tagLabel) {
+  const wrap = document.createElement('div');
+  wrap.className = 'caption-opt';
+  const topRow = document.createElement('div');
+  topRow.className = 'caption-opt-top';
+  const tag = document.createElement('span');
+  tag.className = 'copy-tag';
+  tag.textContent = tagLabel;
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.textContent = 'Copy';
+  copyBtn.onclick = () => copyText(text, copyBtn);
+  topRow.appendChild(tag);
+  topRow.appendChild(copyBtn);
+  wrap.appendChild(topRow);
+  const body = document.createElement('div');
+  body.style.whiteSpace = 'pre-wrap';
+  body.textContent = text;
+  wrap.appendChild(body);
+  return wrap;
+}
+
+function generatePitchOutput() {
+  const ctx = getTplContext();
+  const type = document.getElementById('tplPitchType').value;
+  const tpl = PITCH_TEMPLATES[type];
+  const out = document.getElementById('tplPitchOutput');
+  out.innerHTML = '';
+  if (tpl.subject) {
+    const subjectFilled = fillTemplate(tpl.subject, ctx);
+    out.appendChild(makeCopyableBlock(subjectFilled, 'Subject line'));
+  }
+  const bodyFilled = fillTemplate(tpl.body, ctx);
+  out.appendChild(makeCopyableBlock(bodyFilled, tpl.label));
+}
+
+function generateCaptionOutput() {
+  const ctx = getTplContext();
+  const out = document.getElementById('tplCaptionOutput');
+  out.innerHTML = '';
+  CAPTION_TEMPLATES.forEach(group => {
+    const title = document.createElement('div');
+    title.className = 'tpl-format-title';
+    title.textContent = group.format;
+    out.appendChild(title);
+    const isTwoFloor = group.format.indexOf('Two-floor') > -1;
+    group.lines.forEach((line, i) => {
+      const filled = isTwoFloor ? fillTwoFloorTemplate(line, ctx) : fillTemplate(line, ctx);
+      out.appendChild(makeCopyableBlock(filled, 'Option ' + (i + 1)));
+    });
+  });
+}
+
+function renderCarouselIdeas() {
+  const filterEl = document.getElementById('tplCarouselFilter');
+  const filter = filterEl ? filterEl.value.trim().toLowerCase() : '';
+  const out = document.getElementById('tplCarouselOutput');
+  if (!out) return;
+  out.innerHTML = '';
+  CAROUSEL_IDEAS.forEach(group => {
+    const pillarMatches = group.pillar.toLowerCase().includes(filter);
+    const matchingIdeas = filter && !pillarMatches
+      ? group.ideas.filter(idea => idea.toLowerCase().includes(filter))
+      : group.ideas;
+    if (filter && !pillarMatches && matchingIdeas.length === 0) return;
+
+    const title = document.createElement('div');
+    title.className = 'tpl-pillar-title';
+    title.textContent = group.pillar + ' (' + matchingIdeas.length + ')';
+    out.appendChild(title);
+
+    matchingIdeas.forEach(idea => {
+      const row = document.createElement('div');
+      row.className = 'tpl-idea-row';
+      const text = document.createElement('span');
+      text.textContent = idea;
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'ot-mini-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.onclick = () => copyText(idea, copyBtn);
+      row.appendChild(text);
+      row.appendChild(copyBtn);
+      out.appendChild(row);
+    });
+  });
+  if (!out.innerHTML) {
+    out.innerHTML = '<div class="ot-empty">No ideas match that search</div>';
+  }
+}
+
+function initTemplatesSection() {
+  document.getElementById('otTabPipeline').addEventListener('click', () => switchOutreachSubView('pipeline'));
+  document.getElementById('otTabTemplates').addEventListener('click', () => switchOutreachSubView('templates'));
+  document.getElementById('tplBrandSelect').addEventListener('change', onTplBrandSelectChange);
+  document.getElementById('tplGeneratePitchBtn').addEventListener('click', generatePitchOutput);
+  document.getElementById('tplGenerateCaptionsBtn').addEventListener('click', generateCaptionOutput);
+  document.getElementById('tplCarouselFilter').addEventListener('input', renderCarouselIdeas);
+  // Seed both output panels once so the section isn't empty on first visit
+  generatePitchOutput();
+  generateCaptionOutput();
+  renderCarouselIdeas();
 }
 
 function saveBrandForm() {
@@ -2603,6 +3057,7 @@ renderNewClipDateRow();
 loadTheme();
 loadClips();
 loadBrands();
+initTemplatesSection();
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') { loadClips(); loadBrands(); }
