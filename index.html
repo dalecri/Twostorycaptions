@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TwoStoryCaptions">
-<meta name="theme-color" content="#6E1E3A">
+<meta name="theme-color" content="#274F8B">
 <title>TwoStoryCaptions</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1257,7 +1257,6 @@ const STATUS_LABELS = { idea:'Idea', filmed:'Filmed', captioned:'Captioned', sch
 const TONES = ['Deadpan nature-doc', 'Funny', 'Educational', 'Meme-style', 'Relatable', 'Multi-cat tie-in', 'Wholesome'];
 const PLATFORMS = ['Instagram', 'TikTok', 'Both'];
 const VIEW_META = {
-  log: { label: 'Log view', icon: '📋' },
   grid: { label: 'Grid view', icon: '▦' },
   calendar: { label: 'Calendar view', icon: '📅' },
   outreach: { label: 'Outreach view', icon: '🤝' }
@@ -1268,7 +1267,7 @@ let loadingCaptions = {};
 let newClipTones = ['Deadpan nature-doc'];
 let currentView = 'grid';
 let calMonthOffset = 0;
-let currentTheme = 'berry';
+let currentTheme = 'nautical';
 let isOfflinePreview = false;
 let editingDateIds = new Set();
 let collapsedCaptionIds = new Set();
@@ -1369,46 +1368,6 @@ const THEMES = {
       '--moss': '#25533F', '--moss-dark': '#173626', '--rust': '#8C6A2F', '--line': '#CFE0AE',
       '--stamp-idea': '#6B8067', '--stamp-filmed': '#4C7A50', '--stamp-captioned': '#9C8A3F',
       '--stamp-scheduled': '#3F6B7A', '--stamp-posted': '#173626', '--spark': '#B5504F', '--spark-dark': '#8F3D3C'
-    }
-  },
-  berryDark: {
-    label: 'Midnight Berry',
-    swatches: ['#170D13', '#D98CB5'],
-    vars: {
-      '--paper': '#170D13', '--paper-light': '#221420', '--ink': '#F2DCE8', '--ink-soft': '#B98BA0',
-      '--moss': '#D98CB5', '--moss-dark': '#B5678F', '--rust': '#E0A5B8', '--line': '#3A2230',
-      '--stamp-idea': '#9C7A88', '--stamp-filmed': '#B98CAB', '--stamp-captioned': '#D1A35A',
-      '--stamp-scheduled': '#8A7AB9', '--stamp-posted': '#6E4D63', '--spark': '#E8B054', '--spark-dark': '#C4913C'
-    }
-  },
-  citrusDark: {
-    label: 'Midnight Citrus',
-    swatches: ['#160F06', '#E08A54'],
-    vars: {
-      '--paper': '#160F06', '--paper-light': '#221808', '--ink': '#F5E3C8', '--ink-soft': '#C39B62',
-      '--moss': '#E08A54', '--moss-dark': '#B96B3C', '--rust': '#D9603F', '--line': '#3A2712',
-      '--stamp-idea': '#B5915C', '--stamp-filmed': '#D98A4A', '--stamp-captioned': '#E8B054',
-      '--stamp-scheduled': '#8A9B6A', '--stamp-posted': '#8F5A2E', '--spark': '#5FA89C', '--spark-dark': '#3F8074'
-    }
-  },
-  nauticalDark: {
-    label: 'Midnight Nautical',
-    swatches: ['#0A121D', '#4E7FC7'],
-    vars: {
-      '--paper': '#0A121D', '--paper-light': '#121D2C', '--ink': '#DCE7F5', '--ink-soft': '#7C9AC0',
-      '--moss': '#4E7FC7', '--moss-dark': '#3A5F99', '--rust': '#C77A5F', '--line': '#223349',
-      '--stamp-idea': '#6E8DAE', '--stamp-filmed': '#5083B0', '--stamp-captioned': '#C79A54',
-      '--stamp-scheduled': '#4E7FC7', '--stamp-posted': '#2C4A70', '--spark': '#E0AE54', '--spark-dark': '#BD8C3A'
-    }
-  },
-  forestDark: {
-    label: 'Midnight Forest',
-    swatches: ['#0C160F', '#4E9463'],
-    vars: {
-      '--paper': '#0C160F', '--paper-light': '#142016', '--ink': '#DCE9DC', '--ink-soft': '#7FA085',
-      '--moss': '#4E9463', '--moss-dark': '#356B45', '--rust': '#B5703A', '--line': '#233323',
-      '--stamp-idea': '#7FA085', '--stamp-filmed': '#4E9463', '--stamp-captioned': '#C7A054',
-      '--stamp-scheduled': '#4A8A94', '--stamp-posted': '#2F5C3A', '--spark': '#C76B5A', '--spark-dark': '#A1533F'
     }
   }
 };
@@ -1576,7 +1535,7 @@ function toggleTone(clipId, tone) {
   const idx = clip.selectedTones.indexOf(tone);
   if (idx > -1) clip.selectedTones.splice(idx, 1);
   else clip.selectedTones.push(tone);
-  saveClips();
+  saveClips(clipId);
   render();
 }
 
@@ -1584,7 +1543,7 @@ function setPlatform(clipId, platform) {
   const clip = clips.find(c => c.id === clipId);
   if (!clip) return;
   clip.platform = platform;
-  saveClips();
+  saveClips(clipId);
   render();
 }
 
@@ -1641,9 +1600,11 @@ const NETWORK_HINT = isLikelyArtifactPreview()
   : ' — check your connection';
 
 let isLoadingClips = false;
+let pendingClipSaves = 0;
 
 async function loadClips() {
   if (isLoadingClips) return;
+  if (pendingClipSaves > 0) return; // don't clobber local changes that are still being saved
   isLoadingClips = true;
   const hadDataBefore = clips.length > 0;
   setSyncStatus('Syncing…');
@@ -1662,16 +1623,29 @@ async function loadClips() {
   render();
 }
 
-async function saveClips() {
-  if (!clips.length) return;
+async function saveClips(clipId) {
+  if (!clips.length) return true;
+  pendingClipSaves++;
   try {
     const rows = clips.map(clipToRow);
     const { error } = await sb.from('ttt_clips').upsert(rows, { onConflict: 'id' });
     if (error) throw error;
     setSyncStatus('Synced ✓');
+    if (clipId) {
+      const c = clips.find(x => x.id === clipId);
+      if (c) c.unsynced = false;
+    }
+    return true;
   } catch (e) {
     console.error('Save error', e);
     setSyncStatus('Sync failed' + NETWORK_HINT, true);
+    if (clipId) {
+      const c = clips.find(x => x.id === clipId);
+      if (c) c.unsynced = true;
+    }
+    return false;
+  } finally {
+    pendingClipSaves--;
   }
 }
 
@@ -1716,9 +1690,11 @@ function brandToRow(b) {
 }
 
 let isLoadingBrands = false;
+let pendingBrandSaves = 0;
 
 async function loadBrands() {
   if (isLoadingBrands) return;
+  if (pendingBrandSaves > 0) return;
   isLoadingBrands = true;
   try {
     const { data, error } = await sb.from('ttt_brands').select('*').order('created_at', { ascending: true });
@@ -1740,13 +1716,18 @@ async function loadBrands() {
 }
 
 async function saveBrands() {
-  if (!brands.length) return;
+  if (!brands.length) return true;
+  pendingBrandSaves++;
   try {
     const rows = brands.map(brandToRow);
     const { error } = await sb.from('ttt_brands').upsert(rows, { onConflict: 'id' });
     if (error) throw error;
+    return true;
   } catch (e) {
     console.error('Brand save error:', (e && e.message) || e);
+    return false;
+  } finally {
+    pendingBrandSaves--;
   }
 }
 
@@ -1798,7 +1779,7 @@ function closeEntrySheet() {
 
 function updateStatus(id, status) {
   const c = clips.find(c => c.id === id);
-  if (c) { c.status = status; saveClips(); render(); }
+  if (c) { c.status = status; saveClips(id); render(); }
 }
 
 function setScheduledDate(id, dateStr) {
@@ -1806,7 +1787,7 @@ function setScheduledDate(id, dateStr) {
   if (!c) return;
   c.scheduledDate = dateStr;
   if (dateStr && c.status !== 'posted' && c.status !== 'scheduled') c.status = 'scheduled';
-  saveClips();
+  saveClips(id);
   render();
 }
 
@@ -1836,14 +1817,14 @@ async function generateCaptions(id) {
 
   const platform = clip.platform || 'Both';
   const platformGuide = {
-    'Instagram': 'Optimize for Instagram (Reels/carousel). Hashtags: 12-15 tags, a mix of broad high-volume cat/pet tags and mid-size niche tags (breed-specific, cat-humor, cat-behavior communities) to maximize discoverability for a growing account. Caption can be slightly longer (1-3 sentences).',
-    'TikTok': 'Optimize for TikTok. Hashtags: 4-6 tags only, favor currently high-traffic broad tags (#fyp-style reach tags, #cats, #catsoftiktok, #catbehavior) over niche ones — TikTok discovery leans on fewer, broader tags plus the algorithm, not hashtag walls. Captions should be punchier and shorter, built to be read in under 2 seconds.',
-    'Both': 'Write for cross-posting to Instagram and TikTok. Hashtags: 8-10 tags, a balanced mix of broad reach tags and a couple of niche ones that work on either platform. Keep captions short enough to work as an on-screen TikTok caption but complete enough to stand alone on Instagram.'
+    'Instagram': 'Optimize for Instagram (Reels/carousel). Caption can be slightly longer (1-3 sentences).',
+    'TikTok': 'Optimize for TikTok. Captions should be punchier and shorter, built to be read in under 2 seconds.',
+    'Both': 'Write for cross-posting to Instagram and TikTok. Keep captions short enough to work as an on-screen TikTok caption but complete enough to stand alone on Instagram.'
   };
 
   const systemPrompt = `You write social captions for a cat content account. The account features four cats: Cali and Neo (domestic shorthairs, downstairs territory) and Ramses (Savannah) and Diego (Bengal, upstairs territory).
 
-Critical rule: never include the account's own name or handle anywhere in the hook, captions, or hashtags. The account is small and growing, so its own name has no search reach — do not waste a hashtag or caption line on it. Every hashtag must be a real, widely-searched tag relevant to cats, pets, the specific breeds involved, or cat humor/behavior — chosen purely to maximize discoverability for people who don't yet follow the account.
+Critical rule: never include the account's own name or handle anywhere in the hook, captions, or hashtags. The account is small and growing, so its own name has no search reach — do not waste a hashtag on it. Hashtags: exactly 3, the highest-value, broadest-reach tags for cats, pets, or the specific breeds involved — chosen purely to maximize discoverability for people who don't yet follow the account.
 
 Platform: ${platform}
 ${platformGuide[platform]}
@@ -1857,9 +1838,9 @@ Respond ONLY with valid JSON, no markdown fences, no preamble, in this exact sha
 {
   "hook": "a short on-screen text overlay for the first 1-2 seconds, matching the dominant tone",
   "captions": ["option 1", "option 2", "option 3"],
-  "hashtags": "#tag1 #tag2 #tag3 #tag4 #tag5"
+  "hashtags": "#tag1 #tag2 #tag3"
 }
-Each caption should be 1-3 sentences. Label-free — just the caption text itself.`;
+Each caption should be 1-3 sentences. Label-free — just the caption text itself. Hashtags must be exactly 3, space-separated.`;
 
   try {
     const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-captions`, {
@@ -1878,14 +1859,14 @@ Each caption should be 1-3 sentences. Label-free — just the caption text itsel
     clip.captions = parsed;
     clip.captionTones = tones.length > 1 ? tones : [];
     if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
-    saveClips();
+    await saveClips(clip.id);
   } catch (e) {
     console.error('Caption generation failed', e);
     if (isLikelyArtifactPreview()) {
       clip.captions = buildPlaceholderCaptions(clip, tones, platform);
       clip.captionTones = tones.length > 1 ? tones : [];
       if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
-      saveClips();
+      await saveClips(clip.id);
     } else {
       clip.captions = { hook: '', captions: ['Could not generate captions' + NETWORK_HINT + '.'], hashtags: '' };
     }
@@ -1908,9 +1889,9 @@ function buildPlaceholderCaptions(clip, tones, platform) {
   while (list.length < 3) list.push(list[0]);
 
   const hashtagsByPlatform = {
-    'Instagram': '#catsofinstagram #catbehavior #bengalcat #savannahcat #catcontent #petsofinstagram #catlovers #catmom #indoorcat #catlife',
-    'TikTok': '#catsoftiktok #fyp #cats #catbehavior',
-    'Both': '#catsofinstagram #catsoftiktok #catbehavior #petcontent #catlovers #fyp #bengalcat #savannahcat'
+    'Instagram': '#catsofinstagram #catbehavior #bengalcat',
+    'TikTok': '#catsoftiktok #fyp #cats',
+    'Both': '#catsofinstagram #catsoftiktok #catbehavior'
   };
 
   return {
@@ -2216,7 +2197,7 @@ function buildFullCard(clip, forceExpanded) {
   linkInput.value = clip.videoLink || '';
   linkInput.onchange = () => {
     clip.videoLink = linkInput.value.trim();
-    saveClips();
+    saveClips(clip.id);
     refreshOpenModal();
   };
   linkRow.appendChild(linkInput);
@@ -2261,6 +2242,22 @@ function buildFullCard(clip, forceExpanded) {
 
   card.appendChild(bottomRow);
 
+  if (clip.unsynced) {
+    const warn = document.createElement('div');
+    warn.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding:8px 12px; border:1px solid var(--rust); border-radius:10px; background:color-mix(in srgb, var(--rust) 10%, transparent);';
+    const warnText = document.createElement('span');
+    warnText.style.cssText = 'font-family:\'IBM Plex Mono\',monospace; font-size:10.5px; color:var(--rust);';
+    warnText.textContent = '⚠ Not saved to the cloud yet';
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'ghost';
+    retryBtn.style.cssText = 'padding:5px 10px; font-size:10px;';
+    retryBtn.textContent = 'Retry';
+    retryBtn.onclick = async () => { await saveClips(clip.id); refreshOpenModal(); render(); };
+    warn.appendChild(warnText);
+    warn.appendChild(retryBtn);
+    card.appendChild(warn);
+  }
+
   if (clip.captions) {
     const isCollapsed = collapsedCaptionIds.has(clip.id);
     const toggleBtn = document.createElement('button');
@@ -2284,6 +2281,7 @@ function buildFullCard(clip, forceExpanded) {
     }
 
     const usedTones = clip.captionTones || [];
+    const hashtags = clip.captions.hashtags || '';
     (clip.captions.captions || []).forEach((cap, i) => {
       const optDiv = document.createElement('div');
       optDiv.className = 'caption-opt';
@@ -2294,8 +2292,8 @@ function buildFullCard(clip, forceExpanded) {
       tag.textContent = usedTones[i] ? usedTones[i] : 'Option ' + (i+1);
       const copyBtn = document.createElement('button');
       copyBtn.className = 'copy-btn';
-      copyBtn.textContent = 'Copy';
-      copyBtn.onclick = () => copyText(cap, copyBtn);
+      copyBtn.textContent = 'Copy with tags';
+      copyBtn.onclick = () => copyText(hashtags ? (cap + '\n\n' + hashtags) : cap, copyBtn);
       topRow.appendChild(tag);
       topRow.appendChild(copyBtn);
       optDiv.appendChild(topRow);
@@ -2305,19 +2303,11 @@ function buildFullCard(clip, forceExpanded) {
       box.appendChild(optDiv);
     });
 
-    if (clip.captions.hashtags) {
-      const hashWrap = document.createElement('div');
-      hashWrap.className = 'hashtags-wrap';
+    if (hashtags) {
       const hashDiv = document.createElement('div');
       hashDiv.className = 'hashtags';
-      hashDiv.textContent = clip.captions.hashtags;
-      const hashCopyBtn = document.createElement('button');
-      hashCopyBtn.className = 'copy-btn';
-      hashCopyBtn.textContent = 'Copy';
-      hashCopyBtn.onclick = () => copyText(clip.captions.hashtags, hashCopyBtn);
-      hashWrap.appendChild(hashDiv);
-      hashWrap.appendChild(hashCopyBtn);
-      box.appendChild(hashWrap);
+      hashDiv.textContent = hashtags + '  (copied automatically with each caption above)';
+      box.appendChild(hashDiv);
     }
 
     card.appendChild(box);
@@ -2363,36 +2353,6 @@ function buildGridTile(clip) {
   return tile;
 }
 
-function buildNoteRow(clip) {
-  const row = document.createElement('div');
-  row.className = 'note-row';
-  row.setAttribute('data-highlight-id', clip.id);
-
-  const dot = document.createElement('span');
-  dot.className = 'note-dot ' + clip.status;
-  row.appendChild(dot);
-
-  const title = document.createElement('span');
-  title.className = 'note-title';
-  title.textContent = (clip.captions && clip.captions.captions && clip.captions.captions[0]) || clip.desc;
-  row.appendChild(title);
-
-  if (clip.videoLink) {
-    const linkIcon = document.createElement('span');
-    linkIcon.className = 'note-link-icon';
-    linkIcon.textContent = '🔗';
-    row.appendChild(linkIcon);
-  }
-
-  const chevron = document.createElement('span');
-  chevron.className = 'note-chevron';
-  chevron.textContent = '›';
-  row.appendChild(chevron);
-
-  row.onclick = () => openCardModal(clip.id);
-  return row;
-}
-
 function openCardModal(id) {
   const overlay = document.getElementById('cardModalOverlay');
   const box = document.getElementById('cardModalBox');
@@ -2436,7 +2396,7 @@ function render() {
 
   const toggle = document.getElementById('viewToggle');
   toggle.innerHTML = '';
-  ['log','grid','calendar','outreach'].forEach(v => {
+  ['grid','calendar','outreach'].forEach(v => {
     const btn = document.createElement('button');
     btn.textContent = VIEW_META[v].icon;
     btn.title = VIEW_META[v].label;
@@ -2457,8 +2417,8 @@ function render() {
     return;
   }
 
-  const showList = currentView === 'log' || currentView === 'grid';
-  document.getElementById('cardList').style.display = showList ? (currentView === 'grid' ? 'grid' : 'block') : 'none';
+  const showList = currentView === 'grid';
+  document.getElementById('cardList').style.display = showList ? 'grid' : 'none';
   document.getElementById('calendarView').style.display = currentView === 'calendar' ? 'block' : 'none';
   document.getElementById('filterRow').style.display = showList ? 'flex' : 'none';
 
@@ -2491,10 +2451,7 @@ function render() {
   const list = document.getElementById('cardList');
   list.innerHTML = '';
   const filtered = activeFilter === 'all' ? clips : clips.filter(c => c.status === activeFilter);
-
-  if (currentView === 'grid') list.className = 'cardlist-grid';
-  else if (currentView === 'log' && mobile) list.className = 'note-list';
-  else list.className = '';
+  list.className = 'cardlist-grid';
 
   if (filtered.length === 0) {
     list.innerHTML = isOfflinePreview
@@ -2502,11 +2459,7 @@ function render() {
       : '<div class="empty-state">No captions logged yet. The field is quiet.</div>';
   } else {
     filtered.forEach(clip => {
-      let node;
-      if (currentView === 'grid') node = buildGridTile(clip);
-      else if (currentView === 'log' && mobile) node = buildNoteRow(clip);
-      else node = buildFullCard(clip);
-      list.appendChild(node);
+      list.appendChild(buildGridTile(clip));
     });
   }
 
@@ -2519,10 +2472,10 @@ function renderBottomTabs() {
   const bar = document.getElementById('bottomTabBar');
   if (!bar) return;
   bar.innerHTML = '';
-  ['log','grid','calendar','outreach'].forEach(v => {
+  ['grid','calendar','outreach'].forEach(v => {
     const btn = document.createElement('button');
     btn.className = 'bottom-tab' + (currentView === v ? ' active' : '');
-    const labels = { log: 'Log', grid: 'Grid', calendar: 'Calendar', outreach: 'Brands' };
+    const labels = { grid: 'Captions', calendar: 'Calendar', outreach: 'Brands' };
     btn.innerHTML = '<span class="bottom-tab-icon">' + VIEW_META[v].icon + '</span><span class="bottom-tab-label">' + labels[v] + '</span>';
     btn.onclick = () => { currentView = v; render(); };
     bar.appendChild(btn);
@@ -2624,13 +2577,9 @@ document.getElementById('otCancelBtn').addEventListener('click', () => {
 document.getElementById('otSaveBtn').addEventListener('click', saveBrandForm);
 
 function loadTheme() {
-  let saved = 'berry';
-  try { saved = localStorage.getItem('ttt-theme') || 'berry'; } catch (e) {}
-  applyTheme(THEMES[saved] ? saved : 'berry', true);
-}
-
-if (window.matchMedia('(max-width: 600px)').matches) {
-  currentView = 'log';
+  let saved = 'nautical';
+  try { saved = localStorage.getItem('ttt-theme') || 'nautical'; } catch (e) {}
+  applyTheme(THEMES[saved] ? saved : 'nautical', true);
 }
 
 renderNewClipTones();
