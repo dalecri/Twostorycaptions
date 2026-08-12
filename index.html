@@ -100,7 +100,7 @@
     margin-bottom: 10px;
     resize: vertical;
   }
-  input.app-input, .entry-form input[type="url"] {
+  input.app-input, select.app-input, .entry-form input[type="url"] {
     width: 100%;
     font-family: inherit;
     font-size: 15px;
@@ -207,7 +207,10 @@
   .date-pill-clear:hover { opacity: 1; background: transparent; transform: none; }
 
   /* ===== Minimal dropdown filter ===== */
-  .filter-row { margin-bottom: 18px; }
+  .filters-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+  .filter-row { margin-bottom: 0; }
+  .filters-bar-select { width: auto; min-width: 130px; }
+  .filters-bar-search { width: auto; flex: 1; min-width: 160px; }
   #filterSelect {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
@@ -799,6 +802,21 @@
   .ot-card-cat { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-soft); margin-top: 3px; }
   .ot-card-notes { font-size: 12px; color: var(--ink-soft); margin-top: 7px; line-height: 1.4; }
   .ot-card-date { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-soft); margin-top: 7px; }
+  .ot-stale-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    color: var(--rust);
+    margin-top: 8px;
+    padding: 6px 8px;
+    border: 1px dashed var(--rust);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .ot-stale-badge .ot-mini-btn { border-color: var(--rust); color: var(--rust); }
+  .ot-stale-badge .ot-mini-btn:hover { color: #fff; background: var(--rust); }
   .ot-card-actions { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
   .ot-mini-btn {
     background: var(--paper);
@@ -1126,15 +1144,18 @@
     }
     .bottom-tab.active:hover { background: color-mix(in srgb, var(--moss) 10%, transparent); }
 
-    .filter-row {
+    .filters-bar {
       position: sticky;
       top: 0;
       background: var(--paper);
       z-index: 20;
       padding: 8px 12px 10px;
       margin: 0 -12px 16px;
+      flex-direction: column;
+      align-items: stretch;
     }
-    #filterSelect { width: 100%; min-height: 40px; }
+    .filter-row { width: 100%; }
+    #filterSelect, .filters-bar-select, .filters-bar-search { width: 100%; min-height: 40px; }
 
     .card { padding: 18px; }
     .card-top { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -1220,6 +1241,11 @@
     </div>
 
     <div class="field-group">
+      <div class="field-label">Brand (optional)</div>
+      <select id="newClipBrandSelect" class="app-input"><option value="">— none —</option></select>
+    </div>
+
+    <div class="field-group">
       <div class="field-label">Date</div>
       <div class="date-pill-row" id="newClipDateRow"></div>
     </div>
@@ -1236,7 +1262,11 @@
 
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
-  <div class="filter-row" id="filterRow"></div>
+  <div class="filters-bar" id="filtersBar">
+    <div class="filter-row" id="filterRow"></div>
+    <select id="brandFilterSelect" class="app-input filters-bar-select"><option value="">All brands</option></select>
+    <input id="searchInput" class="app-input filters-bar-search" placeholder="🔍 Search captions...">
+  </div>
 
   <div class="view-toggle" id="viewToggle"></div>
 
@@ -1423,6 +1453,8 @@ const VIEW_META = {
 };
 let clips = [];
 let activeFilter = 'all';
+let activeBrandFilter = '';
+let searchQuery = '';
 let loadingCaptions = {};
 let newClipTones = ['Deadpan nature-doc'];
 let currentView = 'grid';
@@ -1886,7 +1918,8 @@ function rowToClip(row) {
     platform: row.platform || 'Both',
     captionTones: safeParseJSON(row.caption_tones, []),
     captions: safeParseJSON(row.captions, null),
-    videoLink: row.video_link || ''
+    videoLink: row.video_link || '',
+    brandId: row.brand_id || ''
   };
 }
 
@@ -1905,6 +1938,7 @@ function clipToRow(clip) {
     caption_tones: JSON.stringify(clip.captionTones || []),
     captions: clip.captions ? JSON.stringify(clip.captions) : null,
     video_link: clip.videoLink || null,
+    brand_id: clip.brandId || null,
     updated_at: new Date().toISOString()
   };
 }
@@ -1987,7 +2021,8 @@ function rowToBrand(row) {
     contact: row.contact || '',
     product: row.product || '',
     date: row.date_contacted || '',
-    notes: row.notes || ''
+    notes: row.notes || '',
+    updatedAt: row.updated_at || row.created_at || null
   };
 }
 
@@ -2028,6 +2063,7 @@ async function loadBrands() {
     console.error('Brand load error:', (e && e.message) || e);
   }
   isLoadingBrands = false;
+  refreshAllBrandDropdowns();
   if (currentView === 'outreach') renderOutreach();
 }
 
@@ -2061,6 +2097,7 @@ function addClip() {
   if (!desc) return;
   const dateVal = newClipDate;
   const linkVal = document.getElementById('newClipLinkInput').value.trim();
+  const brandVal = document.getElementById('newClipBrandSelect').value;
   const newId = uid();
   clips.unshift({
     id: newId,
@@ -2071,10 +2108,12 @@ function addClip() {
     selectedTones: newClipTones.length ? [...newClipTones] : ['Deadpan nature-doc'],
     platform: newClipPlatform,
     scheduledDate: dateVal || '',
-    videoLink: linkVal || ''
+    videoLink: linkVal || '',
+    brandId: brandVal || ''
   });
   document.getElementById('descInput').value = '';
   document.getElementById('newClipLinkInput').value = '';
+  document.getElementById('newClipBrandSelect').value = '';
   newClipDate = '';
   newClipDateEditing = false;
   renderNewClipDateRow();
@@ -2273,16 +2312,21 @@ function renderOutreach() {
   renderOutreachStats();
   renderQuickAddBrands();
   renderBrandBoard();
-  refreshTplBrandOptions();
+  refreshAllBrandDropdowns();
 }
 
-function refreshTplBrandOptions() {
-  const select = document.getElementById('tplBrandSelect');
+function fillBrandOptions(select, includeNoneLabel) {
   if (!select) return;
   const prevValue = select.value;
-  select.innerHTML = '<option value="">— none / custom —</option>' +
-    brands.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  select.innerHTML = `<option value="">${includeNoneLabel}</option>` +
+    brands.filter(b => b.category !== 'Pinned').map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
   if (brands.some(b => b.id === prevValue)) select.value = prevValue;
+}
+
+function refreshAllBrandDropdowns() {
+  fillBrandOptions(document.getElementById('tplBrandSelect'), '— none / custom —');
+  fillBrandOptions(document.getElementById('newClipBrandSelect'), '— none —');
+  fillBrandOptions(document.getElementById('brandFilterSelect'), 'All brands');
 }
 
 function renderOutreachStats() {
@@ -2335,6 +2379,7 @@ function renderBrandBoard() {
 
   board.querySelectorAll('[data-brand-edit]').forEach(b => b.addEventListener('click', () => openBrandEdit(b.dataset.brandEdit)));
   board.querySelectorAll('[data-brand-del]').forEach(b => b.addEventListener('click', () => deleteBrand(b.dataset.brandDel)));
+  board.querySelectorAll('[data-brand-followup]').forEach(b => b.addEventListener('click', () => goToFollowUpPitch(b.dataset.brandFollowup)));
   board.querySelectorAll('[data-brand-move]').forEach(sel => {
     sel.addEventListener('change', (e) => {
       const b = brands.find(x => x.id === sel.dataset.brandMove);
@@ -2343,8 +2388,17 @@ function renderBrandBoard() {
   });
 }
 
+function daysSince(isoDate) {
+  if (!isoDate) return null;
+  const diff = Date.now() - new Date(isoDate).getTime();
+  return Math.floor(diff / 86400000);
+}
+
 function brandCardHtml(b) {
   const statusOptions = BRAND_STATUSES.map(c => `<option value="${c.key}" ${c.key === b.status ? 'selected' : ''}>${c.label}</option>`).join('');
+  const linkedCount = clips.filter(c => c.brandId === b.id).length;
+  const idle = b.status === 'waiting' ? daysSince(b.updatedAt) : null;
+  const isStale = idle !== null && idle >= 14;
   return `
     <div class="ot-card">
       <div class="ot-card-name">${escapeHtml(b.name)}</div>
@@ -2352,6 +2406,8 @@ function brandCardHtml(b) {
       ${b.product ? `<div class="ot-card-notes">Uses: ${escapeHtml(b.product)}</div>` : ''}
       ${b.notes ? `<div class="ot-card-notes">${escapeHtml(b.notes)}</div>` : ''}
       ${b.date ? `<div class="ot-card-date">${escapeHtml(b.date)}</div>` : ''}
+      ${linkedCount ? `<div class="ot-card-date">🔗 ${linkedCount} caption${linkedCount === 1 ? '' : 's'} linked</div>` : ''}
+      ${isStale ? `<div class="ot-stale-badge">⏰ ${idle} days since last contact — <button type="button" class="ot-mini-btn" data-brand-followup="${b.id}">Draft follow-up</button></div>` : ''}
       <div class="ot-card-actions">
         <select class="ot-mini-select" data-brand-move="${b.id}">${statusOptions}</select>
         <button type="button" class="ot-mini-btn" data-brand-edit="${b.id}">Edit</button>
@@ -2637,6 +2693,32 @@ function buildFullCard(clip, forceExpanded) {
   });
   card.appendChild(toneRow);
 
+  const brandLabel = document.createElement('div');
+  brandLabel.className = 'field-label';
+  brandLabel.style.marginTop = '16px';
+  brandLabel.textContent = 'Brand (optional)';
+  card.appendChild(brandLabel);
+
+  const brandSelect = document.createElement('select');
+  brandSelect.className = 'app-input';
+  const noneOpt = document.createElement('option');
+  noneOpt.value = '';
+  noneOpt.textContent = '— none —';
+  brandSelect.appendChild(noneOpt);
+  brands.filter(b => b.category !== 'Pinned').forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.id;
+    opt.textContent = b.name;
+    if (clip.brandId === b.id) opt.selected = true;
+    brandSelect.appendChild(opt);
+  });
+  brandSelect.onchange = () => {
+    clip.brandId = brandSelect.value;
+    saveClips(clip.id);
+    refreshOpenModal();
+  };
+  card.appendChild(brandSelect);
+
   const dateLabel = document.createElement('div');
   dateLabel.className = 'field-label';
   dateLabel.style.marginTop = '16px';
@@ -2800,6 +2882,16 @@ function buildGridTile(clip) {
   desc.textContent = clip.desc;
   tile.appendChild(desc);
 
+  if (clip.brandId) {
+    const b = brands.find(x => x.id === clip.brandId);
+    if (b) {
+      const brandTag = document.createElement('div');
+      brandTag.style.cssText = 'font-family:\'IBM Plex Mono\',monospace; font-size:9.5px; color:var(--moss-dark); margin-top:-4px; margin-bottom:6px;';
+      brandTag.textContent = '🏷 ' + b.name;
+      tile.insertBefore(brandTag, desc.nextSibling);
+    }
+  }
+
   const footer = document.createElement('div');
   footer.className = 'grid-tile-footer';
   let footerText;
@@ -2877,7 +2969,7 @@ function render() {
   if (currentView === 'outreach') {
     document.getElementById('cardList').style.display = 'none';
     document.getElementById('calendarView').style.display = 'none';
-    document.getElementById('filterRow').style.display = 'none';
+    document.getElementById('filtersBar').style.display = 'none';
     renderOutreach();
     return;
   }
@@ -2885,7 +2977,7 @@ function render() {
   const showList = currentView === 'grid';
   document.getElementById('cardList').style.display = showList ? 'grid' : 'none';
   document.getElementById('calendarView').style.display = currentView === 'calendar' ? 'block' : 'none';
-  document.getElementById('filterRow').style.display = showList ? 'flex' : 'none';
+  document.getElementById('filtersBar').style.display = showList ? 'flex' : 'none';
 
   if (currentView === 'calendar') {
     renderCalendar();
@@ -2913,24 +3005,50 @@ function render() {
   select.onchange = () => { activeFilter = select.value; render(); };
   filterRow.appendChild(select);
 
+  renderCardListOnly();
+  document.getElementById('catalogNum').textContent = 'No. ' + String(clips.length).padStart(3, '0');
+  renderTally();
+  refreshOpenModal();
+}
+
+function getFilteredClips() {
+  let list = clips;
+  if (activeFilter !== 'all') list = list.filter(c => c.status === activeFilter);
+  if (activeBrandFilter) list = list.filter(c => c.brandId === activeBrandFilter);
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(c => {
+      if (c.desc && c.desc.toLowerCase().includes(q)) return true;
+      if (c.captions) {
+        if (c.captions.hook && c.captions.hook.toLowerCase().includes(q)) return true;
+        if (Array.isArray(c.captions.captions) && c.captions.captions.some(cap => cap.toLowerCase().includes(q))) return true;
+      }
+      return false;
+    });
+  }
+  return list;
+}
+
+function renderCardListOnly() {
   const list = document.getElementById('cardList');
+  if (!list) return;
   list.innerHTML = '';
-  const filtered = activeFilter === 'all' ? clips : clips.filter(c => c.status === activeFilter);
   list.className = 'cardlist-grid';
+  const filtered = getFilteredClips();
 
   if (filtered.length === 0) {
-    list.innerHTML = isOfflinePreview
-      ? '<div class="empty-state">Preview mode: can\'t reach the cloud database here, so nothing\'s loaded. Add a caption to test the UI — it\'ll stay local to this preview. Your real data is safe and will show up on the deployed site.</div>'
-      : '<div class="empty-state">No captions logged yet. The field is quiet.</div>';
+    if (isOfflinePreview) {
+      list.innerHTML = '<div class="empty-state">Preview mode: can\'t reach the cloud database here, so nothing\'s loaded. Add a caption to test the UI — it\'ll stay local to this preview. Your real data is safe and will show up on the deployed site.</div>';
+    } else if (searchQuery || activeBrandFilter) {
+      list.innerHTML = '<div class="empty-state">Nothing matches that search/filter.</div>';
+    } else {
+      list.innerHTML = '<div class="empty-state">No captions logged yet. The field is quiet.</div>';
+    }
   } else {
     filtered.forEach(clip => {
       list.appendChild(buildGridTile(clip));
     });
   }
-
-  document.getElementById('catalogNum').textContent = 'No. ' + String(clips.length).padStart(3, '0');
-  renderTally();
-  refreshOpenModal();
 }
 
 function renderBottomTabs() {
@@ -3054,6 +3172,15 @@ loadTheme();
 loadClips();
 loadBrands();
 initTemplatesSection();
+
+document.getElementById('brandFilterSelect').addEventListener('change', (e) => {
+  activeBrandFilter = e.target.value;
+  renderCardListOnly();
+});
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim();
+  renderCardListOnly();
+});
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') { loadClips(); loadBrands(); }
