@@ -2797,11 +2797,7 @@ function buildGridTile(clip) {
 
   const desc = document.createElement('div');
   desc.className = 'grid-tile-desc';
-  if (clip.captions && clip.captions.captions && clip.captions.captions[0]) {
-    desc.textContent = clip.captions.captions[0];
-  } else {
-    desc.textContent = clip.desc;
-  }
+  desc.textContent = clip.desc;
   tile.appendChild(desc);
 
   const footer = document.createElement('div');
