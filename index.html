@@ -756,7 +756,7 @@
     display: block;
     margin-bottom: 6px;
   }
-  .ot-panel input, .ot-panel select, .ot-panel textarea {
+  .ot-panel input:not([type="checkbox"]), .ot-panel select, .ot-panel textarea {
     width: 100%;
     background: #fff;
     border: 1px solid var(--line);
@@ -861,8 +861,9 @@
   }
   .task-row:last-child { border-bottom: none; }
   .task-checkbox {
-    width: 18px;
-    height: 18px;
+    width: 18px !important;
+    height: 18px !important;
+    flex: 0 0 18px;
     margin-top: 1px;
     flex-shrink: 0;
     accent-color: var(--moss);
