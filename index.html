@@ -547,7 +547,31 @@
   .cal-post.scheduled { border-left-color: var(--stamp-scheduled); }
   .cal-post.captioned { border-left-color: var(--stamp-captioned); }
 
-  .theme-picker { position: relative; }
+  .gcal-embed-wrap { margin-top: 20px; }
+  .gcal-embed-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .gcal-embed-iframe {
+    width: 100%;
+    height: 500px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    display: block;
+  }
+  .gcal-embed-hint {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin-top: 8px;
+  }
+
   .theme-btn {
     display: flex;
     align-items: center;
@@ -565,43 +589,44 @@
   .theme-btn:hover { background: var(--ink); color: var(--paper-light); }
   .icon-only-btn {
     padding: 0;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     justify-content: center;
-    font-size: 15px;
-  }
-  .theme-swatch-dot {
-    width: 12px;
-    height: 12px;
+    font-size: 16px;
     border-radius: 50%;
-    display: inline-block;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.15) inset;
   }
-  .theme-dropdown {
-    display: none;
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    background: var(--paper-light);
-    border: 1px solid var(--ink);
-    width: 250px;
-    z-index: 200;
-    max-height: 320px;
-    overflow-y: auto;
-    box-shadow: 4px 4px 0 rgba(0,0,0,0.08);
+
+  .settings-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 17px;
+    margin: 0 0 18px;
   }
-  .theme-dropdown.open { display: block; }
-  .theme-option {
+  .settings-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .settings-theme-card {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
     cursor: pointer;
-    border-bottom: 1px solid var(--line);
+    background: #fff;
   }
-  .theme-option:last-child { border-bottom: none; }
-  .theme-option:hover { background: var(--paper); }
-  .theme-option.selected { background: var(--paper); font-weight: 600; }
+  .settings-theme-card:hover { border-color: var(--moss); }
+  .settings-theme-card.selected { border-color: var(--moss); background: color-mix(in srgb, var(--moss) 8%, #fff); }
+  .settings-data-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  .settings-hint {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin: 12px 0 0;
+  }
   .theme-swatch-pair {
     display: flex;
     width: 32px;
@@ -1092,12 +1117,13 @@
       display: flex !important;
       flex-direction: column !important;
       min-height: 0 !important;
+      overflow-y: auto !important;
       padding-bottom: calc(56px + env(safe-area-inset-bottom));
     }
     body.view-calendar-full .cal-header { flex: 0 0 auto !important; }
     body.view-calendar-full .cal-grid {
       flex: 1 1 auto !important;
-      min-height: 0 !important;
+      min-height: 320px !important;
       display: grid !important;
     }
 
@@ -1191,6 +1217,7 @@
       bottom: 0;
       background: var(--paper-light);
       border-top: 1px solid var(--line);
+      box-shadow: 0 -3px 12px rgba(0,0,0,0.05);
       z-index: 90;
       padding-bottom: env(safe-area-inset-bottom);
     }
@@ -1200,8 +1227,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 2px;
-      padding: 9px 4px 7px;
+      gap: 3px;
+      min-height: 52px;
+      padding: 6px 4px;
       background: transparent;
       border: none;
       border-radius: 0;
@@ -1209,14 +1237,11 @@
       font-family: 'IBM Plex Mono', monospace;
     }
     .bottom-tab:hover { background: transparent; transform: none; }
-    .bottom-tab-icon { font-size: 18px; }
-    .bottom-tab-label { font-size: 9.5px; letter-spacing: 0.4px; text-transform: uppercase; }
-    .bottom-tab.active {
-      color: var(--moss-dark);
-      background: color-mix(in srgb, var(--moss) 10%, transparent);
-      box-shadow: inset 0 2px 0 var(--moss);
-    }
-    .bottom-tab.active:hover { background: color-mix(in srgb, var(--moss) 10%, transparent); }
+    .bottom-tab-icon { font-size: 20px; line-height: 1; transition: transform 0.15s ease; }
+    .bottom-tab-label { font-size: 9px; letter-spacing: 0.3px; text-transform: uppercase; font-weight: 500; }
+    .bottom-tab.active { color: var(--moss); }
+    .bottom-tab.active .bottom-tab-icon { transform: translateY(-1px) scale(1.08); }
+    .bottom-tab.active:hover { background: transparent; }
 
     .filters-bar {
       position: sticky;
@@ -1250,7 +1275,7 @@
     .captions-box { margin-top: 18px; padding-top: 18px; }
     .caption-opt { font-size: 14.5px; padding: 14px 16px; }
 
-    .theme-dropdown { right: 0; width: min(230px, calc(100vw - 32px)); }
+    .settings-theme-grid { grid-template-columns: 1fr; }
 
     .modal-box { padding: 60px 18px 20px; max-height: 90vh; }
     .modal-box h3 { font-size: 19px; padding-right: 50px; }
@@ -1271,6 +1296,9 @@
     .cal-daynum { font-size: 9.5px; margin-bottom: 2px; }
     .cal-post { font-size: 8.5px; padding: 2px 3px; margin-bottom: 2px; border-left-width: 2px; -webkit-line-clamp: 2; }
 
+    .gcal-embed-wrap { margin: 14px 14px 0; flex-shrink: 0; }
+    .gcal-embed-iframe { height: 320px; }
+
     footer.tally { flex-direction: column; gap: 4px; margin-bottom: 8px; }
   }
 
@@ -1288,17 +1316,39 @@
       <h1>TwoStoryCaptions</h1>
       <p id="syncStatus">Connecting…</p>
     </div>
-    <div style="display:flex; align-items:center; gap:16px;">
+    <div style="display:flex; align-items:center; gap:12px;">
       <div class="catalog-num" id="catalogNum">No. ——</div>
-      <button class="theme-btn icon-only-btn" id="exportBtn" title="Export all data as JSON backup">⬇</button>
-      <button class="theme-btn icon-only-btn" id="importBtn" title="Import / restore from a JSON backup">⬆</button>
-      <input type="file" id="importFileInput" accept="application/json" style="display:none;">
-      <div class="theme-picker">
-        <button class="theme-btn" id="themeBtn"><span class="theme-swatch-dot" id="themeBtnDot"></span> Theme</button>
-        <div class="theme-dropdown" id="themeDropdown"></div>
-      </div>
+      <button class="theme-btn icon-only-btn" id="settingsBtn" title="Settings">⚙</button>
     </div>
   </header>
+
+  <div class="modal-overlay" id="settingsModalOverlay">
+    <div class="modal-box" id="settingsModalBox">
+      <button class="modal-close" id="settingsModalClose">Close</button>
+      <h3 class="settings-title">Settings</h3>
+
+      <div class="field-label" style="margin-top:0;">Theme</div>
+      <div class="settings-theme-grid" id="settingsThemeGrid"></div>
+
+      <div class="field-label" style="margin-top:22px;">Google Calendar (optional)</div>
+      <input id="gcalEmbedInput" class="app-input" placeholder="Paste embed link or full <iframe> code here">
+      <div class="settings-data-row" style="margin-top:10px;">
+        <button id="gcalSaveBtn">Save</button>
+        <button class="ghost" id="gcalClearBtn">Remove</button>
+      </div>
+      <p class="settings-hint">
+        Shows your TwoStoryTails Google Calendar underneath the calendar view here, so you can see carousel entries alongside your captions. The calendar must be set to <strong>public</strong> — go to Google Calendar → Settings → pick the calendar → "Access permissions" → check "Make available to public," then under "Integrate calendar" copy the embed code (or just the link) and paste it above.
+      </p>
+
+      <div class="field-label" style="margin-top:22px;">Data</div>
+      <div class="settings-data-row">
+        <button id="exportBtn">⬇ Export backup</button>
+        <button class="ghost" id="importBtn">⬆ Import backup</button>
+      </div>
+      <p class="settings-hint">Export saves everything — captions, brands, and tasks — as one JSON file. Import merges a backup back in without deleting anything already here.</p>
+      <input type="file" id="importFileInput" accept="application/json" style="display:none;">
+    </div>
+  </div>
 
   <div class="entry-form" id="entryForm">
     <div class="sheet-header">
@@ -1846,19 +1896,19 @@ function applyTheme(name, skipSave) {
   const theme = THEMES[name];
   const root = document.documentElement.style;
   Object.entries(theme.vars).forEach(([k, v]) => root.setProperty(k, v));
-  document.getElementById('themeBtnDot').style.background = theme.swatches[1];
-  renderThemeDropdown();
+  renderSettingsThemeGrid();
   if (!skipSave) {
     try { localStorage.setItem('ttt-theme', name); } catch (e) {}
   }
 }
 
-function renderThemeDropdown() {
-  const dd = document.getElementById('themeDropdown');
-  dd.innerHTML = '';
+function renderSettingsThemeGrid() {
+  const grid = document.getElementById('settingsThemeGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
   Object.entries(THEMES).forEach(([key, theme]) => {
-    const opt = document.createElement('div');
-    opt.className = 'theme-option' + (currentTheme === key ? ' selected' : '');
+    const card = document.createElement('div');
+    card.className = 'settings-theme-card' + (currentTheme === key ? ' selected' : '');
     const pair = document.createElement('div');
     pair.className = 'theme-swatch-pair';
     theme.swatches.forEach(c => {
@@ -1869,19 +1919,74 @@ function renderThemeDropdown() {
     const label = document.createElement('div');
     label.className = 'theme-option-label';
     label.textContent = theme.label;
-    opt.appendChild(pair);
-    opt.appendChild(label);
-    opt.onclick = () => { applyTheme(key); document.getElementById('themeDropdown').classList.remove('open'); };
-    dd.appendChild(opt);
+    card.appendChild(pair);
+    card.appendChild(label);
+    card.onclick = () => applyTheme(key);
+    grid.appendChild(card);
   });
 }
 
-document.getElementById('themeBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  document.getElementById('themeDropdown').classList.toggle('open');
+function openSettingsModal() {
+  document.getElementById('settingsModalOverlay').classList.add('open');
+  renderSettingsThemeGrid();
+  document.getElementById('gcalEmbedInput').value = getGcalEmbedUrl() || '';
+}
+function closeSettingsModal() {
+  document.getElementById('settingsModalOverlay').classList.remove('open');
+}
+document.getElementById('settingsBtn').addEventListener('click', openSettingsModal);
+document.getElementById('settingsModalClose').addEventListener('click', closeSettingsModal);
+document.getElementById('settingsModalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'settingsModalOverlay') closeSettingsModal();
 });
-document.addEventListener('click', () => {
-  document.getElementById('themeDropdown').classList.remove('open');
+
+// ===== Google Calendar embed (Settings) =====
+
+// Found via connected Google Calendar account: calendar named "Cat Content 🐈‍⬛"
+// (described as the TwoStoryTails/Hogaroro content-planning calendar). Used as the
+// default so the calendar view works out of the box — override or remove in Settings.
+const DEFAULT_GCAL_EMBED_URL = 'https://calendar.google.com/calendar/embed?src=238c35d6130f9c00b53ca3e42560263153043379cd409a76a287e7de81f1068a%40group.calendar.google.com&ctz=America%2FNew_York';
+
+function extractGcalSrc(raw) {
+  const trimmed = raw.trim();
+  const iframeMatch = trimmed.match(/src="([^"]+)"/);
+  return iframeMatch ? iframeMatch[1] : trimmed;
+}
+
+function getGcalEmbedUrl() {
+  let stored = null;
+  try { stored = localStorage.getItem('ttt-gcal-embed-url'); } catch (e) {}
+  if (stored === 'none') return '';
+  if (stored) return stored;
+  return DEFAULT_GCAL_EMBED_URL;
+}
+
+function setGcalEmbedUrl(url) {
+  try { localStorage.setItem('ttt-gcal-embed-url', url); } catch (e) {}
+}
+
+function clearGcalEmbedUrl() {
+  try { localStorage.setItem('ttt-gcal-embed-url', 'none'); } catch (e) {}
+}
+
+document.getElementById('gcalSaveBtn').addEventListener('click', () => {
+  const raw = document.getElementById('gcalEmbedInput').value;
+  if (!raw.trim()) { clearGcalEmbedUrl(); if (currentView === 'calendar') renderCalendar(); return; }
+  const src = extractGcalSrc(raw);
+  if (!src.startsWith('https://calendar.google.com/calendar/embed')) {
+    const proceed = confirm("That doesn't look like a standard Google Calendar embed link (it should start with calendar.google.com/calendar/embed). Save it anyway?");
+    if (!proceed) return;
+  }
+  setGcalEmbedUrl(src);
+  document.getElementById('gcalEmbedInput').value = src;
+  if (currentView === 'calendar') renderCalendar();
+  alert('Saved. Switch to the Calendar tab to see it.');
+});
+
+document.getElementById('gcalClearBtn').addEventListener('click', () => {
+  clearGcalEmbedUrl();
+  document.getElementById('gcalEmbedInput').value = '';
+  if (currentView === 'calendar') renderCalendar();
 });
 
 let newClipPlatform = 'Both';
@@ -3447,6 +3552,15 @@ function renderCalendar() {
   const trailing = (7 - (totalCells % 7)) % 7;
   for (let i = 0; i < trailing; i++) html += '<div class="cal-cell empty"></div>';
   html += '</div>';
+
+  const gcalUrl = getGcalEmbedUrl();
+  if (gcalUrl) {
+    html += '<div class="gcal-embed-wrap">';
+    html += '<div class="gcal-embed-label">📅 Cat Content — Google Calendar</div>';
+    html += '<iframe class="gcal-embed-iframe" src="' + gcalUrl.replace(/"/g, '&quot;') + '" style="border:0" loading="lazy"></iframe>';
+    html += '<div class="gcal-embed-hint">Blank or says you need permission? This calendar needs to be set to public — Google Calendar → ⚙ Settings → Cat Content → Access permissions → "Make available to public." Or swap in a different link under Settings → Google Calendar.</div>';
+    html += '</div>';
+  }
 
   const numWeeks = Math.ceil((firstDow + daysInMonth) / 7);
   container.innerHTML = html;
