@@ -561,6 +561,13 @@
     cursor: pointer;
   }
   .theme-btn:hover { background: var(--ink); color: var(--paper-light); }
+  .icon-only-btn {
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    justify-content: center;
+    font-size: 15px;
+  }
   .theme-swatch-dot {
     width: 12px;
     height: 12px;
@@ -815,6 +822,60 @@
   }
   .ot-stale-badge .ot-mini-btn { border-color: var(--rust); color: var(--rust); }
   .ot-stale-badge .ot-mini-btn:hover { color: #fff; background: var(--rust); }
+
+  .task-add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .task-add-row input { flex: 2; min-width: 160px; margin-bottom: 0 !important; }
+  .task-add-row select { flex: 1; min-width: 120px; margin-bottom: 0 !important; }
+  .task-progress {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin: 16px 0 10px;
+  }
+  .task-progress-bar {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--paper);
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .task-progress-fill { height: 100%; background: var(--moss); border-radius: 999px; }
+  .task-group-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--moss-dark);
+    margin: 16px 0 6px;
+  }
+  .task-group-title:first-child { margin-top: 0; }
+  .task-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .task-row:last-child { border-bottom: none; }
+  .task-checkbox {
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    flex-shrink: 0;
+    accent-color: var(--moss);
+    cursor: pointer;
+  }
+  .task-text { flex: 1; font-size: 13.5px; line-height: 1.4; }
+  .task-row.done .task-text { text-decoration: line-through; color: var(--ink-soft); }
+  .task-del-btn {
+    background: transparent;
+    border: none;
+    font-size: 13px;
+    opacity: 0.5;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+  .task-del-btn:hover { opacity: 1; transform: none; }
   .ot-card-actions { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
   .ot-mini-btn {
     background: var(--paper);
@@ -1216,6 +1277,9 @@
     </div>
     <div style="display:flex; align-items:center; gap:16px;">
       <div class="catalog-num" id="catalogNum">No. ——</div>
+      <button class="theme-btn icon-only-btn" id="exportBtn" title="Export all data as JSON backup">⬇</button>
+      <button class="theme-btn icon-only-btn" id="importBtn" title="Import / restore from a JSON backup">⬆</button>
+      <input type="file" id="importFileInput" accept="application/json" style="display:none;">
       <div class="theme-picker">
         <button class="theme-btn" id="themeBtn"><span class="theme-swatch-dot" id="themeBtnDot"></span> Theme</button>
         <div class="theme-dropdown" id="themeDropdown"></div>
@@ -1277,13 +1341,14 @@
     <div class="ot-subnav" id="otSubnav">
       <button type="button" class="ot-subtab active" id="otTabPipeline">Pipeline</button>
       <button type="button" class="ot-subtab" id="otTabTemplates">Templates</button>
+      <button type="button" class="ot-subtab" id="otTabTasks">Tasks</button>
     </div>
 
     <div id="otPipelineSection">
       <div class="ot-stats" id="otStats"></div>
       <div class="ot-toolbar">
         <button id="otOpenForm">+ Add brand</button>
-        <button class="ghost" id="otToggleQuick">Quick-add suggestions</button>
+        <button class="ghost" id="otToggleQuick">Quick-add from Amazon history</button>
       </div>
       <div class="ot-quickadd" id="otQuickadd"></div>
 
@@ -1429,6 +1494,24 @@
         <div id="tplCarouselOutput" style="margin-top:14px;"></div>
       </div>
     </div>
+
+    <div id="otTasksSection" style="display:none;">
+      <div class="ot-panel open">
+        <h3>Outreach checklist</h3>
+        <div class="ot-grid2">
+          <div style="grid-column:1/-1;">
+            <label>New task</label>
+            <div class="task-add-row">
+              <input id="taskInput" placeholder="e.g. Follow up with kin+Kind">
+              <select id="taskBrandSelect"><option value="">General</option></select>
+              <button type="button" id="taskAddBtn">Add</button>
+            </div>
+          </div>
+        </div>
+        <div id="taskProgress" class="task-progress"></div>
+        <div id="taskList"></div>
+      </div>
+    </div>
   </div>
 
   <div class="modal-overlay" id="cardModalOverlay">
@@ -1476,10 +1559,42 @@ const BRAND_STATUSES = [
   { key: 'passed', label: 'Passed' }
 ];
 
-const SUGGESTED_BRANDS = [
-  'FELIWAY', 'kin+Kind', 'Boxie', 'N-Bone', 'Feline Greenies', "Hill's Science Diet",
-  'Purina Pro Plan', 'Silverquine', 'Petsters', 'C.E.T.'
+// Pulled from actual Amazon order history (Rufus purchase summary) — used to power
+// the Quick-add panel with real product + order-date context instead of a blank brand.
+const AMAZON_PURCHASE_HISTORY = [
+  { brand: 'ARM & HAMMER', category: 'Litter', product: 'Clump & Seal Cloud Control Litter (6.35 kg)', orders: 'ordered Aug 2024' },
+  { brand: 'Precious Cat', category: 'Litter', product: 'Cat Attract Training Litter (40 lb)', orders: 'ordered Dec 2024' },
+  { brand: 'Boxie', category: 'Litter', product: 'Unscented Clumping Clay Cat Litter (16 lb)', orders: 'ordered 3x — Dec 2025, Jan 2026, Feb 2026' },
+  { brand: 'ZuHucpts', category: 'Litter box / enclosures', product: 'Stainless Steel Litter Box (Large)', orders: 'ordered Aug 2024' },
+  { brand: 'IKITCHEN', category: 'Litter', product: 'Stainless Steel Cat Litter Tray', orders: 'ordered Jul 2024' },
+  { brand: 'Feandrea', category: 'Litter furniture', product: 'Double Cat Litter Box Enclosure/Furniture', orders: 'ordered Jan 2025' },
+  { brand: 'HCY&WLD', category: 'Litter mats', product: 'Extra Large Cat Litter Mat (45"×26")', orders: 'ordered Sep 2024' },
+  { brand: "Hill's Science Diet", category: 'Food', product: 'Dry Cat Food, Urinary & Hairball Control (15.5 lb)', orders: 'ordered 2x — Nov 2023, Jan 2024' },
+  { brand: 'Purina Pro Plan', category: 'Food', product: 'Urinary Tract Health Cat Food (24-pack)', orders: 'ordered Mar 2024' },
+  { brand: 'Feline Greenies', category: 'Dental treats', product: 'Dental Treats, Chicken & Salmon flavours', orders: '4 orders — May 2024, Jul 2024, Jul 2025, Mar 2024' },
+  { brand: 'N-Bone', category: 'Treats', product: 'Get Naked Furball Relief + Urinary Health Treats', orders: 'ordered Jul 2024' },
+  { brand: 'kin+Kind', category: 'Supplements', product: 'Organic Pumpkin Powder for cats & dogs', orders: 'ordered Jan 2025' },
+  { brand: "Vet's Best", category: 'Supplements', product: 'Feline Urinary Tract Support Tablets (60ct)', orders: 'ordered Jan 2025' },
+  { brand: 'Silverquine', category: 'Wound / itch care', product: 'Pet Wound & Itch Care Hydrogel', orders: 'ordered Feb 2024' },
+  { brand: 'C.E.T.', category: 'Dental', product: 'Enzymatic Toothpaste for Dogs & Cats, Beef', orders: 'ordered Dec 2025' },
+  { brand: 'beQ', category: 'Water fountains', product: 'Cat Water Fountain (2.5L)', orders: 'ordered Feb 2024' },
+  { brand: 'DOOOB', category: 'Water fountains', product: 'Stainless Steel Cat Water Fountain (3.2L)', orders: 'ordered Mar 2024' },
+  { brand: 'FEELNEEDY', category: 'Water fountains / toys', product: 'Stainless Steel Wireless Cat Water Fountain; Electric Interactive Cat Toys Set (9-pc, LED)', orders: 'ordered May 2026' },
+  { brand: 'HoneyGuaridan', category: 'Feeders', product: 'Automatic Cat Feeder for Two Cats (3.5L)', orders: 'ordered May 2024' },
+  { brand: 'NON-SQUARE', category: 'Toys', product: 'Silvervine Catnip Chew Sticks (20-pack)', orders: 'ordered Feb 2024' },
+  { brand: 'PAWZ Road', category: 'Toys', product: 'Cat Tunnel Bed with Hanging Balls', orders: 'ordered Oct 2025' },
+  { brand: 'WEOK', category: 'Toys', product: 'Puppy & Cat Heartbeat Stuffed Toy', orders: 'ordered Nov 2025' },
+  { brand: 'Lukito', category: 'Grooming / enrichment', product: 'Licking Mat for Dogs & Cats (3-pack)', orders: 'ordered Jan 2025' },
+  { brand: 'ACE2ACE', category: 'Grooming', product: 'Self-Cleaning Cat Grooming Slicker Brush', orders: 'ordered Mar 2024' },
+  { brand: 'Petsters', category: 'Dental / grooming', product: 'Silicone 360° Pet Finger Toothbrush (3-pack)', orders: 'ordered Nov 2025' },
+  { brand: 'VIVO', category: 'Carriers', product: 'Four Wheel Pet Stroller (Blue)', orders: 'ordered Apr 2024' },
+  { brand: 'Jagahaha', category: 'Enclosures', product: 'Portable Outdoor Cat Enclosure (5-panel)', orders: 'ordered Aug 2024' },
+  { brand: 'BFNN', category: 'Screen doors', product: 'Extra Tall Cat Screen Door (32"×80", Black)', orders: 'ordered Jul 2025' },
+  { brand: 'FELIWAY', category: 'Calming / behavior', product: 'Optimum 30-Day Starter Kit', orders: 'ordered 2x — Nov 2023, Jan 2024' }
 ];
+
+// Legacy flat name list, kept for anything that still just needs brand names
+const SUGGESTED_BRANDS = AMAZON_PURCHASE_HISTORY.map(p => p.brand);
 
 const SEED_STRATEGY_NOTE = {
   name: '★ Strategy reminders',
@@ -2067,11 +2182,13 @@ async function loadBrands() {
   if (currentView === 'outreach') renderOutreach();
 }
 
-async function saveBrands() {
+async function saveBrands(brandId) {
   if (!brands.length) return true;
   pendingBrandSaves++;
   try {
-    const rows = brands.map(brandToRow);
+    const targets = brandId ? brands.filter(b => b.id === brandId) : brands;
+    if (!targets.length) return true;
+    const rows = targets.map(brandToRow);
     const { error } = await sb.from('ttt_brands').upsert(rows, { onConflict: 'id' });
     if (error) throw error;
     return true;
@@ -2090,6 +2207,174 @@ async function deleteBrandRemote(id) {
   } catch (e) {
     console.error('Brand delete error:', (e && e.message) || e);
   }
+}
+
+// ===== Outreach checklist (Google-Tasks-style todo, stored in our own table) =====
+
+let tasks = [];
+let isLoadingTasks = false;
+let pendingTaskSaves = 0;
+
+const SEED_TASKS = [
+  'Apply to Amazon Associates (affiliate-program.amazon.com)',
+  "Reminder: 3 qualifying sales needed within 180 days of signup or Amazon closes the account — don't apply until ready to actually post links",
+  "Generate Amazon affiliate links for repeat-purchase items (Boxie, Feline Greenies, Hill's Science Diet) and add to bio/linktree",
+  'Set up a linktree (or equivalent) for affiliate + partner links',
+  'Tag small/mid brands organically in regular posts for 1–2 weeks before pitching (FELIWAY, Boxie, kin+Kind, N-Bone, ZuHucpts, Silverquine, Petsters)',
+  "Check each small/mid brand's IG bio / website footer for an ambassador or affiliate application form",
+  'Look up "[brand] pet influencer partnerships" contact pages for big brands (Hill\'s, Purina, Greenies) — email PR/marketing, not a cold DM',
+  'Send first batch of outreach pitches — one ask per email (ambassador program, product-for-content, or affiliate code)',
+  'Set up M/W/F carousel content tying products into "what\'s actually in our lineup" round-ups',
+  'Follow up on any pitch that\'s gone quiet for 1–2 weeks using the follow-up template'
+];
+
+function uidTask() { return 't' + Date.now() + Math.floor(Math.random()*1000); }
+
+function rowToTask(row) {
+  return { id: row.id, text: row.text, done: !!row.done, brandId: row.brand_id || '', created: row.created_at };
+}
+
+function taskToRow(t) {
+  return { id: t.id, text: t.text, done: !!t.done, brand_id: t.brandId || null, updated_at: new Date().toISOString() };
+}
+
+async function loadTasks() {
+  if (isLoadingTasks) return;
+  if (pendingTaskSaves > 0) return;
+  isLoadingTasks = true;
+  try {
+    const { data, error } = await sb.from('ttt_tasks').select('*').order('created_at', { ascending: true });
+    if (error) throw error;
+    if (data && data.length) {
+      tasks = data.map(rowToTask);
+    } else if (!tasks.length) {
+      tasks = SEED_TASKS.map(text => ({ id: uidTask(), text, done: false, brandId: '' }));
+      await saveTasks();
+    }
+  } catch (e) {
+    console.error('Task load error:', (e && e.message) || e);
+  }
+  isLoadingTasks = false;
+  if (currentView === 'outreach') renderTasks();
+}
+
+async function saveTasks(taskId) {
+  if (!tasks.length) return true;
+  pendingTaskSaves++;
+  try {
+    const targets = taskId ? tasks.filter(t => t.id === taskId) : tasks;
+    if (!targets.length) return true;
+    const rows = targets.map(taskToRow);
+    const { error } = await sb.from('ttt_tasks').upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.error('Task save error:', (e && e.message) || e);
+    return false;
+  } finally {
+    pendingTaskSaves--;
+  }
+}
+
+async function deleteTaskRemote(id) {
+  try {
+    const { error } = await sb.from('ttt_tasks').delete().eq('id', id);
+    if (error) throw error;
+  } catch (e) {
+    console.error('Task delete error:', (e && e.message) || e);
+  }
+}
+
+function addTask() {
+  const input = document.getElementById('taskInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const brandId = document.getElementById('taskBrandSelect').value;
+  const newTask = { id: uidTask(), text, done: false, brandId: brandId || '' };
+  tasks.push(newTask);
+  input.value = '';
+  saveTasks(newTask.id);
+  renderTasks();
+  renderBrandBoard();
+}
+
+function toggleTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveTasks(id);
+  renderTasks();
+  renderBrandBoard();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  deleteTaskRemote(id);
+  renderTasks();
+  renderBrandBoard();
+}
+
+function renderTasks() {
+  const progressEl = document.getElementById('taskProgress');
+  const listEl = document.getElementById('taskList');
+  if (!progressEl || !listEl) return;
+
+  const total = tasks.length;
+  const done = tasks.filter(t => t.done).length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  progressEl.innerHTML = `${done} / ${total} complete<div class="task-progress-bar"><div class="task-progress-fill" style="width:${pct}%;"></div></div>`;
+
+  listEl.innerHTML = '';
+  if (!tasks.length) {
+    listEl.innerHTML = '<div class="ot-empty">No tasks yet — add one above</div>';
+    return;
+  }
+
+  const general = tasks.filter(t => !t.brandId);
+  const byBrand = {};
+  tasks.forEach(t => {
+    if (t.brandId) {
+      if (!byBrand[t.brandId]) byBrand[t.brandId] = [];
+      byBrand[t.brandId].push(t);
+    }
+  });
+
+  const renderGroup = (title, items) => {
+    if (!items.length) return;
+    const groupTitle = document.createElement('div');
+    groupTitle.className = 'task-group-title';
+    groupTitle.textContent = title;
+    listEl.appendChild(groupTitle);
+    items.forEach(t => listEl.appendChild(buildTaskRow(t)));
+  };
+
+  renderGroup('General', general);
+  Object.keys(byBrand).forEach(brandId => {
+    const b = brands.find(x => x.id === brandId);
+    renderGroup(b ? b.name : 'Unknown brand', byBrand[brandId]);
+  });
+}
+
+function buildTaskRow(t) {
+  const row = document.createElement('div');
+  row.className = 'task-row' + (t.done ? ' done' : '');
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.className = 'task-checkbox';
+  checkbox.checked = t.done;
+  checkbox.onchange = () => toggleTask(t.id);
+  const text = document.createElement('div');
+  text.className = 'task-text';
+  text.textContent = t.text;
+  const delBtn = document.createElement('button');
+  delBtn.className = 'task-del-btn';
+  delBtn.textContent = '🗑';
+  delBtn.title = 'Delete task';
+  delBtn.onclick = () => deleteTask(t.id);
+  row.appendChild(checkbox);
+  row.appendChild(text);
+  row.appendChild(delBtn);
+  return row;
 }
 
 function addClip() {
@@ -2313,6 +2598,7 @@ function renderOutreach() {
   renderQuickAddBrands();
   renderBrandBoard();
   refreshAllBrandDropdowns();
+  renderTasks();
 }
 
 function fillBrandOptions(select, includeNoneLabel) {
@@ -2327,6 +2613,7 @@ function refreshAllBrandDropdowns() {
   fillBrandOptions(document.getElementById('tplBrandSelect'), '— none / custom —');
   fillBrandOptions(document.getElementById('newClipBrandSelect'), '— none —');
   fillBrandOptions(document.getElementById('brandFilterSelect'), 'All brands');
+  fillBrandOptions(document.getElementById('taskBrandSelect'), 'General');
 }
 
 function renderOutreachStats() {
@@ -2348,13 +2635,23 @@ function renderQuickAddBrands() {
   const el = document.getElementById('otQuickadd');
   if (!el) return;
   const existing = new Set(brands.map(b => b.name.toLowerCase()));
-  const remaining = SUGGESTED_BRANDS.filter(n => !existing.has(n.toLowerCase()));
+  const remaining = AMAZON_PURCHASE_HISTORY.filter(p => !existing.has(p.brand.toLowerCase()));
   el.innerHTML = remaining.length
-    ? remaining.map(n => `<button type="button" class="ot-chip" data-name="${escapeHtml(n)}">+ ${escapeHtml(n)}</button>`).join('')
+    ? remaining.map(p => `<button type="button" class="ot-chip" data-name="${escapeHtml(p.brand)}" title="${escapeHtml(p.product)} — ${escapeHtml(p.orders)}">+ ${escapeHtml(p.brand)}</button>`).join('')
     : '<span style="font-family:\'IBM Plex Mono\',monospace; font-size:11.5px; color:var(--ink-soft);">All suggestions added</span>';
   el.querySelectorAll('.ot-chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      brands.push({ id: uidBrand(), name: chip.dataset.name, category: '', status: 'researching', contact: '', product: '', date: '', notes: '' });
+      const p = AMAZON_PURCHASE_HISTORY.find(x => x.brand === chip.dataset.name);
+      brands.push({
+        id: uidBrand(),
+        name: chip.dataset.name,
+        category: p ? p.category : '',
+        status: 'researching',
+        contact: '',
+        product: p ? p.product : '',
+        date: '',
+        notes: p ? `From Amazon order history — ${p.orders}.` : ''
+      });
       saveBrands();
       renderOutreach();
     });
@@ -2399,6 +2696,8 @@ function brandCardHtml(b) {
   const linkedCount = clips.filter(c => c.brandId === b.id).length;
   const idle = b.status === 'waiting' ? daysSince(b.updatedAt) : null;
   const isStale = idle !== null && idle >= 14;
+  const brandTasks = tasks.filter(t => t.brandId === b.id);
+  const tasksDone = brandTasks.filter(t => t.done).length;
   return `
     <div class="ot-card">
       <div class="ot-card-name">${escapeHtml(b.name)}</div>
@@ -2407,6 +2706,7 @@ function brandCardHtml(b) {
       ${b.notes ? `<div class="ot-card-notes">${escapeHtml(b.notes)}</div>` : ''}
       ${b.date ? `<div class="ot-card-date">${escapeHtml(b.date)}</div>` : ''}
       ${linkedCount ? `<div class="ot-card-date">🔗 ${linkedCount} caption${linkedCount === 1 ? '' : 's'} linked</div>` : ''}
+      ${brandTasks.length ? `<div class="ot-card-date">✓ ${tasksDone}/${brandTasks.length} tasks done</div>` : ''}
       ${isStale ? `<div class="ot-stale-badge">⏰ ${idle} days since last contact — <button type="button" class="ot-mini-btn" data-brand-followup="${b.id}">Draft follow-up</button></div>` : ''}
       <div class="ot-card-actions">
         <select class="ot-mini-select" data-brand-move="${b.id}">${statusOptions}</select>
@@ -2449,11 +2749,24 @@ function resetBrandForm() {
 // ===== Outreach Templates sub-view =====
 
 function switchOutreachSubView(view) {
-  const showPipeline = view === 'pipeline';
-  document.getElementById('otPipelineSection').style.display = showPipeline ? '' : 'none';
-  document.getElementById('otTemplatesSection').style.display = showPipeline ? 'none' : '';
-  document.getElementById('otTabPipeline').classList.toggle('active', showPipeline);
-  document.getElementById('otTabTemplates').classList.toggle('active', !showPipeline);
+  document.getElementById('otPipelineSection').style.display = view === 'pipeline' ? '' : 'none';
+  document.getElementById('otTemplatesSection').style.display = view === 'templates' ? '' : 'none';
+  document.getElementById('otTasksSection').style.display = view === 'tasks' ? '' : 'none';
+  document.getElementById('otTabPipeline').classList.toggle('active', view === 'pipeline');
+  document.getElementById('otTabTemplates').classList.toggle('active', view === 'templates');
+  document.getElementById('otTabTasks').classList.toggle('active', view === 'tasks');
+}
+
+function goToFollowUpPitch(brandId) {
+  currentView = 'outreach';
+  render();
+  switchOutreachSubView('templates');
+  const brandSelect = document.getElementById('tplBrandSelect');
+  brandSelect.value = brandId;
+  onTplBrandSelectChange();
+  document.getElementById('tplPitchType').value = 'followUp';
+  generatePitchOutput();
+  document.getElementById('otTemplatesSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function onTplBrandSelectChange() {
@@ -2571,14 +2884,18 @@ function renderCarouselIdeas() {
 function initTemplatesSection() {
   document.getElementById('otTabPipeline').addEventListener('click', () => switchOutreachSubView('pipeline'));
   document.getElementById('otTabTemplates').addEventListener('click', () => switchOutreachSubView('templates'));
+  document.getElementById('otTabTasks').addEventListener('click', () => switchOutreachSubView('tasks'));
   document.getElementById('tplBrandSelect').addEventListener('change', onTplBrandSelectChange);
   document.getElementById('tplGeneratePitchBtn').addEventListener('click', generatePitchOutput);
   document.getElementById('tplGenerateCaptionsBtn').addEventListener('click', generateCaptionOutput);
   document.getElementById('tplCarouselFilter').addEventListener('input', renderCarouselIdeas);
-  // Seed both output panels once so the section isn't empty on first visit
+  document.getElementById('taskAddBtn').addEventListener('click', addTask);
+  document.getElementById('taskInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') addTask(); });
+  // Seed output panels once so sections aren't empty on first visit
   generatePitchOutput();
   generateCaptionOutput();
   renderCarouselIdeas();
+  renderTasks();
 }
 
 function saveBrandForm() {
@@ -3159,6 +3476,86 @@ document.getElementById('otCancelBtn').addEventListener('click', () => {
 });
 document.getElementById('otSaveBtn').addEventListener('click', saveBrandForm);
 
+// ===== Backup: export / import all data =====
+
+function exportAllData() {
+  const payload = {
+    exportedFrom: 'TwoStoryCaptions',
+    exportedAt: new Date().toISOString(),
+    clips,
+    brands,
+    tasks
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'twostorycaptions-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setSyncStatus('Backup downloaded ✓');
+}
+
+async function handleImportFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    const clipCount = Array.isArray(data.clips) ? data.clips.length : 0;
+    const brandCount = Array.isArray(data.brands) ? data.brands.length : 0;
+    const taskCount = Array.isArray(data.tasks) ? data.tasks.length : 0;
+    if (!clipCount && !brandCount && !taskCount) {
+      alert("That file doesn't look like a TwoStoryCaptions backup — no captions, brands, or tasks found in it.");
+      return;
+    }
+    const ok = confirm(
+      `Import ${clipCount} caption(s), ${brandCount} brand(s), and ${taskCount} task(s)?\n\n` +
+      `This merges into what you already have — existing items with matching IDs get overwritten, everything else is added alongside it. Nothing is deleted.`
+    );
+    if (!ok) return;
+
+    if (Array.isArray(data.clips)) {
+      data.clips.forEach(c => {
+        if (!c || !c.id) return;
+        const idx = clips.findIndex(x => x.id === c.id);
+        if (idx > -1) clips[idx] = c; else clips.push(c);
+      });
+      await saveClips();
+    }
+    if (Array.isArray(data.brands)) {
+      data.brands.forEach(b => {
+        if (!b || !b.id) return;
+        const idx = brands.findIndex(x => x.id === b.id);
+        if (idx > -1) brands[idx] = b; else brands.push(b);
+      });
+      await saveBrands();
+    }
+    if (Array.isArray(data.tasks)) {
+      data.tasks.forEach(t => {
+        if (!t || !t.id) return;
+        const idx = tasks.findIndex(x => x.id === t.id);
+        if (idx > -1) tasks[idx] = t; else tasks.push(t);
+      });
+      await saveTasks();
+    }
+
+    render();
+    alert(`Imported ${clipCount} caption(s), ${brandCount} brand(s), ${taskCount} task(s).`);
+  } catch (err) {
+    console.error('Import failed', err);
+    alert("Could not read that file — make sure it's a JSON backup exported from this app.");
+  }
+  e.target.value = '';
+}
+
+document.getElementById('exportBtn').addEventListener('click', exportAllData);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFileInput').click());
+document.getElementById('importFileInput').addEventListener('change', handleImportFile);
+
 function loadTheme() {
   let saved = 'nautical';
   try { saved = localStorage.getItem('ttt-theme') || 'nautical'; } catch (e) {}
@@ -3171,6 +3568,7 @@ renderNewClipDateRow();
 loadTheme();
 loadClips();
 loadBrands();
+loadTasks();
 initTemplatesSection();
 
 document.getElementById('brandFilterSelect').addEventListener('change', (e) => {
@@ -3183,9 +3581,9 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
 });
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') { loadClips(); loadBrands(); }
+  if (document.visibilityState === 'visible') { loadClips(); loadBrands(); loadTasks(); }
 });
-window.addEventListener('focus', () => { loadClips(); loadBrands(); });
+window.addEventListener('focus', () => { loadClips(); loadBrands(); loadTasks(); });
 window.addEventListener('resize', () => { render(); });
 
 </script>
