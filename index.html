@@ -272,7 +272,23 @@
   .date-pill-clear:hover { opacity: 1; background: transparent; transform: none; }
 
   /* ===== Minimal dropdown filter ===== */
-  .filters-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+  .header-icons { display: flex; align-items: center; gap: 2px; }
+  .header-filter-icons { display: flex; align-items: center; gap: 2px; }
+  .icon-btn.filter-icon-active { color: var(--moss); }
+
+  .quick-filter-panel {
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    background: var(--paper-light);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    animation: quickFilterIn 0.15s ease;
+  }
+  @keyframes quickFilterIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #quickFilterSelects { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .filter-row { margin-bottom: 0; }
   .filters-bar-search { width: 100%; }
   .filter-select, #filterSelect {
@@ -281,7 +297,7 @@
     padding: 9px 14px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: var(--paper-light);
+    background: var(--paper);
     color: var(--ink);
     min-width: 120px;
   }
@@ -289,8 +305,7 @@
     position: relative;
     display: flex;
     align-items: center;
-    flex: 1.6;
-    min-width: 200px;
+    width: 100%;
   }
   .search-icon {
     position: absolute;
@@ -307,7 +322,7 @@
     padding: 9px 14px 9px 34px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: var(--paper-light);
+    background: var(--paper);
     color: var(--ink);
   }
 
@@ -1318,16 +1333,8 @@
 
     .header-nav-icons button svg { width: 18px; height: 18px; }
 
-    .filters-bar {
-      position: sticky;
-      top: 0;
-      background: var(--paper);
-      z-index: 20;
-      padding: 8px 12px 10px;
-      margin: 0 -12px 16px;
-      flex-direction: column;
-      align-items: stretch;
-    }
+    .quick-filter-panel { margin: 0 0 16px; }
+    #quickFilterSelects { flex-direction: column; align-items: stretch; }
     .filter-row { width: 100%; }
     #filterSelect, .filter-select, .search-wrap { width: 100%; min-height: 40px; }
 
@@ -1389,8 +1396,12 @@
       <p id="syncStatus">Connecting…</p>
     </div>
     <div class="header-icons">
+      <span class="header-filter-icons" id="headerFilterIcons">
+        <button class="icon-btn" id="searchToggleBtn" title="Search"></button>
+        <button class="icon-btn" id="filterToggleBtn" title="Filter"></button>
+      </span>
       <span class="header-nav-icons" id="headerNav"></span>
-      <button class="icon-btn" id="settingsBtn" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+      <button class="icon-btn" id="settingsBtn" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg></button>
     </div>
   </header>
 
@@ -1461,12 +1472,16 @@
 
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
-  <div class="filters-bar" id="filtersBar">
-    <div class="filter-row" id="filterRow"></div>
-    <select id="brandFilterSelect" class="filter-select"><option value="">All brands</option></select>
-    <div class="search-wrap">
-      <span class="search-icon" id="searchIcon"></span>
-      <input id="searchInput" class="filters-bar-search" placeholder="Search captions...">
+  <div class="quick-filter-panel" id="quickFilterPanel" style="display:none;">
+    <div id="quickFilterSearch" style="display:none;">
+      <div class="search-wrap">
+        <span class="search-icon" id="searchIcon"></span>
+        <input id="searchInput" class="filters-bar-search" placeholder="Search captions...">
+      </div>
+    </div>
+    <div id="quickFilterSelects" style="display:none;">
+      <div class="filter-row" id="filterRow"></div>
+      <select id="brandFilterSelect" class="filter-select"><option value="">All brands</option></select>
     </div>
   </div>
 
@@ -1677,7 +1692,8 @@ const NAV_ICONS = {
   instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>',
   tiktok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3v11.5a3.5 3.5 0 1 1-3.5-3.5"></path><path d="M15 3c.5 2.5 2.3 4.4 5 4.7"></path></svg>',
   both: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="5"></circle><circle cx="16" cy="12" r="5"></circle></svg>',
-  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>'
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+  filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>'
 };
 
 const VIEW_META = {
@@ -1689,6 +1705,7 @@ let clips = [];
 let activeFilter = 'all';
 let activeBrandFilter = '';
 let searchQuery = '';
+let activeQuickFilter = null; // null | 'search' | 'select'
 let loadingCaptions = {};
 let newClipTones = ['Deadpan nature-doc'];
 let currentView = 'grid';
@@ -3579,18 +3596,20 @@ function render() {
 
   document.getElementById('outreachView').style.display = currentView === 'outreach' ? 'block' : 'none';
 
+  const showList = currentView === 'grid';
+  document.getElementById('headerFilterIcons').style.display = showList ? 'flex' : 'none';
+  if (!showList) activeQuickFilter = null;
+  renderQuickFilterPanel();
+
   if (currentView === 'outreach') {
     document.getElementById('cardList').style.display = 'none';
     document.getElementById('calendarView').style.display = 'none';
-    document.getElementById('filtersBar').style.display = 'none';
     renderOutreach();
     return;
   }
 
-  const showList = currentView === 'grid';
   document.getElementById('cardList').style.display = showList ? 'grid' : 'none';
   document.getElementById('calendarView').style.display = currentView === 'calendar' ? 'block' : 'none';
-  document.getElementById('filtersBar').style.display = showList ? 'flex' : 'none';
 
   if (currentView === 'calendar') {
     renderCalendar();
@@ -3621,6 +3640,25 @@ function render() {
   renderCardListOnly();
   renderTally();
   refreshOpenModal();
+}
+
+function toggleQuickFilter(type) {
+  activeQuickFilter = activeQuickFilter === type ? null : type;
+  renderQuickFilterPanel();
+  if (activeQuickFilter === 'search') {
+    setTimeout(() => document.getElementById('searchInput').focus(), 50);
+  }
+}
+
+function renderQuickFilterPanel() {
+  const panel = document.getElementById('quickFilterPanel');
+  const searchBox = document.getElementById('quickFilterSearch');
+  const selectsBox = document.getElementById('quickFilterSelects');
+  panel.style.display = activeQuickFilter ? 'block' : 'none';
+  searchBox.style.display = activeQuickFilter === 'search' ? 'block' : 'none';
+  selectsBox.style.display = activeQuickFilter === 'select' ? 'flex' : 'none';
+  document.getElementById('searchToggleBtn').classList.toggle('filter-icon-active', activeQuickFilter === 'search');
+  document.getElementById('filterToggleBtn').classList.toggle('filter-icon-active', activeQuickFilter === 'select');
 }
 
 function getFilteredClips() {
@@ -3874,6 +3912,10 @@ loadBrands();
 loadTasks();
 initTemplatesSection();
 document.getElementById('searchIcon').innerHTML = NAV_ICONS.search;
+document.getElementById('searchToggleBtn').innerHTML = NAV_ICONS.search;
+document.getElementById('filterToggleBtn').innerHTML = NAV_ICONS.filter;
+document.getElementById('searchToggleBtn').addEventListener('click', () => toggleQuickFilter('search'));
+document.getElementById('filterToggleBtn').addEventListener('click', () => toggleQuickFilter('select'));
 
 document.getElementById('brandFilterSelect').addEventListener('change', (e) => {
   activeBrandFilter = e.target.value;
