@@ -125,13 +125,22 @@
   }
   .sheet-close:hover { color: var(--moss); background: transparent; }
   .sheet-backdrop {
-    display: none;
+    display: block;
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.4);
     z-index: 92;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
   }
-  .sheet-backdrop.open { display: block; }
+  .sheet-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.2s ease, visibility 0s linear 0s;
+  }
   .fab-add {
     display: flex;
     position: fixed;
@@ -294,6 +303,12 @@
     from { opacity: 0; transform: translateY(-4px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  @keyframes viewFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .view-anim { animation: viewFadeIn 0.22s ease; }
   #quickFilterSelects { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .filter-row { margin-bottom: 0; }
   .filters-bar-search { width: 100%; }
@@ -466,11 +481,12 @@
     justify-content: center;
     background: transparent;
     border: none;
-    padding: 0 12px;
+    padding: 9px 14px;
     color: inherit;
     cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease;
   }
-  .platform-badge-btn svg { width: 13px; height: 13px; }
+  .platform-badge-btn svg { width: 16px; height: 16px; }
   .platform-badge-btn:hover { background: transparent; opacity: 0.75; transform: none; }
   .platform-badge-btn.has-value { background: color-mix(in srgb, currentColor 22%, transparent); }
 
@@ -1274,7 +1290,7 @@
   }
 
   .modal-overlay {
-    display: none;
+    display: flex;
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.45);
@@ -1282,8 +1298,17 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
   }
-  .modal-overlay.open { display: flex; }
+  .modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.2s ease, visibility 0s linear 0s;
+  }
   .modal-box {
     background: var(--paper-light);
     border: 1px solid var(--ink);
@@ -1295,7 +1320,10 @@
     padding: 50px 26px 26px;
     position: relative;
     box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    transform: scale(0.96) translateY(10px);
+    transition: transform 0.22s cubic-bezier(0.32, 0.72, 0, 1);
   }
+  .modal-overlay.open .modal-box { transform: scale(1) translateY(0); }
   .modal-box .card { border: none; border-radius: 0; padding: 0; margin: 0; }
   .modal-close {
     position: absolute;
@@ -1797,6 +1825,7 @@ try { gridLayoutMode = localStorage.getItem('ttt-layout-mode') || 'grid'; } catc
 let loadingCaptions = {};
 let newClipTones = ['Deadpan nature-doc'];
 let currentView = 'grid';
+let lastAnimatedView = null;
 let calMonthOffset = 0;
 let currentTheme = 'lavender';
 let isOfflinePreview = false;
@@ -3121,6 +3150,8 @@ function switchOutreachSubView(view) {
   document.getElementById('otTabPipeline').classList.toggle('active', view === 'pipeline');
   document.getElementById('otTabTemplates').classList.toggle('active', view === 'templates');
   document.getElementById('otTabTasks').classList.toggle('active', view === 'tasks');
+  const activeId = view === 'pipeline' ? 'otPipelineSection' : view === 'templates' ? 'otTemplatesSection' : 'otTasksSection';
+  playViewAnim(document.getElementById(activeId));
 }
 
 function goToFollowUpPitch(brandId) {
@@ -3526,18 +3557,16 @@ function buildFullCard(clip, forceExpanded) {
   }
   genBtn.onclick = () => generateCaptions(clip.id);
   bottomRow.appendChild(genBtn);
-  card.appendChild(bottomRow);
 
-  // Trash sits alone, bottom-right — same look/size as the date pill, diagonally opposite it
-  const footerRow = document.createElement('div');
-  footerRow.className = 'card-footer-row';
+  // Same look/size as the date pill, just placed opposite the generate button on this row
   const trashBtn = document.createElement('button');
   trashBtn.className = 'date-pill-btn trash-footer-btn';
   trashBtn.innerHTML = NAV_ICONS.trash;
   trashBtn.title = 'Remove';
   trashBtn.onclick = () => { removeClip(clip.id); closeCardModal(); };
-  footerRow.appendChild(trashBtn);
-  card.appendChild(footerRow);
+  bottomRow.appendChild(trashBtn);
+
+  card.appendChild(bottomRow);
 
   if (clip.unsynced) {
     const warn = document.createElement('div');
@@ -3662,6 +3691,13 @@ function isMobile() {
   return window.matchMedia('(max-width: 600px)').matches;
 }
 
+function playViewAnim(el) {
+  if (!el) return;
+  el.classList.remove('view-anim');
+  void el.offsetWidth; // force reflow so the animation restarts
+  el.classList.add('view-anim');
+}
+
 function render() {
   const mobile = isMobile();
   document.body.classList.toggle('view-calendar-full', currentView === 'calendar' && mobile);
@@ -3677,10 +3713,14 @@ function render() {
   if (!showList) activeQuickFilter = null;
   renderQuickFilterPanel();
 
+  const viewChanged = currentView !== lastAnimatedView;
+  lastAnimatedView = currentView;
+
   if (currentView === 'outreach') {
     document.getElementById('cardList').style.display = 'none';
     document.getElementById('calendarView').style.display = 'none';
     renderOutreach();
+    if (viewChanged) playViewAnim(document.getElementById('outreachView'));
     return;
   }
 
@@ -3691,6 +3731,7 @@ function render() {
     renderCalendar();
     renderTally();
     refreshOpenModal();
+    if (viewChanged) playViewAnim(document.getElementById('calendarView'));
     return;
   }
 
@@ -3716,6 +3757,7 @@ function render() {
   renderCardListOnly();
   renderTally();
   refreshOpenModal();
+  if (viewChanged) playViewAnim(document.getElementById('cardList'));
 }
 
 function toggleQuickFilter(type) {
@@ -3989,6 +4031,7 @@ document.getElementById('layoutToggleBtn').addEventListener('click', () => {
   try { localStorage.setItem('ttt-layout-mode', gridLayoutMode); } catch (e) {}
   renderLayoutToggle();
   renderCardListOnly();
+  playViewAnim(document.getElementById('cardList'));
 });
 
 function renderLayoutToggle() {
