@@ -3429,7 +3429,7 @@ function buildFullCard(clip, forceExpanded) {
       topRow.className = 'caption-opt-top';
       const tag = document.createElement('span');
       tag.className = 'copy-tag';
-      tag.textContent = 'Option ' + (i+1) + (usedTones[i] ? ' · ' + usedTones[i] : '');
+      tag.textContent = 'Option ' + (i+1) + (usedTones[i] ? ' | ' + usedTones[i] : '');
       const copyBtnGroup = document.createElement('div');
       copyBtnGroup.className = 'platform-copy-group';
 
