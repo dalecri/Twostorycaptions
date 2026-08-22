@@ -246,20 +246,20 @@
   .date-pill-btn {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
-    letter-spacing: 0.4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
     padding: 7px 14px;
-    border-radius: 999px;
-    border: 1px dashed var(--line);
-    background: transparent;
+    border-radius: 0;
+    border: none;
+    background: var(--paper-light);
     color: var(--ink-soft);
     cursor: pointer;
     transition: all 0.12s ease;
   }
-  .date-pill-btn:hover { border-color: var(--stamp-scheduled); color: var(--stamp-scheduled); transform: none; }
+  .date-pill-btn:hover { background: color-mix(in srgb, var(--stamp-scheduled) 16%, var(--paper-light)); color: var(--stamp-scheduled); transform: none; }
   .date-pill-btn.confirmed {
-    border: 1px solid var(--stamp-scheduled);
+    background: color-mix(in srgb, var(--stamp-scheduled) 16%, var(--paper-light));
     color: var(--stamp-scheduled);
-    background: color-mix(in srgb, var(--stamp-scheduled) 8%, transparent);
   }
   .date-pill-clear {
     background: transparent;
@@ -342,6 +342,7 @@
     gap: 12px;
     margin-top: 10px;
     margin-bottom: 4px;
+    padding: 0 14px;
   }
   .card-top-right {
     display: flex;
@@ -464,6 +465,26 @@
   }
   .platform-badge-btn svg { width: 13px; height: 13px; }
   .platform-badge-btn:hover { background: transparent; opacity: 0.75; transform: none; }
+  .platform-badge-btn.has-value { background: color-mix(in srgb, currentColor 22%, transparent); }
+
+  .tone-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .tone-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    background: color-mix(in srgb, var(--spark) 18%, var(--paper-light));
+    color: var(--spark-dark);
+  }
 
   .stamp-select {
     appearance: none;
@@ -491,6 +512,7 @@
     font-size: 10.5px;
     color: var(--ink-soft);
     margin-top: 8px;
+    padding: 0 14px;
   }
   .card-meta-row {
     display: flex;
@@ -583,14 +605,13 @@
     padding-top: 16px;
   }
   .caption-opt {
-    background: #fff;
+    background: var(--paper-light);
     border: 1px solid var(--line);
     border-radius: 16px;
     padding: 14px 16px;
     margin-bottom: 12px;
     font-size: 14.5px;
     line-height: 1.6;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
   }
   .caption-opt-top {
     display: flex;
@@ -3345,9 +3366,53 @@ function buildFullCard(clip, forceExpanded) {
   };
   statusPlatformGroup.appendChild(platformBadgeBtn);
 
+  const brandDivider = document.createElement('div');
+  brandDivider.className = 'status-platform-divider';
+  statusPlatformGroup.appendChild(brandDivider);
+
+  const brandToggleBtn = document.createElement('button');
+  brandToggleBtn.className = 'platform-badge-btn' + (clip.brandId ? ' has-value' : '');
+  brandToggleBtn.title = 'Brand';
+  brandToggleBtn.innerHTML = NAV_ICONS.outreach;
+  brandToggleBtn.onclick = () => {
+    if (brandPickerOpenIds.has(clip.id)) brandPickerOpenIds.delete(clip.id); else brandPickerOpenIds.add(clip.id);
+    refreshOpenModal();
+    render();
+  };
+  statusPlatformGroup.appendChild(brandToggleBtn);
+
+  const linkDivider = document.createElement('div');
+  linkDivider.className = 'status-platform-divider';
+  statusPlatformGroup.appendChild(linkDivider);
+
+  const linkToggleBtn = document.createElement('button');
+  linkToggleBtn.className = 'platform-badge-btn' + (clip.videoLink ? ' has-value' : '');
+  linkToggleBtn.title = 'Video link';
+  linkToggleBtn.innerHTML = NAV_ICONS.link;
+  linkToggleBtn.onclick = () => {
+    if (linkPickerOpenIds.has(clip.id)) linkPickerOpenIds.delete(clip.id); else linkPickerOpenIds.add(clip.id);
+    refreshOpenModal();
+    render();
+  };
+  statusPlatformGroup.appendChild(linkToggleBtn);
+
   headerRow.appendChild(statusPlatformGroup);
   headerRow.appendChild(buildDatePillForClip(clip));
   card.appendChild(headerRow);
+
+  // Tone/vibe is informational once set — a plain badge, not a toggle
+  if (!clip.selectedTones) clip.selectedTones = ['Deadpan nature-doc'];
+  if (clip.selectedTones.length) {
+    const toneBadgeRow = document.createElement('div');
+    toneBadgeRow.className = 'tone-badge-row';
+    clip.selectedTones.forEach(tone => {
+      const badge = document.createElement('span');
+      badge.className = 'tone-badge';
+      badge.textContent = tone;
+      toneBadgeRow.appendChild(badge);
+    });
+    card.appendChild(toneBadgeRow);
+  }
 
   const top = document.createElement('div');
   top.className = 'card-top';
@@ -3440,50 +3505,6 @@ function buildFullCard(clip, forceExpanded) {
   meta.className = 'card-meta';
   meta.textContent = 'Logged ' + timeAgo(clip.created);
   card.appendChild(meta);
-
-  // Only the tones actually chosen show here — not the full picker (that lives in the New Caption sheet)
-  if (!clip.selectedTones) clip.selectedTones = ['Deadpan nature-doc'];
-  if (clip.selectedTones.length) {
-    const toneRow = document.createElement('div');
-    toneRow.className = 'tone-row';
-    toneRow.style.marginTop = '10px';
-    clip.selectedTones.forEach(tone => {
-      const chip = document.createElement('div');
-      chip.className = 'tone-chip selected';
-      chip.textContent = tone;
-      chip.title = 'Remove this tone';
-      chip.onclick = () => { toggleTone(clip.id, tone); refreshOpenModal(); };
-      toneRow.appendChild(chip);
-    });
-    card.appendChild(toneRow);
-  }
-
-  // Brand and video link collapse behind small icon toggles to stay minimal
-  const metaRow = document.createElement('div');
-  metaRow.className = 'card-meta-row';
-
-  const brandToggleBtn = document.createElement('button');
-  brandToggleBtn.className = 'icon-toggle-btn' + (clip.brandId ? ' has-value' : '');
-  brandToggleBtn.title = 'Brand';
-  brandToggleBtn.innerHTML = NAV_ICONS.outreach;
-  brandToggleBtn.onclick = () => {
-    if (brandPickerOpenIds.has(clip.id)) brandPickerOpenIds.delete(clip.id); else brandPickerOpenIds.add(clip.id);
-    refreshOpenModal();
-    render();
-  };
-  metaRow.appendChild(brandToggleBtn);
-
-  const linkToggleBtn = document.createElement('button');
-  linkToggleBtn.className = 'icon-toggle-btn' + (clip.videoLink ? ' has-value' : '');
-  linkToggleBtn.title = 'Video link';
-  linkToggleBtn.innerHTML = NAV_ICONS.link;
-  linkToggleBtn.onclick = () => {
-    if (linkPickerOpenIds.has(clip.id)) linkPickerOpenIds.delete(clip.id); else linkPickerOpenIds.add(clip.id);
-    refreshOpenModal();
-    render();
-  };
-  metaRow.appendChild(linkToggleBtn);
-  card.appendChild(metaRow);
 
   if (brandPickerOpenIds.has(clip.id)) {
     const brandSelect = document.createElement('select');
