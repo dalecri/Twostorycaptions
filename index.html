@@ -167,12 +167,12 @@
   }
   input.app-input, select.app-input, .entry-form input[type="url"] {
     width: 100%;
-    font-family: inherit;
-    font-size: 15px;
-    padding: 10px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 9px 14px;
     border: 1px solid var(--line);
-    border-radius: 12px;
-    background: #fff;
+    border-radius: 10px;
+    background: var(--paper);
     color: var(--ink);
   }
   .link-row {
@@ -272,7 +272,7 @@
   .date-pill-clear:hover { opacity: 1; background: transparent; transform: none; }
 
   /* ===== Minimal dropdown filter ===== */
-  .header-icons { display: flex; align-items: center; gap: 2px; }
+  .content-toolbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
   .header-filter-icons { display: flex; align-items: center; gap: 2px; }
   .icon-btn.filter-icon-active { color: var(--moss); }
 
@@ -340,6 +340,8 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
+    margin-top: 10px;
+    margin-bottom: 4px;
   }
   .card-top-right {
     display: flex;
@@ -473,6 +475,43 @@
     flex-wrap: wrap;
     margin-top: 14px;
   }
+  .card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .icon-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--ink-soft);
+    padding: 0;
+  }
+  .icon-toggle-btn svg { width: 14px; height: 14px; }
+  .icon-toggle-btn:hover { border-color: var(--moss); color: var(--moss); background: transparent; transform: none; }
+  .icon-toggle-btn.has-value { border-color: var(--moss); color: var(--moss); background: color-mix(in srgb, var(--moss) 10%, transparent); }
+  .platform-copy-group { display: flex; gap: 4px; flex-shrink: 0; }
+  .platform-copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: transparent;
+    border: 1px solid var(--moss);
+    border-radius: 50%;
+    color: var(--moss-dark);
+    padding: 0;
+  }
+  .platform-copy-btn svg { width: 13px; height: 13px; }
+  .platform-copy-btn:hover { background: var(--moss); color: #fff; transform: none; }
+  .platform-copy-btn.just-copied { background: var(--moss); color: #fff; }
   .card-bottom-row {
     display: flex;
     align-items: center;
@@ -559,7 +598,6 @@
   }
   .copy-btn:hover { background: var(--moss); color: #fff; }
   .copy-btn.just-copied { background: var(--moss); color: #fff; border-color: var(--moss); }
-  .hook-line { font-style: normal; font-weight: 600; color: var(--moss-dark); }
   .hashtags-wrap {
     display: flex;
     align-items: center;
@@ -614,24 +652,6 @@
   .platform-chip svg { width: 13px; height: 13px; flex-shrink: 0; }
   .platform-chip:hover { background: color-mix(in srgb, var(--rust) 10%, transparent); }
   .platform-chip.selected { background: var(--rust); color: #fff; }
-
-  .brand-select-compact {
-    display: inline-block;
-    width: auto;
-    max-width: 100%;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9.5px;
-    font-weight: 600;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-    padding: 6px 11px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--paper);
-    color: var(--ink-soft);
-    cursor: pointer;
-  }
-  .brand-select-compact:hover { border-color: var(--moss); color: var(--ink); }
 
   .cal-header {
     display: flex;
@@ -947,7 +967,7 @@
     display: block;
     margin-bottom: 6px;
   }
-  .ot-panel input:not([type="checkbox"]), .ot-panel select, .ot-panel textarea {
+  .ot-panel input:not([type="checkbox"]), .ot-panel textarea {
     width: 100%;
     background: #fff;
     border: 1px solid var(--line);
@@ -956,6 +976,17 @@
     border-radius: 10px;
     font-family: inherit;
     font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .ot-panel select {
+    width: 100%;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
     margin-bottom: 12px;
   }
   .ot-panel textarea { resize: vertical; min-height: 52px; }
@@ -1396,10 +1427,6 @@
       <p id="syncStatus">Connecting…</p>
     </div>
     <div class="header-icons">
-      <span class="header-filter-icons" id="headerFilterIcons">
-        <button class="icon-btn" id="searchToggleBtn" title="Search"></button>
-        <button class="icon-btn" id="filterToggleBtn" title="Filter"></button>
-      </span>
       <span class="header-nav-icons" id="headerNav"></span>
       <button class="icon-btn" id="settingsBtn" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg></button>
     </div>
@@ -1452,7 +1479,7 @@
 
     <div class="field-group">
       <div class="field-label">Brand (optional)</div>
-      <select id="newClipBrandSelect" class="brand-select-compact"><option value="">🏷 No brand</option></select>
+      <select id="newClipBrandSelect" class="filter-select"><option value="">🏷 No brand</option></select>
     </div>
 
     <div class="field-group">
@@ -1471,6 +1498,13 @@
   </div>
 
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+  <div class="content-toolbar" id="contentToolbar">
+    <span class="header-filter-icons" id="headerFilterIcons">
+      <button class="icon-btn" id="searchToggleBtn" title="Search"></button>
+      <button class="icon-btn" id="filterToggleBtn" title="Filter"></button>
+    </span>
+  </div>
 
   <div class="quick-filter-panel" id="quickFilterPanel" style="display:none;">
     <div id="quickFilterSearch" style="display:none;">
@@ -1693,7 +1727,8 @@ const NAV_ICONS = {
   tiktok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3v11.5a3.5 3.5 0 1 1-3.5-3.5"></path><path d="M15 3c.5 2.5 2.3 4.4 5 4.7"></path></svg>',
   both: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="5"></circle><circle cx="16" cy="12" r="5"></circle></svg>',
   search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
-  filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>'
+  filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>'
 };
 
 const VIEW_META = {
@@ -1715,6 +1750,8 @@ let isOfflinePreview = false;
 let editingDateIds = new Set();
 let collapsedCaptionIds = new Set();
 let compactCardIds = new Set();
+let brandPickerOpenIds = new Set();
+let linkPickerOpenIds = new Set();
 
 let brands = [];
 let editingBrandId = '';
@@ -1752,13 +1789,13 @@ const SEED_CLIPS = [
     platform: 'Both',
     scheduledDate: '',
     captions: {
-      hook: 'the situationship nobody asked for',
       captions: [
         "i've never had a relationship this codependent where only one of us is emotionally available",
         'he needs me for food, warmth, and emotional labor. i need him for nothing. this is the dynamic.',
         "we're in this together. by which i mean i'm in it and he's supervising."
       ],
-      hashtags: '#catsofinstagram #catbehavior #catmom'
+      hashtagsInstagram: '#catsofinstagram #catbehavior #catmom',
+      hashtagsTiktok: '#catsoftiktok #fyp #cats'
     }
   },
   {
@@ -2763,7 +2800,12 @@ async function generateCaptions(id) {
 
   const systemPrompt = `You write social captions for a cat content account. The account features four cats: Cali and Neo (domestic shorthairs, downstairs territory) and Ramses (Savannah) and Diego (Bengal, upstairs territory).
 
-Critical rule: never include the account's own name or handle anywhere in the hook, captions, or hashtags. The account is small and growing, so its own name has no search reach — do not waste a hashtag on it. Hashtags: exactly 3, the highest-value, broadest-reach tags for cats, pets, or the specific breeds involved — chosen purely to maximize discoverability for people who don't yet follow the account.
+Critical rule: never include the account's own name or handle anywhere in the captions or hashtags. The account is small and growing, so its own name has no search reach — do not waste a hashtag on it.
+
+You must produce TWO separate hashtag sets, each exactly 3 tags, space-separated:
+- Instagram-flavored: the highest-value, broadest-reach tags for cats/pets/the specific breeds involved on Instagram specifically.
+- TikTok-flavored: tags that fit TikTok's discovery style (can lean toward broader reach/FYP-style tags, since TikTok relies less on hashtag-walls and more on a few strong tags).
+They can overlap if genuinely the best choice for both, but consider each platform on its own terms rather than reusing one list twice by default.
 
 Platform: ${platform}
 ${platformGuide[platform]}
@@ -2775,11 +2817,11 @@ If multiple tones are selected, write one caption option per tone (in the order 
 
 Respond ONLY with valid JSON, no markdown fences, no preamble, in this exact shape:
 {
-  "hook": "a short on-screen text overlay for the first 1-2 seconds, matching the dominant tone",
   "captions": ["option 1", "option 2", "option 3"],
-  "hashtags": "#tag1 #tag2 #tag3"
+  "hashtagsInstagram": "#tag1 #tag2 #tag3",
+  "hashtagsTiktok": "#tag1 #tag2 #tag3"
 }
-Each caption should be 1-3 sentences. Label-free — just the caption text itself. Hashtags must be exactly 3, space-separated.`;
+Each caption should be 1-3 sentences. Label-free — just the caption text itself. Each hashtag set must be exactly 3 tags, space-separated.`;
 
   try {
     const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-captions`, {
@@ -2807,7 +2849,7 @@ Each caption should be 1-3 sentences. Label-free — just the caption text itsel
       if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
       await saveClips(clip.id);
     } else {
-      clip.captions = { hook: '', captions: ['Could not generate captions' + NETWORK_HINT + '.'], hashtags: '' };
+      clip.captions = { captions: ['Could not generate captions' + NETWORK_HINT + '.'], hashtagsInstagram: '', hashtagsTiktok: '' };
     }
   }
   loadingCaptions[id] = false;
@@ -2827,16 +2869,10 @@ function buildPlaceholderCaptions(clip, tones, platform) {
   const list = (tones && tones.length ? tones : ['Deadpan nature-doc']).map(t => toneCaptionMap[t] || toneCaptionMap['Deadpan nature-doc']);
   while (list.length < 3) list.push(list[0]);
 
-  const hashtagsByPlatform = {
-    'Instagram': '#catsofinstagram #catbehavior #bengalcat',
-    'TikTok': '#catsoftiktok #fyp #cats',
-    'Both': '#catsofinstagram #catsoftiktok #catbehavior'
-  };
-
   return {
-    hook: '(placeholder — preview mode)',
     captions: list.slice(0, 3),
-    hashtags: hashtagsByPlatform[platform] || hashtagsByPlatform['Both']
+    hashtagsInstagram: '#catsofinstagram #catbehavior #bengalcat',
+    hashtagsTiktok: '#catsoftiktok #fyp #cats'
   };
 }
 
@@ -3243,6 +3279,28 @@ function buildFullCard(clip, forceExpanded) {
 
   const isCompact = !forceExpanded && compactCardIds.has(clip.id);
 
+  // Status (left) + Date (right) share the top row
+  const headerRow = document.createElement('div');
+  headerRow.className = 'card-header-row';
+
+  const statusSelect = document.createElement('select');
+  statusSelect.className = 'stamp-select ' + clip.status;
+  STATUSES.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = STATUS_LABELS[s];
+    if (s === clip.status) opt.selected = true;
+    statusSelect.appendChild(opt);
+  });
+  statusSelect.onchange = () => {
+    statusSelect.className = 'stamp-select ' + statusSelect.value;
+    updateStatus(clip.id, statusSelect.value);
+    refreshOpenModal();
+  };
+  headerRow.appendChild(statusSelect);
+  headerRow.appendChild(buildDatePillForClip(clip));
+  card.appendChild(headerRow);
+
   const top = document.createElement('div');
   top.className = 'card-top';
   const desc = document.createElement('div');
@@ -3280,26 +3338,61 @@ function buildFullCard(clip, forceExpanded) {
   top.appendChild(topRight);
   card.appendChild(top);
 
-  // Status: click the pill itself to change it — no separate dropdown control
-  const statusSelect = document.createElement('select');
-  statusSelect.className = 'stamp-select ' + clip.status;
-  STATUSES.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s;
-    opt.textContent = STATUS_LABELS[s];
-    if (s === clip.status) opt.selected = true;
-    statusSelect.appendChild(opt);
-  });
-  statusSelect.onchange = () => {
-    statusSelect.className = 'stamp-select ' + statusSelect.value;
-    updateStatus(clip.id, statusSelect.value);
-    refreshOpenModal();
-  };
-  card.appendChild(statusSelect);
-
   if (isCompact) {
     card.classList.add('card-compact');
     return card;
+  }
+
+  // Generated caption options (if any) render below the main caption
+  if (clip.captions) {
+    const box = document.createElement('div');
+    box.className = 'captions-box';
+
+    const usedTones = clip.captionTones || [];
+    const igHashtags = clip.captions.hashtagsInstagram || clip.captions.hashtags || '';
+    const ttHashtags = clip.captions.hashtagsTiktok || clip.captions.hashtags || '';
+    (clip.captions.captions || []).forEach((cap, i) => {
+      const optDiv = document.createElement('div');
+      optDiv.className = 'caption-opt';
+      const topRow = document.createElement('div');
+      topRow.className = 'caption-opt-top';
+      const tag = document.createElement('span');
+      tag.className = 'copy-tag';
+      tag.textContent = usedTones[i] ? usedTones[i] : 'Option ' + (i+1);
+      const copyBtnGroup = document.createElement('div');
+      copyBtnGroup.className = 'platform-copy-group';
+
+      const igCopyBtn = document.createElement('button');
+      igCopyBtn.className = 'platform-copy-btn';
+      igCopyBtn.title = 'Copy for Instagram (with IG tags)';
+      igCopyBtn.innerHTML = NAV_ICONS.instagram;
+      igCopyBtn.onclick = () => copyWithIconFeedback(igHashtags ? (cap + '\n\n' + igHashtags) : cap, igCopyBtn);
+
+      const ttCopyBtn = document.createElement('button');
+      ttCopyBtn.className = 'platform-copy-btn';
+      ttCopyBtn.title = 'Copy for TikTok (with TikTok tags)';
+      ttCopyBtn.innerHTML = NAV_ICONS.tiktok;
+      ttCopyBtn.onclick = () => copyWithIconFeedback(ttHashtags ? (cap + '\n\n' + ttHashtags) : cap, ttCopyBtn);
+
+      copyBtnGroup.appendChild(igCopyBtn);
+      copyBtnGroup.appendChild(ttCopyBtn);
+      topRow.appendChild(tag);
+      topRow.appendChild(copyBtnGroup);
+      optDiv.appendChild(topRow);
+      const capText = document.createElement('div');
+      capText.textContent = cap;
+      optDiv.appendChild(capText);
+      box.appendChild(optDiv);
+    });
+
+    if (igHashtags || ttHashtags) {
+      const hashDiv = document.createElement('div');
+      hashDiv.className = 'hashtags';
+      hashDiv.innerHTML = (igHashtags ? '<strong>IG:</strong> ' + igHashtags + '<br>' : '') + (ttHashtags ? '<strong>TikTok:</strong> ' + ttHashtags : '');
+      box.appendChild(hashDiv);
+    }
+
+    card.appendChild(box);
   }
 
   const meta = document.createElement('div');
@@ -3307,7 +3400,7 @@ function buildFullCard(clip, forceExpanded) {
   meta.textContent = 'Logged ' + timeAgo(clip.created);
   card.appendChild(meta);
 
-  // Platform, brand, and date together on one row — all compact, self-explanatory controls
+  // Platform stays visible; brand and video link collapse behind small icon toggles to stay minimal
   const metaRow = document.createElement('div');
   metaRow.className = 'card-meta-row';
 
@@ -3319,27 +3412,78 @@ function buildFullCard(clip, forceExpanded) {
   });
   metaRow.appendChild(platformRow);
 
-  const brandSelect = document.createElement('select');
-  brandSelect.className = 'brand-select-compact';
-  const noneOpt = document.createElement('option');
-  noneOpt.value = '';
-  noneOpt.textContent = '🏷 No brand';
-  brandSelect.appendChild(noneOpt);
-  brands.filter(b => b.category !== 'Pinned').forEach(b => {
-    const opt = document.createElement('option');
-    opt.value = b.id;
-    opt.textContent = b.name;
-    if (clip.brandId === b.id) opt.selected = true;
-    brandSelect.appendChild(opt);
-  });
-  brandSelect.onchange = () => {
-    clip.brandId = brandSelect.value;
-    saveClips(clip.id);
+  const brandToggleBtn = document.createElement('button');
+  brandToggleBtn.className = 'icon-toggle-btn' + (clip.brandId ? ' has-value' : '');
+  brandToggleBtn.title = 'Brand';
+  brandToggleBtn.innerHTML = NAV_ICONS.outreach;
+  brandToggleBtn.onclick = () => {
+    if (brandPickerOpenIds.has(clip.id)) brandPickerOpenIds.delete(clip.id); else brandPickerOpenIds.add(clip.id);
     refreshOpenModal();
+    render();
   };
-  metaRow.appendChild(brandSelect);
-  metaRow.appendChild(buildDatePillForClip(clip));
+  metaRow.appendChild(brandToggleBtn);
+
+  const linkToggleBtn = document.createElement('button');
+  linkToggleBtn.className = 'icon-toggle-btn' + (clip.videoLink ? ' has-value' : '');
+  linkToggleBtn.title = 'Video link';
+  linkToggleBtn.innerHTML = NAV_ICONS.link;
+  linkToggleBtn.onclick = () => {
+    if (linkPickerOpenIds.has(clip.id)) linkPickerOpenIds.delete(clip.id); else linkPickerOpenIds.add(clip.id);
+    refreshOpenModal();
+    render();
+  };
+  metaRow.appendChild(linkToggleBtn);
   card.appendChild(metaRow);
+
+  if (brandPickerOpenIds.has(clip.id)) {
+    const brandSelect = document.createElement('select');
+    brandSelect.className = 'filter-select';
+    const noneOpt = document.createElement('option');
+    noneOpt.value = '';
+    noneOpt.textContent = '🏷 No brand';
+    brandSelect.appendChild(noneOpt);
+    brands.filter(b => b.category !== 'Pinned').forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = b.name;
+      if (clip.brandId === b.id) opt.selected = true;
+      brandSelect.appendChild(opt);
+    });
+    brandSelect.onchange = () => {
+      clip.brandId = brandSelect.value;
+      saveClips(clip.id);
+      refreshOpenModal();
+    };
+    brandSelect.style.marginTop = '8px';
+    card.appendChild(brandSelect);
+  }
+
+  if (linkPickerOpenIds.has(clip.id)) {
+    const linkRow = document.createElement('div');
+    linkRow.className = 'link-row';
+    linkRow.style.marginTop = '8px';
+    const linkInput = document.createElement('input');
+    linkInput.type = 'url';
+    linkInput.className = 'app-input';
+    linkInput.placeholder = '🔗 Google Photos link (optional)';
+    linkInput.value = clip.videoLink || '';
+    linkInput.onchange = () => {
+      clip.videoLink = linkInput.value.trim();
+      saveClips(clip.id);
+      refreshOpenModal();
+    };
+    linkRow.appendChild(linkInput);
+    if (clip.videoLink) {
+      const openLink = document.createElement('a');
+      openLink.className = 'link-open-btn';
+      openLink.href = clip.videoLink;
+      openLink.target = '_blank';
+      openLink.rel = 'noopener noreferrer';
+      openLink.textContent = 'Open ↗';
+      linkRow.appendChild(openLink);
+    }
+    card.appendChild(linkRow);
+  }
 
   const toneLabel = document.createElement('div');
   toneLabel.className = 'field-label';
@@ -3358,36 +3502,6 @@ function buildFullCard(clip, forceExpanded) {
     toneRow.appendChild(chip);
   });
   card.appendChild(toneRow);
-
-  const linkLabel = document.createElement('div');
-  linkLabel.className = 'field-label';
-  linkLabel.style.marginTop = '16px';
-  linkLabel.textContent = 'Video link';
-  card.appendChild(linkLabel);
-
-  const linkRow = document.createElement('div');
-  linkRow.className = 'link-row';
-  const linkInput = document.createElement('input');
-  linkInput.type = 'url';
-  linkInput.className = 'app-input';
-  linkInput.placeholder = '🔗 Google Photos link (optional)';
-  linkInput.value = clip.videoLink || '';
-  linkInput.onchange = () => {
-    clip.videoLink = linkInput.value.trim();
-    saveClips(clip.id);
-    refreshOpenModal();
-  };
-  linkRow.appendChild(linkInput);
-  if (clip.videoLink) {
-    const openLink = document.createElement('a');
-    openLink.className = 'link-open-btn';
-    openLink.href = clip.videoLink;
-    openLink.target = '_blank';
-    openLink.rel = 'noopener noreferrer';
-    openLink.textContent = 'Open ↗';
-    linkRow.appendChild(openLink);
-  }
-  card.appendChild(linkRow);
 
   const bottomRow = document.createElement('div');
   bottomRow.className = 'card-bottom-row';
@@ -3427,61 +3541,6 @@ function buildFullCard(clip, forceExpanded) {
     card.appendChild(warn);
   }
 
-  if (clip.captions) {
-    const isCollapsed = collapsedCaptionIds.has(clip.id);
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'captions-toggle';
-    toggleBtn.innerHTML = isCollapsed ? '▸ Show captions' : '▾ Hide captions';
-    toggleBtn.onclick = () => {
-      if (isCollapsed) collapsedCaptionIds.delete(clip.id); else collapsedCaptionIds.add(clip.id);
-      render();
-    };
-    card.appendChild(toggleBtn);
-
-    const box = document.createElement('div');
-    box.className = 'captions-box';
-    if (isCollapsed) box.style.display = 'none';
-
-    if (clip.captions.hook) {
-      const hookP = document.createElement('div');
-      hookP.className = 'hook-line';
-      hookP.textContent = '"' + clip.captions.hook + '"';
-      box.appendChild(hookP);
-    }
-
-    const usedTones = clip.captionTones || [];
-    const hashtags = clip.captions.hashtags || '';
-    (clip.captions.captions || []).forEach((cap, i) => {
-      const optDiv = document.createElement('div');
-      optDiv.className = 'caption-opt';
-      const topRow = document.createElement('div');
-      topRow.className = 'caption-opt-top';
-      const tag = document.createElement('span');
-      tag.className = 'copy-tag';
-      tag.textContent = usedTones[i] ? usedTones[i] : 'Option ' + (i+1);
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'copy-btn';
-      copyBtn.textContent = 'Copy with tags';
-      copyBtn.onclick = () => copyText(hashtags ? (cap + '\n\n' + hashtags) : cap, copyBtn);
-      topRow.appendChild(tag);
-      topRow.appendChild(copyBtn);
-      optDiv.appendChild(topRow);
-      const capText = document.createElement('div');
-      capText.textContent = cap;
-      optDiv.appendChild(capText);
-      box.appendChild(optDiv);
-    });
-
-    if (hashtags) {
-      const hashDiv = document.createElement('div');
-      hashDiv.className = 'hashtags';
-      hashDiv.textContent = hashtags + '  (copied automatically with each caption above)';
-      box.appendChild(hashDiv);
-    }
-
-    card.appendChild(box);
-  }
-
   return card;
 }
 
@@ -3503,7 +3562,10 @@ function buildGridTile(clip) {
     e.stopPropagation();
     let textToCopy = clip.desc;
     if (clip.captions && clip.captions.captions && clip.captions.captions[0]) {
-      textToCopy = clip.captions.captions[0] + (clip.captions.hashtags ? '\n\n' + clip.captions.hashtags : '');
+      const tags = clip.platform === 'TikTok'
+        ? (clip.captions.hashtagsTiktok || clip.captions.hashtags || '')
+        : (clip.captions.hashtagsInstagram || clip.captions.hashtags || '');
+      textToCopy = clip.captions.captions[0] + (tags ? '\n\n' + tags : '');
     }
     copyWithIconFeedback(textToCopy, copyBtn);
   };
@@ -3597,7 +3659,7 @@ function render() {
   document.getElementById('outreachView').style.display = currentView === 'outreach' ? 'block' : 'none';
 
   const showList = currentView === 'grid';
-  document.getElementById('headerFilterIcons').style.display = showList ? 'flex' : 'none';
+  document.getElementById('contentToolbar').style.display = showList ? 'flex' : 'none';
   if (!showList) activeQuickFilter = null;
   renderQuickFilterPanel();
 
