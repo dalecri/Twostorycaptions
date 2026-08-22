@@ -172,7 +172,7 @@
     padding: 9px 14px;
     border: 1px solid var(--line);
     border-radius: 10px;
-    background: var(--paper);
+    background: var(--paper-light);
     color: var(--ink);
   }
   .link-row {
@@ -297,7 +297,7 @@
     padding: 9px 14px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: var(--paper);
+    background: var(--paper-light);
     color: var(--ink);
     min-width: 120px;
   }
@@ -322,7 +322,7 @@
     padding: 9px 14px 9px 34px;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: var(--paper);
+    background: var(--paper-light);
     color: var(--ink);
   }
 
@@ -436,31 +436,55 @@
     flex-shrink: 0;
     background: color-mix(in srgb, currentColor 16%, var(--paper-light));
   }
-  .stamp.idea, .stamp-select.idea { color: var(--stamp-idea); }
-  .stamp.filmed, .stamp-select.filmed { color: var(--stamp-filmed); }
-  .stamp.captioned, .stamp-select.captioned { color: var(--stamp-captioned); }
-  .stamp.scheduled, .stamp-select.scheduled { color: var(--stamp-scheduled); }
-  .stamp.posted, .stamp-select.posted { color: var(--stamp-posted); }
+  .stamp.idea, .status-platform-group.idea { color: var(--stamp-idea); }
+  .stamp.filmed, .status-platform-group.filmed { color: var(--stamp-filmed); }
+  .stamp.captioned, .status-platform-group.captioned { color: var(--stamp-captioned); }
+  .stamp.scheduled, .status-platform-group.scheduled { color: var(--stamp-scheduled); }
+  .stamp.posted, .status-platform-group.posted { color: var(--stamp-posted); }
+
+  .status-platform-group {
+    display: inline-flex;
+    align-items: stretch;
+    background: color-mix(in srgb, currentColor 16%, var(--paper-light));
+  }
+  .status-platform-divider {
+    width: 1px;
+    align-self: stretch;
+    background: color-mix(in srgb, currentColor 35%, var(--paper-light));
+  }
+  .platform-badge-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    padding: 0 12px;
+    color: inherit;
+    cursor: pointer;
+  }
+  .platform-badge-btn svg { width: 13px; height: 13px; }
+  .platform-badge-btn:hover { background: transparent; opacity: 0.75; transform: none; }
 
   .stamp-select {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 9.5px;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.6px;
     text-transform: uppercase;
     text-align: center;
     text-align-last: center;
     border: none;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: color-mix(in srgb, currentColor 16%, var(--paper-light));
+    padding: 7px 14px;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
     cursor: pointer;
-    margin-top: 8px;
+    margin-top: 0;
   }
-  .stamp-select:hover { background: color-mix(in srgb, currentColor 26%, var(--paper-light)); }
+  .stamp-select:hover { background: transparent; opacity: 0.85; }
 
   .card-meta {
     font-family: 'IBM Plex Mono', monospace;
@@ -496,22 +520,20 @@
   .icon-toggle-btn svg { width: 14px; height: 14px; }
   .icon-toggle-btn:hover { border-color: var(--moss); color: var(--moss); background: transparent; transform: none; }
   .icon-toggle-btn.has-value { border-color: var(--moss); color: var(--moss); background: color-mix(in srgb, var(--moss) 10%, transparent); }
-  .platform-copy-group { display: flex; gap: 4px; flex-shrink: 0; }
+  .platform-copy-group { display: flex; gap: 6px; flex-shrink: 0; }
   .platform-copy-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
     background: transparent;
-    border: 1px solid var(--moss);
-    border-radius: 50%;
+    border: none;
+    border-radius: 0;
     color: var(--moss-dark);
-    padding: 0;
+    padding: 2px;
   }
-  .platform-copy-btn svg { width: 13px; height: 13px; }
-  .platform-copy-btn:hover { background: var(--moss); color: #fff; transform: none; }
-  .platform-copy-btn.just-copied { background: var(--moss); color: #fff; }
+  .platform-copy-btn svg { width: 15px; height: 15px; }
+  .platform-copy-btn:hover { color: var(--moss); background: transparent; transform: none; }
+  .platform-copy-btn.just-copied { color: var(--moss); }
   .card-bottom-row {
     display: flex;
     align-items: center;
@@ -980,7 +1002,7 @@
   }
   .ot-panel select {
     width: 100%;
-    background: var(--paper);
+    background: var(--paper-light);
     border: 1px solid var(--line);
     color: var(--ink);
     padding: 9px 14px;
@@ -1794,8 +1816,8 @@ const SEED_CLIPS = [
         'he needs me for food, warmth, and emotional labor. i need him for nothing. this is the dynamic.',
         "we're in this together. by which i mean i'm in it and he's supervising."
       ],
-      hashtagsInstagram: '#catsofinstagram #catbehavior #catmom',
-      hashtagsTiktok: '#catsoftiktok #fyp #cats'
+      hashtagsInstagram: '#catsofig #catsofinstagram #catlife',
+      hashtagsTiktok: '#catsoftiktok #bengalsoftiktok #catlife'
     }
   },
   {
@@ -2755,7 +2777,14 @@ function closeEntrySheet() {
 
 function updateStatus(id, status) {
   const c = clips.find(c => c.id === id);
-  if (c) { c.status = status; saveClips(id); render(); }
+  if (!c) return;
+  c.status = status;
+  if (status === 'posted' && !c.scheduledDate) {
+    const now = new Date();
+    c.scheduledDate = [now.getFullYear(), String(now.getMonth()+1).padStart(2,'0'), String(now.getDate()).padStart(2,'0')].join('-');
+  }
+  saveClips(id);
+  render();
 }
 
 function setScheduledDate(id, dateStr) {
@@ -2772,6 +2801,10 @@ function removeClip(id) {
   deleteClipRemote(id);
   render();
 }
+
+// Fixed hashtag sets — always used as-is, never generated, so they stay exactly on-brand.
+const FIXED_HASHTAGS_IG = '#catsofig #catsofinstagram #catlife';
+const FIXED_HASHTAGS_TT = '#catsoftiktok #bengalsoftiktok #catlife';
 
 async function generateCaptions(id) {
   const clip = clips.find(c => c.id === id);
@@ -2800,12 +2833,7 @@ async function generateCaptions(id) {
 
   const systemPrompt = `You write social captions for a cat content account. The account features four cats: Cali and Neo (domestic shorthairs, downstairs territory) and Ramses (Savannah) and Diego (Bengal, upstairs territory).
 
-Critical rule: never include the account's own name or handle anywhere in the captions or hashtags. The account is small and growing, so its own name has no search reach — do not waste a hashtag on it.
-
-You must produce TWO separate hashtag sets, each exactly 3 tags, space-separated:
-- Instagram-flavored: the highest-value, broadest-reach tags for cats/pets/the specific breeds involved on Instagram specifically.
-- TikTok-flavored: tags that fit TikTok's discovery style (can lean toward broader reach/FYP-style tags, since TikTok relies less on hashtag-walls and more on a few strong tags).
-They can overlap if genuinely the best choice for both, but consider each platform on its own terms rather than reusing one list twice by default.
+Critical rule: never include the account's own name or handle anywhere in the captions. The account is small and growing, so its own name has no search reach.
 
 Platform: ${platform}
 ${platformGuide[platform]}
@@ -2817,11 +2845,9 @@ If multiple tones are selected, write one caption option per tone (in the order 
 
 Respond ONLY with valid JSON, no markdown fences, no preamble, in this exact shape:
 {
-  "captions": ["option 1", "option 2", "option 3"],
-  "hashtagsInstagram": "#tag1 #tag2 #tag3",
-  "hashtagsTiktok": "#tag1 #tag2 #tag3"
+  "captions": ["option 1", "option 2", "option 3"]
 }
-Each caption should be 1-3 sentences. Label-free — just the caption text itself. Each hashtag set must be exactly 3 tags, space-separated.`;
+Each caption should be 1-3 sentences. Label-free — just the caption text itself. Do not include any hashtags in the caption text.`;
 
   try {
     const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-captions`, {
@@ -2837,7 +2863,7 @@ Each caption should be 1-3 sentences. Label-free — just the caption text itsel
     let raw = textBlock ? textBlock.text : '{}';
     raw = raw.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(raw);
-    clip.captions = parsed;
+    clip.captions = { captions: parsed.captions, hashtagsInstagram: FIXED_HASHTAGS_IG, hashtagsTiktok: FIXED_HASHTAGS_TT };
     clip.captionTones = tones.length > 1 ? tones : [];
     if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
     await saveClips(clip.id);
@@ -2871,8 +2897,8 @@ function buildPlaceholderCaptions(clip, tones, platform) {
 
   return {
     captions: list.slice(0, 3),
-    hashtagsInstagram: '#catsofinstagram #catbehavior #bengalcat',
-    hashtagsTiktok: '#catsoftiktok #fyp #cats'
+    hashtagsInstagram: FIXED_HASHTAGS_IG,
+    hashtagsTiktok: FIXED_HASHTAGS_TT
   };
 }
 
@@ -3279,12 +3305,15 @@ function buildFullCard(clip, forceExpanded) {
 
   const isCompact = !forceExpanded && compactCardIds.has(clip.id);
 
-  // Status (left) + Date (right) share the top row
+  // Status + platform form one unified badge (left), date on the right
   const headerRow = document.createElement('div');
   headerRow.className = 'card-header-row';
 
+  const statusPlatformGroup = document.createElement('div');
+  statusPlatformGroup.className = 'status-platform-group ' + clip.status;
+
   const statusSelect = document.createElement('select');
-  statusSelect.className = 'stamp-select ' + clip.status;
+  statusSelect.className = 'stamp-select';
   STATUSES.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s;
@@ -3293,11 +3322,30 @@ function buildFullCard(clip, forceExpanded) {
     statusSelect.appendChild(opt);
   });
   statusSelect.onchange = () => {
-    statusSelect.className = 'stamp-select ' + statusSelect.value;
+    statusPlatformGroup.className = 'status-platform-group ' + statusSelect.value;
     updateStatus(clip.id, statusSelect.value);
     refreshOpenModal();
   };
-  headerRow.appendChild(statusSelect);
+  statusPlatformGroup.appendChild(statusSelect);
+
+  const statusPlatformDivider = document.createElement('div');
+  statusPlatformDivider.className = 'status-platform-divider';
+  statusPlatformGroup.appendChild(statusPlatformDivider);
+
+  if (!clip.platform) clip.platform = 'Both';
+  const PLATFORM_ORDER = ['Instagram', 'TikTok', 'Both'];
+  const platformBadgeBtn = document.createElement('button');
+  platformBadgeBtn.className = 'platform-badge-btn';
+  platformBadgeBtn.title = 'Shared on: ' + clip.platform + ' (tap to change)';
+  platformBadgeBtn.innerHTML = PLATFORM_ICONS[clip.platform] || PLATFORM_ICONS['Both'];
+  platformBadgeBtn.onclick = () => {
+    const next = PLATFORM_ORDER[(PLATFORM_ORDER.indexOf(clip.platform) + 1) % PLATFORM_ORDER.length];
+    setPlatform(clip.id, next);
+    refreshOpenModal();
+  };
+  statusPlatformGroup.appendChild(platformBadgeBtn);
+
+  headerRow.appendChild(statusPlatformGroup);
   headerRow.appendChild(buildDatePillForClip(clip));
   card.appendChild(headerRow);
 
@@ -3385,13 +3433,6 @@ function buildFullCard(clip, forceExpanded) {
       box.appendChild(optDiv);
     });
 
-    if (igHashtags || ttHashtags) {
-      const hashDiv = document.createElement('div');
-      hashDiv.className = 'hashtags';
-      hashDiv.innerHTML = (igHashtags ? '<strong>IG:</strong> ' + igHashtags + '<br>' : '') + (ttHashtags ? '<strong>TikTok:</strong> ' + ttHashtags : '');
-      box.appendChild(hashDiv);
-    }
-
     card.appendChild(box);
   }
 
@@ -3400,17 +3441,26 @@ function buildFullCard(clip, forceExpanded) {
   meta.textContent = 'Logged ' + timeAgo(clip.created);
   card.appendChild(meta);
 
-  // Platform stays visible; brand and video link collapse behind small icon toggles to stay minimal
+  // Only the tones actually chosen show here — not the full picker (that lives in the New Caption sheet)
+  if (!clip.selectedTones) clip.selectedTones = ['Deadpan nature-doc'];
+  if (clip.selectedTones.length) {
+    const toneRow = document.createElement('div');
+    toneRow.className = 'tone-row';
+    toneRow.style.marginTop = '10px';
+    clip.selectedTones.forEach(tone => {
+      const chip = document.createElement('div');
+      chip.className = 'tone-chip selected';
+      chip.textContent = tone;
+      chip.title = 'Remove this tone';
+      chip.onclick = () => { toggleTone(clip.id, tone); refreshOpenModal(); };
+      toneRow.appendChild(chip);
+    });
+    card.appendChild(toneRow);
+  }
+
+  // Brand and video link collapse behind small icon toggles to stay minimal
   const metaRow = document.createElement('div');
   metaRow.className = 'card-meta-row';
-
-  if (!clip.platform) clip.platform = 'Both';
-  const platformRow = document.createElement('div');
-  platformRow.className = 'platform-row';
-  PLATFORMS.forEach(p => {
-    platformRow.appendChild(buildPlatformChip(p, clip.platform === p, () => { setPlatform(clip.id, p); refreshOpenModal(); }));
-  });
-  metaRow.appendChild(platformRow);
 
   const brandToggleBtn = document.createElement('button');
   brandToggleBtn.className = 'icon-toggle-btn' + (clip.brandId ? ' has-value' : '');
@@ -3484,24 +3534,6 @@ function buildFullCard(clip, forceExpanded) {
     }
     card.appendChild(linkRow);
   }
-
-  const toneLabel = document.createElement('div');
-  toneLabel.className = 'field-label';
-  toneLabel.style.marginTop = '16px';
-  toneLabel.textContent = 'Tone / vibe';
-  card.appendChild(toneLabel);
-
-  if (!clip.selectedTones) clip.selectedTones = ['Deadpan nature-doc'];
-  const toneRow = document.createElement('div');
-  toneRow.className = 'tone-row';
-  TONES.forEach(tone => {
-    const chip = document.createElement('div');
-    chip.className = 'tone-chip' + (clip.selectedTones.includes(tone) ? ' selected' : '');
-    chip.textContent = tone;
-    chip.onclick = () => { toggleTone(clip.id, tone); refreshOpenModal(); };
-    toneRow.appendChild(chip);
-  });
-  card.appendChild(toneRow);
 
   const bottomRow = document.createElement('div');
   bottomRow.className = 'card-bottom-row';
