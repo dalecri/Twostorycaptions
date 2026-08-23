@@ -288,6 +288,57 @@
 
   /* ===== Minimal dropdown filter ===== */
   .content-toolbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  .icon-btn.select-mode-active { color: var(--moss); }
+
+  .selection-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    background: var(--paper-light);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    animation: viewFadeIn 0.2s ease;
+  }
+  .selection-bar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .selection-bar-actions button { padding: 7px 12px; font-size: 10.5px; }
+  #deleteSelectedBtn { background: var(--rust); }
+  #deleteSelectedBtn:hover { background: var(--rust); filter: brightness(0.9); }
+  #deleteSelectedBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .tile-select-check {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    background: var(--paper-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    z-index: 3;
+    transition: all 0.12s ease;
+  }
+  .tile-select-check svg { width: 13px; height: 13px; }
+  .grid-tile.selected .tile-select-check,
+  .list-tile.selected .tile-select-check {
+    background: var(--moss);
+    border-color: var(--moss);
+    color: #fff;
+  }
+  .grid-tile.selected, .list-tile.selected {
+    border-color: var(--moss);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--moss) 40%, transparent);
+  }
   .header-filter-icons { display: flex; align-items: center; gap: 2px; }
   .icon-btn.filter-icon-active { color: var(--moss); }
 
@@ -1580,7 +1631,17 @@
       <button class="icon-btn" id="searchToggleBtn" title="Search"></button>
       <button class="icon-btn" id="filterToggleBtn" title="Filter"></button>
       <button class="icon-btn" id="layoutToggleBtn" title="Switch to list view"></button>
+      <button class="icon-btn" id="selectModeToggleBtn" title="Select captions"></button>
     </span>
+  </div>
+
+  <div class="selection-bar" id="selectionBar" style="display:none;">
+    <span id="selectionCount">0 selected</span>
+    <div class="selection-bar-actions">
+      <button class="ghost" id="selectAllBtn">Select all</button>
+      <button class="ghost" id="cancelSelectBtn">Cancel</button>
+      <button id="deleteSelectedBtn">Delete</button>
+    </div>
   </div>
 
   <div class="quick-filter-panel" id="quickFilterPanel" style="display:none;">
@@ -1807,7 +1868,8 @@ const NAV_ICONS = {
   filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>',
   link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
-  gridView: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>'
+  gridView: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>',
+  checkSquare: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>'
 };
 
 const VIEW_META = {
@@ -1822,6 +1884,8 @@ let searchQuery = '';
 let activeQuickFilter = null; // null | 'search' | 'select'
 let gridLayoutMode = 'grid'; // 'grid' | 'list'
 try { gridLayoutMode = localStorage.getItem('ttt-layout-mode') || 'grid'; } catch (e) {}
+let selectMode = false;
+let selectedClipIds = new Set();
 let loadingCaptions = {};
 let newClipTones = ['Deadpan nature-doc'];
 let currentView = 'grid';
@@ -3592,6 +3656,14 @@ function buildGridTile(clip, mode) {
   tile.className = mode === 'list' ? 'list-tile' : 'grid-tile';
   tile.setAttribute('data-highlight-id', clip.id);
 
+  if (selectMode) {
+    if (selectedClipIds.has(clip.id)) tile.classList.add('selected');
+    const check = document.createElement('div');
+    check.className = 'tile-select-check';
+    check.innerHTML = NAV_ICONS.checkSquare;
+    tile.appendChild(check);
+  }
+
   const stamp = document.createElement('div');
   stamp.className = 'stamp ' + clip.status;
   stamp.textContent = STATUS_LABELS[clip.status];
@@ -3650,7 +3722,13 @@ function buildGridTile(clip, mode) {
   footer.textContent = footerText;
   tile.appendChild(footer);
 
-  tile.onclick = () => openCardModal(clip.id);
+  tile.onclick = () => {
+    if (selectMode) {
+      toggleClipSelection(clip.id);
+    } else {
+      openCardModal(clip.id);
+    }
+  };
   return tile;
 }
 
@@ -3710,7 +3788,15 @@ function render() {
 
   const showList = currentView === 'grid';
   document.getElementById('contentToolbar').style.display = showList ? 'flex' : 'none';
-  if (!showList) activeQuickFilter = null;
+  if (!showList) {
+    activeQuickFilter = null;
+    if (selectMode) {
+      selectMode = false;
+      selectedClipIds.clear();
+      document.getElementById('selectModeToggleBtn').classList.remove('select-mode-active');
+      document.getElementById('selectionBar').style.display = 'none';
+    }
+  }
   renderQuickFilterPanel();
 
   const viewChanged = currentView !== lastAnimatedView;
@@ -3817,6 +3903,52 @@ function renderCardListOnly() {
       list.appendChild(buildGridTile(clip, gridLayoutMode));
     });
   }
+}
+
+// ===== Mass select / delete =====
+
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  if (!selectMode) selectedClipIds.clear();
+  document.getElementById('selectModeToggleBtn').classList.toggle('select-mode-active', selectMode);
+  document.getElementById('selectionBar').style.display = selectMode ? 'flex' : 'none';
+  renderSelectionBar();
+  renderCardListOnly();
+}
+
+function toggleClipSelection(id) {
+  if (selectedClipIds.has(id)) selectedClipIds.delete(id); else selectedClipIds.add(id);
+  renderSelectionBar();
+  renderCardListOnly();
+}
+
+function renderSelectionBar() {
+  const countEl = document.getElementById('selectionCount');
+  const deleteBtn = document.getElementById('deleteSelectedBtn');
+  if (!countEl) return;
+  const n = selectedClipIds.size;
+  countEl.textContent = n + ' selected';
+  deleteBtn.disabled = n === 0;
+}
+
+function selectAllVisible() {
+  getFilteredClips().forEach(c => selectedClipIds.add(c.id));
+  renderSelectionBar();
+  renderCardListOnly();
+}
+
+async function deleteSelectedClips() {
+  const ids = Array.from(selectedClipIds);
+  if (!ids.length) return;
+  const ok = confirm('Delete ' + ids.length + ' caption' + (ids.length === 1 ? '' : 's') + '? This can\'t be undone.');
+  if (!ok) return;
+  clips = clips.filter(c => !selectedClipIds.has(c.id));
+  selectedClipIds.clear();
+  selectMode = false;
+  document.getElementById('selectModeToggleBtn').classList.remove('select-mode-active');
+  document.getElementById('selectionBar').style.display = 'none';
+  render();
+  await Promise.all(ids.map(id => deleteClipRemote(id)));
 }
 
 function renderHeaderNav() {
@@ -4044,6 +4176,12 @@ function renderLayoutToggle() {
     btn.title = 'Switch to list view';
   }
 }
+
+document.getElementById('selectModeToggleBtn').innerHTML = NAV_ICONS.checkSquare;
+document.getElementById('selectModeToggleBtn').addEventListener('click', toggleSelectMode);
+document.getElementById('selectAllBtn').addEventListener('click', selectAllVisible);
+document.getElementById('cancelSelectBtn').addEventListener('click', toggleSelectMode);
+document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedClips);
 
 document.getElementById('brandFilterSelect').addEventListener('change', (e) => {
   activeBrandFilter = e.target.value;
