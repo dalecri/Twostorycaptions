@@ -3609,6 +3609,25 @@ function buildFullCard(clip, forceExpanded) {
     card.appendChild(linkRow);
   }
 
+  if (!clip.captions) {
+    const toneLabel = document.createElement('div');
+    toneLabel.className = 'field-label';
+    toneLabel.style.marginTop = '4px';
+    toneLabel.textContent = 'Tone / vibe (pick one or more)';
+    card.appendChild(toneLabel);
+
+    const toneRow = document.createElement('div');
+    toneRow.className = 'tone-row';
+    TONES.forEach(tone => {
+      const chip = document.createElement('div');
+      chip.className = 'tone-chip' + (clip.selectedTones.includes(tone) ? ' selected' : '');
+      chip.textContent = tone;
+      chip.onclick = () => { toggleTone(clip.id, tone); refreshOpenModal(); };
+      toneRow.appendChild(chip);
+    });
+    card.appendChild(toneRow);
+  }
+
   const bottomRow = document.createElement('div');
   bottomRow.className = 'card-bottom-row';
 
