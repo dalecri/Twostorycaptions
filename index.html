@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TwoStoryCaptions">
-<meta name="theme-color" content="#A9C084">
+<meta name="theme-color" content="#F2ECE1">
 <link rel="icon" type="image/png" href="tst.png">
 <link rel="shortcut icon" type="image/png" href="tst.png">
 <link rel="apple-touch-icon" href="tst.png">
@@ -15,21 +15,21 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Pixelify+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #A9C084;
-    --paper-light: #E3ECC7;
-    --ink: #232B18;
-    --ink-soft: #5B6B42;
-    --moss: #4B5A2E;
-    --moss-dark: #333E1F;
-    --rust: #8B4B2E;
-    --line: #B9C99A;
-    --stamp-idea: #8A9A6C;
-    --stamp-filmed: #5C7A4A;
-    --stamp-captioned: #A98A4A;
+    --paper: #F2ECE1;
+    --paper-light: #FAF6EF;
+    --ink: #33241B;
+    --ink-soft: #8A7160;
+    --moss: #F0491F;
+    --moss-dark: #C2350F;
+    --rust: #A83A1A;
+    --line: #E6D8C8;
+    --stamp-idea: #B39A82;
+    --stamp-filmed: #D97142;
+    --stamp-captioned: #D9A441;
     --stamp-scheduled: #4A7A8A;
-    --stamp-posted: #333E1F;
-    --spark: #C79A3E;
-    --spark-dark: #A17B2E;
+    --stamp-posted: #C2350F;
+    --spark: #D98B2E;
+    --spark-dark: #B36F1F;
     --pixel-notch-lg: 10px;
     --pixel-notch-sm: 5px;
   }
@@ -1928,7 +1928,7 @@ let newClipTones = ['Deadpan nature-doc'];
 let currentView = 'grid';
 let lastAnimatedView = null;
 let calMonthOffset = 0;
-let currentTheme = 'pixelSage';
+let currentTheme = 'twoStoryTails';
 let isOfflinePreview = false;
 let editingDateIds = new Set();
 let collapsedCaptionIds = new Set();
@@ -2234,6 +2234,16 @@ function fillTwoFloorTemplate(text, vars) {
 
 
 const THEMES = {
+  twoStoryTails: {
+    label: 'TwoStoryTails',
+    swatches: ['#F2ECE1', '#F0491F'],
+    vars: {
+      '--paper': '#F2ECE1', '--paper-light': '#FAF6EF', '--ink': '#33241B', '--ink-soft': '#8A7160',
+      '--moss': '#F0491F', '--moss-dark': '#C2350F', '--rust': '#A83A1A', '--line': '#E6D8C8',
+      '--stamp-idea': '#B39A82', '--stamp-filmed': '#D97142', '--stamp-captioned': '#D9A441',
+      '--stamp-scheduled': '#4A7A8A', '--stamp-posted': '#C2350F', '--spark': '#D98B2E', '--spark-dark': '#B36F1F'
+    }
+  },
   lavender: {
     label: 'Lavender Score Card',
     swatches: ['#E4E1F7', '#6C7FE8'],
@@ -4206,9 +4216,9 @@ document.getElementById('importBtn').addEventListener('click', () => document.ge
 document.getElementById('importFileInput').addEventListener('change', handleImportFile);
 
 function loadTheme() {
-  let saved = 'pixelSage';
-  try { saved = localStorage.getItem('ttt-theme') || 'pixelSage'; } catch (e) {}
-  applyTheme(THEMES[saved] ? saved : 'pixelSage', true);
+  let saved = 'twoStoryTails';
+  try { saved = localStorage.getItem('ttt-theme') || 'twoStoryTails'; } catch (e) {}
+  applyTheme(THEMES[saved] ? saved : 'twoStoryTails', true);
 }
 
 renderNewClipTones();
