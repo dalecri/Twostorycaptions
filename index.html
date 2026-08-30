@@ -7,7 +7,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TwoStoryCaptions">
 <meta name="theme-color" content="#A9C084">
+<link rel="icon" type="image/png" href="tst.png">
+<link rel="shortcut icon" type="image/png" href="tst.png">
+<link rel="apple-touch-icon" href="tst.png">
 <title>TwoStoryCaptions</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Pixelify+Sans:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -176,7 +180,6 @@
   }
   .fab-add:hover { background: var(--moss-dark); }
   .fab-add:active { background: var(--moss-dark); }
-  
   .entry-form textarea, .entry-form select {
     width: 100%;
     font-family: inherit;
@@ -221,6 +224,8 @@
     align-items: center;
   }
   .link-open-btn:hover { background: var(--moss); color: #fff; }
+  .note-link-icon { font-size: 12px; color: var(--ink-soft); flex-shrink: 0; }
+  .grid-tile-link { font-size: 11px; }
   .field-group { margin: 11px 0; }
   .field-label {
     font-family: 'IBM Plex Mono', monospace;
@@ -256,6 +261,7 @@
   button.ghost:hover { background: var(--ink); color: var(--paper-light); }
   button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+  /* ===== Date pill (shared design: new-caption form + card) ===== */
   .date-pill-row { display: flex; align-items: center; gap: 8px; }
   .date-pill-row input[type="date"] {
     font-family: 'IBM Plex Mono', monospace;
@@ -300,6 +306,7 @@
   .card-footer-row { display: flex; justify-content: flex-end; margin-top: 10px; }
   .trash-footer-btn:hover { background: color-mix(in srgb, var(--rust) 16%, var(--paper-light)); color: var(--rust); }
 
+  /* ===== Minimal dropdown filter ===== */
   .content-toolbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
   .icon-btn.select-mode-active { color: var(--moss); }
 
@@ -375,6 +382,7 @@
   .view-anim { animation: viewFadeIn 0.22s ease; }
   #quickFilterSelects { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .filter-row { margin-bottom: 0; }
+  .filters-bar-search { width: 100%; }
   .filter-select, #filterSelect {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
@@ -408,9 +416,9 @@
     border: 1px solid var(--line);
     background: var(--paper-light);
     color: var(--ink);
-    width: 100%;
   }
 
+  /* ===== Cards: simplified ===== */
   .card {
     background: var(--paper-light);
     border: 3px solid var(--ink);
@@ -435,6 +443,20 @@
     gap: 8px;
     flex-shrink: 0;
   }
+  .trash-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    line-height: 1;
+    padding: 2px 4px;
+    cursor: pointer;
+    opacity: 0.6;
+  }
+  .trash-btn svg { width: 16px; height: 16px; }
+  .trash-btn:hover { opacity: 1; color: var(--rust); background: transparent; transform: none; }
   .expand-toggle-btn {
     background: transparent;
     border: none;
@@ -453,7 +475,21 @@
   .card.card-compact { padding-bottom: 16px; }
   .card.card-compact .card-top { margin-bottom: 0; }
   .card.card-compact .card-desc { font-size: 15px; }
-  
+  .captions-toggle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--moss-dark);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 0 2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .captions-toggle:hover { text-decoration: underline; }
   .card-desc-wrap {
     display: flex;
     align-items: flex-start;
@@ -481,7 +517,6 @@
   .desc-copy-btn svg { width: 15px; height: 15px; }
   .desc-copy-btn:hover { color: var(--moss); background: transparent; transform: none; }
   .desc-copy-btn.just-copied { color: var(--moss); }
-
   .stamp {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 9.5px;
@@ -533,21 +568,18 @@
     gap: 6px;
     margin-top: 10px;
   }
-  .tone-chip {
+  .tone-badge {
+    display: inline-flex;
+    align-items: center;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
-    letter-spacing: 0.6px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     padding: 6px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: #fff;
-    color: var(--ink-soft);
-    cursor: pointer;
-    transition: all 0.12s ease;
+    background: color-mix(in srgb, var(--spark) 18%, var(--paper-light));
+    color: var(--spark-dark);
   }
-  .tone-chip:hover { border-color: var(--moss); }
-  .tone-chip.selected { background: var(--moss); border-color: var(--moss); color: #fff; }
 
   .stamp-select {
     appearance: none;
@@ -577,12 +609,34 @@
     margin-top: 8px;
     padding: 0 14px;
   }
+  .card-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
   .card-header-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
   }
+  .icon-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--ink-soft);
+    padding: 0;
+  }
+  .icon-toggle-btn svg { width: 14px; height: 14px; }
+  .icon-toggle-btn:hover { border-color: var(--moss); color: var(--moss); background: transparent; transform: none; }
+  .icon-toggle-btn.has-value { border-color: var(--moss); color: var(--moss); background: color-mix(in srgb, var(--moss) 10%, transparent); }
   .platform-copy-group { display: flex; gap: 6px; flex-shrink: 0; }
   .platform-copy-btn {
     display: flex;
@@ -605,6 +659,21 @@
     margin-top: 12px;
     flex-wrap: wrap;
   }
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .card-actions select {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+  }
+  .card-actions button { padding: 6px 10px; font-size: 10.5px; }
   .gen-caption-btn {
     background: var(--moss);
     color: #fff;
@@ -618,6 +687,12 @@
   }
   .gen-caption-btn:hover { background: var(--moss-dark); }
   .gen-caption-btn:disabled { background: var(--moss); opacity: 0.75; }
+  .remove-btn {
+    background: transparent;
+    color: var(--rust);
+    border: 1px solid var(--rust);
+  }
+  .remove-btn:hover { background: var(--rust); color: #fff; }
 
   .captions-box {
     margin-top: 14px;
@@ -659,6 +734,60 @@
   }
   .copy-btn:hover { background: var(--moss); color: #fff; }
   .copy-btn.just-copied { background: var(--moss); color: #fff; border-color: var(--moss); }
+  .hashtags-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .hashtags { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); flex: 1; }
+
+  .tone-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tone-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .tone-chip:hover { border-color: var(--moss); }
+  .tone-chip.selected { background: var(--moss); border-color: var(--moss); color: #fff; }
+
+  .platform-row {
+    display: inline-flex;
+    gap: 0;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  .platform-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 6px 11px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .platform-chip svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .platform-chip:hover { background: color-mix(in srgb, var(--rust) 10%, transparent); }
+  .platform-chip.selected { background: var(--rust); color: #fff; }
 
   .cal-header {
     display: flex;
@@ -883,6 +1012,33 @@
     letter-spacing: 0.3px;
   }
 
+  /* ===== Mobile "notes app" list ===== */
+  .note-list { border-top: 1px solid var(--line); }
+  .note-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .note-row:hover { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+  .note-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .note-dot.idea { background: var(--stamp-idea); }
+  .note-dot.filmed { background: var(--stamp-filmed); }
+  .note-dot.captioned { background: var(--stamp-captioned); }
+  .note-dot.scheduled { background: var(--stamp-scheduled); }
+  .note-dot.posted { background: var(--stamp-posted); }
+  .note-title {
+    flex: 1;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .note-chevron { color: var(--ink-soft); font-size: 16px; flex-shrink: 0; }
+
+  /* ===== Outreach / brand partnership board ===== */
   .ot-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1189,6 +1345,24 @@
     margin-bottom: 6px;
   }
 
+  @media (max-width: 900px) {
+    .ot-board { grid-template-columns: 1fr; }
+    .ot-grid2 { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 900px) {
+    .cardlist-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .grid-tile-desc { font-size: 12px; -webkit-line-clamp: 4; }
+  }
+  @media (max-width: 560px) {
+    .cardlist-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .grid-tile { padding: 9px; }
+    .grid-tile-desc { font-size: 11.5px; -webkit-line-clamp: 4; margin: 6px 0; }
+    .grid-tile-footer { font-size: 8.5px; }
+    .list-tile { padding: 14px 48px 14px 14px; }
+    .list-tile-desc { font-size: 13px; }
+  }
+
   .modal-overlay {
     display: flex;
     position: fixed;
@@ -1287,21 +1461,21 @@
     justify-content: space-between;
   }
 
-  @media (max-width: 900px) {
-    .ot-board { grid-template-columns: 1fr; }
-    .ot-grid2 { grid-template-columns: 1fr; }
-    .cardlist-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-    .grid-tile-desc { font-size: 12px; -webkit-line-clamp: 4; }
-  }
   @media (max-width: 820px) {
     body { padding: 24px 16px 60px; }
     .masthead-inner { flex-wrap: wrap; gap: 12px; }
+    .card-actions { row-gap: 8px; }
   }
+
   @media (max-width: 600px) {
     body { padding: calc(16px + env(safe-area-inset-top)) 12px calc(90px + env(safe-area-inset-bottom)); }
     .wrap { max-width: 100%; }
+
+    /* iOS Safari auto-zooms on focusing any input/select/textarea under 16px — force 16px everywhere to stop it */
     input, select, textarea { font-size: 16px !important; }
+
     .ot-stats { grid-template-columns: repeat(2, 1fr); }
+
     body.view-calendar-full {
       padding: env(safe-area-inset-top) 0 0 0 !important;
       display: flex !important;
@@ -1310,59 +1484,108 @@
     }
     body.view-calendar-full .masthead-inner { padding-bottom: 8px; }
     body.view-calendar-full footer.tally { display: none !important; }
-    body.view-calendar-full .wrap { padding: 0 !important; max-width: 100% !important; flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; min-height: 0 !important; width: 100% !important; }
-    body.view-calendar-full #calendarView { margin: 0 !important; flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; min-height: 0 !important; overflow-y: auto !important; padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+    body.view-calendar-full .wrap {
+      padding: 0 !important;
+      max-width: 100% !important;
+      flex: 1 1 auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 0 !important;
+      width: 100% !important;
+    }
+    body.view-calendar-full #calendarView {
+      margin: 0 !important;
+      flex: 1 1 auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      padding-bottom: calc(56px + env(safe-area-inset-bottom));
+    }
     body.view-calendar-full .cal-header { flex: 0 0 auto !important; }
-    body.view-calendar-full .cal-grid { flex: 1 1 auto !important; min-height: 320px !important; display: grid !important; }
-    .masthead-inner { flex-direction: column; align-items: flex-start; gap: 10px; padding-bottom: 12px; }
+    body.view-calendar-full .cal-grid {
+      flex: 1 1 auto !important;
+      min-height: 320px !important;
+      display: grid !important;
+    }
+
+    .masthead-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      padding-bottom: 12px;
+    }
     header.masthead .title-block h1 { font-size: 20px; }
-    .entry-form { left: 0; right: 0; width: 100%; transform: translateY(110%); border-radius: 18px 18px 0 0; }
+
+    .entry-form {
+      left: 0;
+      right: 0;
+      width: 100%;
+      transform: translateY(110%);
+      border-radius: 18px 18px 0 0;
+    }
     .entry-form.sheet-open { transform: translateY(0); }
     .entry-form textarea { font-size: 16px; }
     #addBtn { width: 100%; min-height: 44px; }
     .tone-row { gap: 5px; }
     .tone-chip, .platform-chip { font-size: 9.5px; padding: 6px 10px; }
-    .fab-add { right: 18px; bottom: calc(72px + env(safe-area-inset-bottom)); width: 54px; height: 54px; font-size: 26px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+
+    .fab-add {
+      right: 18px;
+      bottom: calc(72px + env(safe-area-inset-bottom));
+      width: 54px;
+      height: 54px;
+      font-size: 26px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    }
+
     .header-nav-icons button svg { width: 18px; height: 18px; }
+
     .quick-filter-panel { margin: 0 0 16px; }
     #quickFilterSelects { flex-direction: column; align-items: stretch; }
     .filter-row { width: 100%; }
     #filterSelect, .filter-select, .search-wrap { width: 100%; min-height: 40px; }
+
     .card { padding: 18px; }
     .card-top { flex-direction: column; align-items: flex-start; gap: 10px; }
     .card-desc { font-size: 17px; }
     .field-label { margin-top: 4px; }
     .tone-row, .platform-row { margin-bottom: 2px; }
     .card-meta-row { row-gap: 10px; }
+
     .card-bottom-row { margin-top: 18px; gap: 10px; }
     .link-row { flex-direction: column; align-items: stretch; }
     .link-open-btn { justify-content: center; }
     .gen-caption-btn { flex: 1; min-height: 48px; font-size: 13px; }
     .trash-btn svg { width: 18px; height: 18px; }
+
     .captions-box { margin-top: 18px; padding-top: 18px; }
     .caption-opt { font-size: 14px; padding: 10px 0; }
+
     .settings-theme-grid { grid-template-columns: 1fr; }
+
     .modal-box { padding: 60px 18px 20px; max-height: 90vh; }
     .modal-box h3 { font-size: 19px; padding-right: 50px; }
     .modal-overlay { padding: 0; align-items: flex-end; z-index: 94; }
     .modal-box { max-width: 100%; border-left: none; border-right: none; border-bottom: none; border-radius: 20px 20px 0 0; }
+
     #calendarView { margin: 0 -12px; padding: 0; display: flex; flex-direction: column; }
     .cal-header { padding: 10px 14px 0; margin-bottom: 8px; flex: 0 0 auto; }
     .cal-header h2 { font-size: 15px; }
     .cal-header .nav-btns button { padding: 6px 10px; font-size: 10px; min-height: 32px; }
-    .cal-grid { border-left: none; border-right: none; border-bottom: none; gap: 1px; flex: 1 1 auto; min-height: 0; grid-template-rows: auto repeat(var(--cal-weeks, 5), 1fr); }
+    .cal-grid {
+      border-left: none; border-right: none; border-bottom: none;
+      gap: 1px; flex: 1 1 auto; min-height: 0;
+      grid-template-rows: auto repeat(var(--cal-weeks, 5), 1fr);
+    }
     .cal-dow { font-size: 9px; padding: 7px 2px; }
     .cal-cell { min-height: 0; aspect-ratio: unset; padding: 4px; overflow: hidden; }
     .cal-daynum { font-size: 9.5px; margin-bottom: 2px; }
     .cal-post { font-size: 8.5px; padding: 2px 3px; margin-bottom: 2px; border-left-width: 2px; -webkit-line-clamp: 2; }
+
     footer.tally { flex-direction: column; gap: 4px; margin-bottom: 8px; }
-    .cardlist-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .grid-tile { padding: 9px; }
-    .grid-tile-desc { font-size: 11.5px; -webkit-line-clamp: 4; margin: 6px 0; }
-    .grid-tile-footer { font-size: 8.5px; }
-    .list-tile { padding: 14px 48px 14px 14px; }
-    .list-tile-desc { font-size: 13px; }
   }
+
   @media (max-width: 380px) {
     header.masthead .title-block h1 { font-size: 19px; }
     .cardlist-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1374,7 +1597,7 @@
   <div class="masthead-inner">
     <div class="title-block">
       <h1 id="pageTitle">Home</h1>
-      <p id="syncStatus">Initializing...</p>
+      <p id="syncStatus">Connecting…</p>
     </div>
     <div class="header-icons">
       <span class="header-nav-icons" id="headerNav"></span>
@@ -1389,8 +1612,10 @@
     <div class="modal-box" id="settingsModalBox">
       <button class="modal-close" id="settingsModalClose">✕</button>
       <h3 class="settings-title">Settings</h3>
+
       <div class="field-label" style="margin-top:0;">Theme</div>
       <div class="settings-theme-grid" id="settingsThemeGrid"></div>
+
       <div class="field-label" style="margin-top:22px;">Data</div>
       <div class="settings-data-row">
         <button id="exportBtn">⬇ Export backup</button>
@@ -1407,6 +1632,7 @@
       <button class="sheet-close" id="sheetCloseBtn">✕</button>
     </div>
     <textarea id="descInput" rows="2" placeholder="e.g. Diego knocked a mug off the counter, then stared directly at the camera for four seconds"></textarea>
+
     <div class="card-header-row" style="margin-top:10px;">
       <div class="status-platform-group new-clip-badge-group">
         <button type="button" class="platform-badge-btn" id="newClipPlatformBadge" title="Platform"></button>
@@ -1417,16 +1643,19 @@
       </div>
       <div class="date-pill-row" id="newClipDateRow"></div>
     </div>
+
     <div id="newClipBrandWrap" style="display:none; margin-top:8px;">
       <select id="newClipBrandSelect" class="filter-select"><option value="">🏷 No brand</option></select>
     </div>
     <div id="newClipLinkWrap" style="display:none; margin-top:8px;">
       <input type="url" id="newClipLinkInput" class="app-input" placeholder="🔗 Google Photos link (optional)">
     </div>
+
     <div class="field-group">
       <div class="field-label">Tone</div>
       <div class="tone-row" id="newClipToneRow"></div>
     </div>
+
     <div style="display:flex; justify-content:flex-end;">
       <button id="addBtn">Log Entry</button>
     </div>
@@ -1486,8 +1715,14 @@
       <div class="ot-panel" id="otPanel">
         <h3 id="otPanelTitle">Add a brand</h3>
         <div class="ot-grid2">
-          <div><label>Brand name</label><input id="ot-f-name" placeholder="e.g. kin+Kind"></div>
-          <div><label>Category</label><input id="ot-f-category" placeholder="e.g. Supplements, Litter, Toys"></div>
+          <div>
+            <label>Brand name</label>
+            <input id="ot-f-name" placeholder="e.g. kin+Kind">
+          </div>
+          <div>
+            <label>Category</label>
+            <input id="ot-f-category" placeholder="e.g. Supplements, Litter, Toys">
+          </div>
         </div>
         <div class="ot-grid2">
           <div>
@@ -1500,11 +1735,20 @@
               <option value="passed">Passed / declined</option>
             </select>
           </div>
-          <div><label>Contact method</label><input id="ot-f-contact" placeholder="e.g. Ambassador form, email, DM"></div>
+          <div>
+            <label>Contact method</label>
+            <input id="ot-f-contact" placeholder="e.g. Ambassador form, email, DM">
+          </div>
         </div>
         <div class="ot-grid2">
-          <div><label>Product you use</label><input id="ot-f-product" placeholder="e.g. Organic Pumpkin Powder"></div>
-          <div><label>Date contacted</label><input id="ot-f-date" type="date"></div>
+          <div>
+            <label>Product you use</label>
+            <input id="ot-f-product" placeholder="e.g. Organic Pumpkin Powder">
+          </div>
+          <div>
+            <label>Date contacted</label>
+            <input id="ot-f-date" type="date">
+          </div>
         </div>
         <label>Notes / code / link</label>
         <textarea id="ot-f-notes" placeholder="Application link, discount code, who you talked to, follow-up date..."></textarea>
@@ -1513,6 +1757,7 @@
           <button class="ghost" id="otCancelBtn">Cancel</button>
         </div>
       </div>
+
       <div class="ot-board" id="otBoard"></div>
     </div>
 
@@ -1520,32 +1765,65 @@
       <div class="ot-panel open">
         <h3>Fill in the details</h3>
         <div class="ot-grid2">
-          <div><label>Load from brand (optional)</label><select id="tplBrandSelect"><option value="">— none / custom —</option></select></div>
-          <div><label>Brand name</label><input id="tplBrandName" placeholder="e.g. kin+Kind"></div>
+          <div>
+            <label>Load from brand (optional)</label>
+            <select id="tplBrandSelect"><option value="">— none / custom —</option></select>
+          </div>
+          <div>
+            <label>Brand name</label>
+            <input id="tplBrandName" placeholder="e.g. kin+Kind">
+          </div>
         </div>
         <div class="ot-grid2">
-          <div><label>Product</label><input id="tplProduct" placeholder="e.g. Organic Pumpkin Powder"></div>
-          <div><label>Category</label><input id="tplCategory" placeholder="e.g. Litter, Dental, Supplements"></div>
+          <div>
+            <label>Product</label>
+            <input id="tplProduct" placeholder="e.g. Organic Pumpkin Powder">
+          </div>
+          <div>
+            <label>Category</label>
+            <input id="tplCategory" placeholder="e.g. Litter, Dental, Supplements">
+          </div>
         </div>
         <div class="ot-grid2">
-          <div><label>Time used</label><input id="tplDuration" placeholder="e.g. 3 months"></div>
-          <div><label>Your name (sign-off)</label><input id="tplName" value="Cris"></div>
+          <div>
+            <label>Time used</label>
+            <input id="tplDuration" placeholder="e.g. 3 months">
+          </div>
+          <div>
+            <label>Your name (sign-off)</label>
+            <input id="tplName" value="Cris">
+          </div>
         </div>
         <div class="ot-grid2">
           <div>
             <label>Cat (single-cat templates)</label>
-            <select id="tplCat"><option>Cali</option><option>Neo</option><option>Ramses</option><option>Diego</option></select>
+            <select id="tplCat">
+              <option>Cali</option>
+              <option>Neo</option>
+              <option>Ramses</option>
+              <option>Diego</option>
+            </select>
           </div>
           <div></div>
         </div>
         <div class="ot-grid2">
           <div>
             <label>Upstairs cat (two-floor templates)</label>
-            <select id="tplUpstairsCat"><option>Ramses</option><option>Diego</option><option>Cali</option><option>Neo</option></select>
+            <select id="tplUpstairsCat">
+              <option>Ramses</option>
+              <option>Diego</option>
+              <option>Cali</option>
+              <option>Neo</option>
+            </select>
           </div>
           <div>
             <label>Downstairs cat (two-floor templates)</label>
-            <select id="tplDownstairsCat"><option>Cali</option><option>Neo</option><option>Ramses</option><option>Diego</option></select>
+            <select id="tplDownstairsCat">
+              <option>Cali</option>
+              <option>Neo</option>
+              <option>Ramses</option>
+              <option>Diego</option>
+            </select>
           </div>
         </div>
       </div>
@@ -1558,7 +1836,9 @@
           <option value="bigBrand">Big brand (formal email)</option>
           <option value="followUp">Follow-up (after 1–2 weeks silence)</option>
         </select>
-        <div style="margin-top:10px;"><button type="button" id="tplGeneratePitchBtn">Generate pitch</button></div>
+        <div style="margin-top:10px;">
+          <button type="button" id="tplGeneratePitchBtn">Generate pitch</button>
+        </div>
         <div id="tplPitchOutput" style="margin-top:14px;"></div>
       </div>
 
@@ -1609,6 +1889,8 @@ const STATUS_LABELS = { idea:'Idea', filmed:'Filmed', captioned:'Captioned', sch
 const TONES = ['Deadpan nature-doc', 'Funny', 'Educational', 'Meme-style', 'Relatable', 'Multi-cat tie-in', 'Wholesome'];
 const PLATFORMS = ['Instagram', 'TikTok', 'Both'];
 
+// Matched line-icon set (same stroke weight/style, colored via currentColor) so the
+// nav never mixes flat symbols with full-color emoji again.
 const NAV_ICONS = {
   grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
   calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
@@ -1632,15 +1914,12 @@ const VIEW_META = {
   calendar: { label: 'Calendar view', icon: NAV_ICONS.calendar },
   outreach: { label: 'Outreach view', icon: NAV_ICONS.outreach }
 };
-
 let clips = [];
-let brands = [];
-let tasks = [];
 let activeFilter = 'all';
 let activeBrandFilter = '';
 let searchQuery = '';
-let activeQuickFilter = null;
-let gridLayoutMode = 'grid';
+let activeQuickFilter = null; // null | 'search' | 'select'
+let gridLayoutMode = 'grid'; // 'grid' | 'list'
 try { gridLayoutMode = localStorage.getItem('ttt-layout-mode') || 'grid'; } catch (e) {}
 let selectMode = false;
 let selectedClipIds = new Set();
@@ -1650,10 +1929,14 @@ let currentView = 'grid';
 let lastAnimatedView = null;
 let calMonthOffset = 0;
 let currentTheme = 'pixelSage';
+let isOfflinePreview = false;
 let editingDateIds = new Set();
+let collapsedCaptionIds = new Set();
 let compactCardIds = new Set();
 let brandPickerOpenIds = new Set();
 let linkPickerOpenIds = new Set();
+
+let brands = [];
 let editingBrandId = '';
 
 const BRAND_STATUSES = [
@@ -1664,6 +1947,7 @@ const BRAND_STATUSES = [
   { key: 'passed', label: 'Passed' }
 ];
 
+// Example captions shown on first load so the grid isn't empty — real entries replace these naturally as you add your own.
 const SEED_CLIPS = [
   {
     desc: "my cat has main character energy and i'm just the guy who buys the food",
@@ -1723,6 +2007,8 @@ const SEED_CLIPS = [
   }
 ];
 
+// Pulled from actual Amazon order history (Rufus purchase summary) — used to power
+// the Quick-add panel with real product + order-date context instead of a blank brand.
 const AMAZON_PURCHASE_HISTORY = [
   { brand: 'ARM & HAMMER', category: 'Litter', product: 'Clump & Seal Cloud Control Litter (6.35 kg)', orders: 'ordered Aug 2024' },
   { brand: 'Precious Cat', category: 'Litter', product: 'Cat Attract Training Litter (40 lb)', orders: 'ordered Dec 2024' },
@@ -1755,6 +2041,9 @@ const AMAZON_PURCHASE_HISTORY = [
   { brand: 'FELIWAY', category: 'Calming / behavior', product: 'Optimum 30-Day Starter Kit', orders: 'ordered 2x — Nov 2023, Jan 2024' }
 ];
 
+// Legacy flat name list, kept for anything that still just needs brand names
+const SUGGESTED_BRANDS = AMAZON_PURCHASE_HISTORY.map(p => p.brand);
+
 const SEED_STRATEGY_NOTE = {
   name: '★ Strategy reminders',
   category: 'Pinned',
@@ -1766,17 +2055,33 @@ const SEED_STRATEGY_NOTE = {
 };
 
 const SEED_BRANDS = [
-  { name: 'Amazon Associates', category: 'Affiliate program', status: 'applied', contact: 'affiliate-program.amazon.com', product: "Everything you've bought & reviewed", date: '', notes: "Apply first, but only once you're ready to post — 3 qualifying sales needed within 180 days or they close the account." },
-  { name: 'FELIWAY', category: 'Calming / behavior', status: 'researching', contact: '', product: 'Optimum 30-Day Starter Kit', date: '', notes: 'Repeat-adjacent, established brand — check IG bio / site footer for ambassador form first.' },
-  { name: 'kin+Kind', category: 'Supplements', status: 'researching', contact: '', product: 'Organic Pumpkin Powder', date: '', notes: 'Small-to-mid brand, likely has an active ambassador program — good early target.' },
-  { name: 'Boxie', category: 'Litter', status: 'researching', contact: '', product: 'Unscented Clumping Clay Litter', date: '', notes: 'Ordered 3x (Dec 2025, Jan 2026, Feb 2026) — strong repeat-use angle for the pitch.' }
-];
-
-const SEED_TASKS = [
-  'Apply to Amazon Associates (affiliate-program.amazon.com)',
-  "Generate Amazon affiliate links for repeat-purchase items and add to bio/linktree",
-  'Set up a linktree (or equivalent) for affiliate + partner links',
-  'Tag small/mid brands organically in regular posts for 1–2 weeks before pitching'
+  { name: 'Amazon Associates', category: 'Affiliate program', status: 'applied', contact: 'affiliate-program.amazon.com',
+    product: "Everything you've bought & reviewed", date: '',
+    notes: "Apply first, but only once you're ready to post — 3 qualifying sales needed within 180 days or they close the account. Start with repeat-purchase items: Boxie litter (x3), Feline Greenies (x2), Hill's Science Diet (x2)." },
+  { name: 'FELIWAY', category: 'Calming / behavior', status: 'researching', contact: '',
+    product: 'Optimum 30-Day Starter Kit', date: '',
+    notes: 'Repeat-adjacent, established brand — check IG bio / site footer for ambassador form first.' },
+  { name: 'kin+Kind', category: 'Supplements', status: 'researching', contact: '',
+    product: 'Organic Pumpkin Powder', date: '',
+    notes: 'Small-to-mid brand, likely has an active ambassador program — good early target.' },
+  { name: 'Boxie', category: 'Litter', status: 'researching', contact: '',
+    product: 'Unscented Clumping Clay Litter', date: '',
+    notes: 'Ordered 3x (Dec 2025, Jan 2026, Feb 2026) — strong repeat-use angle for the pitch.' },
+  { name: 'N-Bone', category: 'Treats', status: 'researching', contact: '',
+    product: 'Get Naked Furball Relief + Urinary Health Treats', date: '', notes: '' },
+  { name: 'Feline Greenies', category: 'Dental treats', status: 'researching', contact: '',
+    product: 'Dental Treats, Chicken & Salmon', date: '',
+    notes: "Bigger brand — go through their marketing/PR team or 'pet influencer partnerships' page, not a cold DM." },
+  { name: "Hill's Science Diet", category: 'Food', status: 'researching', contact: '',
+    product: 'Dry Cat Food, Urinary & Hairball Control', date: '',
+    notes: "Big brand — email PR team directly, cold DMs likely ignored at this size." },
+  { name: 'Purina Pro Plan', category: 'Food', status: 'researching', contact: '',
+    product: 'Urinary Tract Health Cat Food', date: '',
+    notes: "Big brand — same approach as Hill's, look up their partnerships contact page." },
+  { name: 'Silverquine', category: 'Wound / itch care', status: 'researching', contact: '', product: 'Pet Wound & Itch Care Hydrogel', date: '', notes: '' },
+  { name: 'Petsters', category: 'Dental / grooming', status: 'researching', contact: '', product: 'Silicone 360° Pet Finger Toothbrush', date: '', notes: '' },
+  { name: 'ZuHucpts', category: 'Litter box / enclosures', status: 'researching', contact: '', product: 'Stainless Steel Litter Box, Foldable Playpen', date: '', notes: '' },
+  { name: 'C.E.T.', category: 'Dental', status: 'researching', contact: '', product: 'Enzymatic Toothpaste, Beef', date: '', notes: '' }
 ];
 
 const CAPTION_TEMPLATES = [
@@ -1821,10 +2126,72 @@ const CAPTION_TEMPLATES = [
 ];
 
 const CAROUSEL_IDEAS = [
-  { pillar: 'Litter & hygiene', ideas: ['things nobody tells you about owning 2 litter boxes vs 4', 'litter mat vs no mat: the tracking experiment'] },
-  { pillar: 'Grooming', ideas: ['brushing tools ranked by how much our cats tolerated them', 'self-cleaning brushes: worth it or gimmick?'] },
-  { pillar: 'Diet, food & treats', ideas: ['wet vs dry food: what our 4 cats each prefer and why', 'treat rotation: how we keep 4 cats from getting bored'] },
-  { pillar: 'Enrichment & play', ideas: ['toy rotation schedule that actually keeps cats engaged', 'cat tunnels ranked by chaos-per-dollar'] }
+  { pillar: 'Litter & hygiene', ideas: [
+    'things nobody tells you about owning 2 litter boxes vs 4',
+    'why your cat is side-eyeing their new litter (and what actually changes their mind)',
+    'litter mat vs no mat: the tracking experiment',
+    "how often you actually need to scoop (it's more than you think)",
+    "signs your litter box setup is stressing your cat out",
+    'covered vs uncovered litter boxes: what our 4 cats taught us',
+    'the "one box per cat plus one" rule, explained',
+    "what litter tracking says about your cat's paw sensitivity"
+  ]},
+  { pillar: 'Grooming', ideas: [
+    'brushing tools ranked by how much our cats tolerated them',
+    'why your exotic cat sheds differently than your domestic shorthair',
+    'self-cleaning brushes: worth it or gimmick?',
+    'dental care for cats nobody actually does (until now)',
+    'how to introduce toothbrushing without losing a finger',
+    "signs your cat needs a grooming routine upgrade",
+    'matting 101: what causes it and how to prevent it'
+  ]},
+  { pillar: 'Diet, food & treats', ideas: [
+    'why we switched to urinary health food (and what changed)',
+    'wet vs dry food: what our 4 cats each prefer and why',
+    'treat rotation: how we keep 4 cats from getting bored',
+    'reading a cat food label like you actually know what it means',
+    'hairball control food: does it really work?',
+    "how much water your cat should actually be drinking",
+    'dental treats vs actual brushing: the real difference',
+    'why Ramses and Diego eat differently than Cali and Neo'
+  ]},
+  { pillar: 'Enrichment & play', ideas: [
+    'toy rotation schedule that actually keeps cats engaged',
+    'why your cat ignores the $40 toy and loves the box it came in',
+    'enrichment ideas for high-energy breeds (Savannah/Bengal edition)',
+    'window perches: the most underrated cat purchase',
+    'cat tunnels ranked by chaos-per-dollar',
+    'interactive feeders: do they actually slow down eating?',
+    "signs your cat is understimulated (and what to do about it)",
+    'heartbeat toys and separation anxiety: what actually helps'
+  ]},
+  { pillar: 'Health & wellness', ideas: [
+    'supplements we actually give our cats and why',
+    "how to tell if your cat's \"being dramatic\" is actually pain",
+    'salmon oil, pumpkin powder, and other add-ins explained',
+    'wound care basics every cat owner should have on hand',
+    'urinary tract health: what every cat owner should watch for',
+    'the vet visit checklist we wish we had before owning 4 cats',
+    'hydration tricks for cats who ignore their water bowl'
+  ]},
+  { pillar: 'Home setup & gear', ideas: [
+    'carrier vs backpack vs stroller: which one for which situation',
+    'cat-proofing a two-story home, room by room',
+    'screen doors and enclosures: how we gave our indoor cats "outside"',
+    'litter furniture that actually hides the box',
+    'setting up a multi-cat household without the turf wars',
+    "our full gear list by category (and what we'd actually rebuy)"
+  ]},
+  { pillar: 'Exotic cat specific (Savannah / Bengal)', ideas: [
+    'things we wish we knew before getting an F2 Savannah',
+    'Bengal cat energy levels: what to expect before you get one',
+    'exotic breed vs domestic shorthair: real differences in care, not just looks',
+    'why Ramses and Diego need more vertical space than Cali and Neo',
+    'hybrid cat myths we get asked about constantly'
+  ]},
+  { pillar: 'General cat parenting', ideas: [
+    'loot our cats would drop in a video game (gear breakdown, meme format but ties every product back to a slide)'
+  ]}
 ];
 
 const PITCH_TEMPLATES = {
@@ -1836,7 +2203,7 @@ const PITCH_TEMPLATES = {
   bigBrand: {
     label: 'Big brand (formal email to PR/Partnerships)',
     subject: 'TwoStoryTails x [BRAND] — partnership inquiry',
-    body: 'Hi [Name/Team],\n\nMy name is [NAME] and I run TwoStoryTails, a multi-platform cat content account following 4 cats across two breeds — domestic shorthairs and exotic Savannah/Bengal cats — with a two-floor "two worlds, one house" format that\'s become our core hook.\n\nWe post [frequency] across Instagram and TikTok. We\'ve used [PRODUCT] regularly with [CAT] and it\'s held up as one of the more reliable products in our routine.\n\nI\'d love to learn more about any influencer, ambassador, or affiliate partnerships [BRAND] currently runs.\n\nThanks for your time,\n[NAME]\n@twostorytails'
+    body: 'Hi [Name/Team],\n\nMy name is [NAME] and I run TwoStoryTails, a multi-platform cat content account following 4 cats across two breeds — domestic shorthairs and exotic Savannah/Bengal cats — with a two-floor "two worlds, one house" format that\'s become our core hook.\n\nWe post [frequency] across Instagram and TikTok, with [follower/view stats if strong]. We\'ve used [PRODUCT] regularly with [CAT] and it\'s held up as one of the more reliable products in our routine.\n\nI\'d love to learn more about any influencer, ambassador, or affiliate partnerships [BRAND] currently runs. Happy to share our media kit and past content examples.\n\nThanks for your time,\n[NAME]\n@twostorytails · [IG link] · [TikTok link]'
   },
   followUp: {
     label: 'Follow-up (after 1–2 weeks of silence)',
@@ -1845,8 +2212,26 @@ const PITCH_TEMPLATES = {
   }
 };
 
-const FIXED_HASHTAGS_IG = '#catsofig #catsofinstagram #catlife';
-const FIXED_HASHTAGS_TT = '#catsoftiktok #bengalsoftiktok #catlife';
+function fillTemplate(text, vars) {
+  return text
+    .replace(/\[BRAND\]/gi, vars.brand || '[BRAND]')
+    .replace(/\[PRODUCT\]/gi, vars.product || '[PRODUCT]')
+    .replace(/\[CATEGORY\]/gi, vars.category || '[CATEGORY]')
+    .replace(/\[X\s*(MONTHS|WEEKS)\]/gi, vars.duration || '[X $1]')
+    .replace(/\[NAME\]/gi, vars.name || '[NAME]')
+    .replace(/\[CAT\]/gi, vars.cat || '[CAT]');
+}
+
+// Format C alternates upstairs/downstairs cat per [CAT] occurrence (order in the source text is upstairs, then downstairs)
+function fillTwoFloorTemplate(text, vars) {
+  let occurrence = 0;
+  let filled = text.replace(/\[CAT\]/gi, () => {
+    occurrence++;
+    return occurrence === 1 ? (vars.upstairsCat || '[CAT]') : (vars.downstairsCat || '[CAT]');
+  });
+  return fillTemplate(filled, vars);
+}
+
 
 const THEMES = {
   lavender: {
@@ -1867,6 +2252,26 @@ const THEMES = {
       '--moss': '#5C6B3E', '--moss-dark': '#414F2A', '--rust': '#A0522D', '--line': '#D4D3AE',
       '--stamp-idea': '#8C8D6A', '--stamp-filmed': '#6B7A4A', '--stamp-captioned': '#B08A4A',
       '--stamp-scheduled': '#5C6B3E', '--stamp-posted': '#414F2A', '--spark': '#C77A4A', '--spark-dark': '#A05C34'
+    }
+  },
+  cream: {
+    label: 'Cream Utilization',
+    swatches: ['#EFE6D8', '#D97B3E'],
+    vars: {
+      '--paper': '#EFE6D8', '--paper-light': '#FBF6EE', '--ink': '#43301F', '--ink-soft': '#8C6F52',
+      '--moss': '#D97B3E', '--moss-dark': '#B35F2A', '--rust': '#8B3A1E', '--line': '#E3D4BE',
+      '--stamp-idea': '#A98F6E', '--stamp-filmed': '#C08A4A', '--stamp-captioned': '#D97B3E',
+      '--stamp-scheduled': '#5C8C74', '--stamp-posted': '#B35F2A', '--spark': '#5C8C74', '--spark-dark': '#3E6B54'
+    }
+  },
+  blush: {
+    label: 'Blush Trend Line',
+    swatches: ['#F5E3EE', '#C43E7A'],
+    vars: {
+      '--paper': '#F5E3EE', '--paper-light': '#FDF3F9', '--ink': '#43203A', '--ink-soft': '#8C5C78',
+      '--moss': '#C43E7A', '--moss-dark': '#9C2E5E', '--rust': '#B0567A', '--line': '#EDD0E2',
+      '--stamp-idea': '#B58CA8', '--stamp-filmed': '#C46E9A', '--stamp-captioned': '#C9A45C',
+      '--stamp-scheduled': '#9C6EC4', '--stamp-posted': '#9C2E5E', '--spark': '#D9A441', '--spark-dark': '#B3831F'
     }
   },
   pixelSage: {
@@ -1929,178 +2334,9 @@ document.getElementById('settingsModalOverlay').addEventListener('click', (e) =>
   if (e.target.id === 'settingsModalOverlay') closeSettingsModal();
 });
 
-const DB_NAME = 'TwoStoryDB';
-const DB_VERSION = 1;
-let localDB;
-
-function initDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains('clips')) db.createObjectStore('clips', { keyPath: 'id' });
-      if (!db.objectStoreNames.contains('brands')) db.createObjectStore('brands', { keyPath: 'id' });
-      if (!db.objectStoreNames.contains('tasks')) db.createObjectStore('tasks', { keyPath: 'id' });
-    };
-    request.onsuccess = (e) => {
-      localDB = e.target.result;
-      resolve(localDB);
-    };
-    request.onerror = (e) => reject(e.target.error);
-  });
-}
-
-function dbGetAll(storeName) {
-  return new Promise((resolve, reject) => {
-    const tx = localDB.transaction(storeName, 'readonly');
-    const store = tx.objectStore(storeName);
-    const request = store.getAll();
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-function dbPutAll(storeName, items) {
-  return new Promise((resolve, reject) => {
-    const tx = localDB.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    items.forEach(item => store.put(item));
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-function dbDelete(storeName, id) {
-  return new Promise((resolve, reject) => {
-    const tx = localDB.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    const request = store.delete(id);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
-}
-
-function setSyncStatus(text, isError) {
-  const el = document.getElementById('syncStatus');
-  if (!el) return;
-  el.textContent = text;
-  el.style.color = isError ? 'var(--rust)' : '';
-}
-
-function uid() { return 'c' + Date.now() + Math.floor(Math.random()*1000); }
-function uidBrand() { return 'b' + Date.now() + Math.floor(Math.random()*1000); }
-function uidTask() { return 't' + Date.now() + Math.floor(Math.random()*1000); }
-
-async function loadClips() {
-  try {
-    let data = await dbGetAll('clips');
-    data.sort((a, b) => new Date(b.created) - new Date(a.created));
-    if (data.length) {
-      clips = data;
-    } else {
-      clips = SEED_CLIPS.map(c => ({ id: uid(), created: new Date().toISOString(), captionTones: [], videoLink: '', brandId: '', ...c }));
-      await dbPutAll('clips', clips);
-    }
-  } catch (e) {
-    console.error('Failed to load clips', e);
-  }
-}
-
-async function saveClips(clipId) {
-  if (!clips.length) return true;
-  try {
-    const targets = clipId ? clips.filter(c => c.id === clipId) : clips;
-    if (targets.length) await dbPutAll('clips', targets);
-    setSyncStatus('Saved locally ✓');
-    return true;
-  } catch (e) {
-    console.error('Save error', e);
-    setSyncStatus('Local save failed', true);
-    return false;
-  }
-}
-
-async function deleteClipRemote(id) {
-  try {
-    await dbDelete('clips', id);
-  } catch (e) {
-    console.error('Delete error', e);
-  }
-}
-
-async function loadBrands() {
-  try {
-    let data = await dbGetAll('brands');
-    if (data.length) {
-      brands = data;
-    } else {
-      brands = [
-        { id: uidBrand(), ...SEED_STRATEGY_NOTE },
-        ...SEED_BRANDS.map(b => ({ id: uidBrand(), ...b }))
-      ];
-      await dbPutAll('brands', brands);
-    }
-  } catch (e) {
-    console.error('Brand load error:', e);
-  }
-}
-
-async function saveBrands(brandId) {
-  if (!brands.length) return true;
-  try {
-    const targets = brandId ? brands.filter(b => b.id === brandId) : brands;
-    if (targets.length) await dbPutAll('brands', targets);
-    setSyncStatus('Saved locally ✓');
-    return true;
-  } catch (e) {
-    console.error('Brand save error:', e);
-    return false;
-  }
-}
-
-async function deleteBrandRemote(id) {
-  try { await dbDelete('brands', id); } catch (e) { console.error('Brand delete error:', e); }
-}
-
-async function loadTasks() {
-  try {
-    let data = await dbGetAll('tasks');
-    if (data.length) {
-      tasks = data;
-    } else {
-      tasks = SEED_TASKS.map(text => ({ id: uidTask(), text, done: false, brandId: '' }));
-      await dbPutAll('tasks', tasks);
-    }
-  } catch (e) {
-    console.error('Task load error:', e);
-  }
-}
-
-async function saveTasks(taskId) {
-  if (!tasks.length) return true;
-  try {
-    const targets = taskId ? tasks.filter(t => t.id === taskId) : tasks;
-    if (targets.length) await dbPutAll('tasks', targets);
-    setSyncStatus('Saved locally ✓');
-    return true;
-  } catch (e) {
-    console.error('Task save error:', e);
-    return false;
-  }
-}
-
-async function deleteTaskRemote(id) {
-  try { await dbDelete('tasks', id); } catch (e) { console.error('Task delete error:', e); }
-}
-
 let newClipPlatform = 'Both';
 let newClipDate = '';
 let newClipDateEditing = false;
-let newClipBrandOpen = false;
-let newClipLinkOpen = false;
-
-const PLATFORM_ICONS = { Instagram: NAV_ICONS.instagram, TikTok: NAV_ICONS.tiktok, Both: NAV_ICONS.both };
-const PLATFORM_ORDER = ['Instagram', 'TikTok', 'Both'];
 
 function renderNewClipDateRow() {
   const row = document.getElementById('newClipDateRow');
@@ -2185,6 +2421,9 @@ function toggleNewClipTone(tone) {
   renderNewClipTones();
 }
 
+const PLATFORM_ICONS = { Instagram: NAV_ICONS.instagram, TikTok: NAV_ICONS.tiktok, Both: NAV_ICONS.both };
+const PLATFORM_ORDER = ['Instagram', 'TikTok', 'Both'];
+
 function renderNewClipPlatform() {
   const btn = document.getElementById('newClipPlatformBadge');
   btn.innerHTML = PLATFORM_ICONS[newClipPlatform] || PLATFORM_ICONS['Both'];
@@ -2195,6 +2434,8 @@ document.getElementById('newClipPlatformBadge').addEventListener('click', () => 
   renderNewClipPlatform();
 });
 
+let newClipBrandOpen = false;
+let newClipLinkOpen = false;
 document.getElementById('newClipBrandBadge').innerHTML = NAV_ICONS.outreach;
 document.getElementById('newClipLinkBadge').innerHTML = NAV_ICONS.link;
 document.getElementById('newClipBrandBadge').addEventListener('click', () => {
@@ -2237,110 +2478,293 @@ function setPlatform(clipId, platform) {
   render();
 }
 
-async function generateCaptions(id) {
-  const clip = clips.find(c => c.id === id);
-  if (!clip) return;
-  loadingCaptions[id] = true;
-  render();
+const SUPABASE_URL = 'https://kumlmoecgnpkhgpxuopk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_qQZRlaTbMm3kEs5n2Fikfg_K5OaciqO';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+});
 
-  const tones = (clip.selectedTones && clip.selectedTones.length) ? clip.selectedTones : ['Deadpan nature-doc'];
-  const platform = clip.platform || 'Both';
-
-  // Simulate network delay for "AI generation" since this is entirely local via IndexedDB
-  await new Promise(r => setTimeout(r, 1200));
-
-  clip.captions = buildPlaceholderCaptions(clip, tones, platform);
-  clip.captionTones = tones.length > 1 ? tones : [];
-  if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
-  
-  await saveClips(clip.id);
-  loadingCaptions[id] = false;
-  render();
+function setSyncStatus(text, isError) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? 'var(--rust)' : '';
 }
 
-function buildPlaceholderCaptions(clip, tones, platform) {
-  const toneCaptionMap = {
-    'Deadpan nature-doc': 'Observed: the subject pauses mid-task, assesses the room, and resumes as if nothing occurred.',
-    'Funny': 'The audacity. The confidence. The complete lack of remorse.',
-    'Educational': 'Cats do this to reset their sense of territory — it\'s a normal behavioral marker, not mischief.',
-    'Meme-style': 'no thoughts. just vibes. and chaos.',
-    'Relatable': 'when you do something unhinged and immediately act like it never happened',
-    'Multi-cat tie-in': 'One cat causes the chaos, the other watches from a safe distance judging silently.',
-    'Wholesome': 'Just a small, ordinary moment that made the whole day better.'
-  };
-  const list = (tones && tones.length ? tones : ['Deadpan nature-doc']).map(t => toneCaptionMap[t] || toneCaptionMap['Deadpan nature-doc']);
-  while (list.length < 3) list.push(list[0]);
+function safeParseJSON(val, fallback) {
+  if (val === null || val === undefined || val === '') return fallback;
+  if (typeof val === 'object') return val; // already decoded (jsonb column)
+  try { return JSON.parse(val); } catch (e) { return fallback; }
+}
 
+function rowToClip(row) {
   return {
-    captions: list.slice(0, 3),
-    hashtagsInstagram: FIXED_HASHTAGS_IG,
-    hashtagsTiktok: FIXED_HASHTAGS_TT
+    id: row.id,
+    desc: row.desc_text,
+    status: row.status,
+    created: row.created,
+    scheduledDate: row.scheduled_date || '',
+    selectedTones: safeParseJSON(row.selected_tones, ['Deadpan nature-doc']),
+    platform: row.platform || 'Both',
+    captionTones: safeParseJSON(row.caption_tones, []),
+    captions: safeParseJSON(row.captions, null),
+    videoLink: row.video_link || '',
+    brandId: row.brand_id || ''
   };
 }
 
-function copyText(text, el) {
-  const showCopied = () => {
-    const orig = el.textContent;
-    el.textContent = 'Copied ✓';
-    el.classList.add('just-copied');
-    setTimeout(() => { el.textContent = orig; el.classList.remove('just-copied'); }, 1200);
+function clipToRow(clip) {
+  return {
+    id: clip.id,
+    desc_text: clip.desc,
+    status: clip.status,
+    created: clip.created,
+    scheduled_date: clip.scheduledDate || null,
+    // Stringified explicitly: works whether the DB column is jsonb or plain text,
+    // which avoids a silent type-mismatch failure on the one field (captions)
+    // that's actually an object instead of a plain string/number.
+    selected_tones: JSON.stringify(clip.selectedTones || ['Deadpan nature-doc']),
+    platform: clip.platform || 'Both',
+    caption_tones: JSON.stringify(clip.captionTones || []),
+    captions: clip.captions ? JSON.stringify(clip.captions) : null,
+    video_link: clip.videoLink || null,
+    brand_id: clip.brandId || null,
+    updated_at: new Date().toISOString()
   };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopy(text, showCopied));
-  } else {
-    fallbackCopy(text, showCopied);
-  }
 }
 
-function copyWithIconFeedback(text, btn) {
-  const origHTML = btn.innerHTML;
-  const finish = () => {
-    btn.innerHTML = '✓';
-    btn.classList.add('just-copied');
-    setTimeout(() => { btn.innerHTML = origHTML; btn.classList.remove('just-copied'); }, 1200);
-  };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(finish).catch(() => fallbackCopy(text, finish));
-  } else {
-    fallbackCopy(text, finish);
-  }
+function isLikelyArtifactPreview() {
+  try { return window.self !== window.top; } catch (e) { return true; }
 }
 
-function fallbackCopy(text, onSuccess) {
+const NETWORK_HINT = isLikelyArtifactPreview()
+  ? ' (Claude\'s artifact preview blocks calls to Supabase — this works once deployed, e.g. on GitHub Pages)'
+  : ' — check your connection';
+
+let isLoadingClips = false;
+let pendingClipSaves = 0;
+
+async function loadClips() {
+  if (isLoadingClips) return;
+  if (pendingClipSaves > 0) return; // don't clobber local changes that are still being saved
+  isLoadingClips = true;
+  const hadDataBefore = clips.length > 0;
+  setSyncStatus('Syncing…');
   try {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    onSuccess();
+    const { data, error } = await sb.from('ttt_clips').select('*').order('created', { ascending: false });
+    if (error) throw error;
+    if (data && data.length) {
+      clips = data.map(rowToClip);
+    } else if (!hadDataBefore) {
+      clips = SEED_CLIPS.map(c => ({ id: uid(), created: new Date().toISOString(), captionTones: [], videoLink: '', brandId: '', ...c }));
+      await saveClips();
+    }
+    setSyncStatus('Synced ✓');
   } catch (e) {
-    console.error('Copy failed', e);
+    console.error('Load error:', (e && (e.message || e.toString && e.toString())) || 'unknown error');
+    isOfflinePreview = isLikelyArtifactPreview();
+    if (!hadDataBefore) {
+      clips = SEED_CLIPS.map(c => ({ id: uid(), created: new Date().toISOString(), captionTones: [], videoLink: '', brandId: '', ...c }));
+    }
+    setSyncStatus('Offline' + NETWORK_HINT, true);
+  }
+  isLoadingClips = false;
+  render();
+}
+
+async function saveClips(clipId) {
+  if (!clips.length) return true;
+  pendingClipSaves++;
+  try {
+    const targets = clipId ? clips.filter(c => c.id === clipId) : clips;
+    if (!targets.length) return true;
+    const rows = targets.map(clipToRow);
+    const { error } = await sb.from('ttt_clips').upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
+    setSyncStatus('Synced ✓');
+    targets.forEach(c => { c.unsynced = false; c.saveError = ''; });
+    return true;
+  } catch (e) {
+    const msg = (e && e.message) || (e && e.toString && e.toString()) || 'unknown error';
+    console.error('Save error', e);
+    setSyncStatus('Sync failed' + NETWORK_HINT, true);
+    const targets = clipId ? clips.filter(c => c.id === clipId) : clips;
+    targets.forEach(c => { c.unsynced = true; c.saveError = msg; });
+    return false;
+  } finally {
+    pendingClipSaves--;
   }
 }
 
-function timeAgo(iso) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return 'today';
-  if (days === 1) return '1 day ago';
-  return days + ' days ago';
+async function deleteClipRemote(id) {
+  try {
+    const { error } = await sb.from('ttt_clips').delete().eq('id', id);
+    if (error) throw error;
+  } catch (e) {
+    console.error('Delete error', e);
+    setSyncStatus('Delete failed' + NETWORK_HINT, true);
+  }
 }
 
-function formatDateLong(dateStr) {
-  const [y,m,d] = dateStr.split('-').map(Number);
-  const dt = new Date(y, m-1, d);
-  return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+function uid() { return 'c' + Date.now() + Math.floor(Math.random()*1000); }
+function uidBrand() { return 'b' + Date.now() + Math.floor(Math.random()*1000); }
+
+function rowToBrand(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category || '',
+    status: row.status || 'researching',
+    contact: row.contact || '',
+    product: row.product || '',
+    date: row.date_contacted || '',
+    notes: row.notes || '',
+    updatedAt: row.updated_at || row.created_at || null
+  };
 }
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+function brandToRow(b) {
+  return {
+    id: b.id,
+    name: b.name,
+    category: b.category || null,
+    status: b.status || 'researching',
+    contact: b.contact || null,
+    product: b.product || null,
+    date_contacted: b.date || null,
+    notes: b.notes || null,
+    updated_at: new Date().toISOString()
+  };
+}
+
+let isLoadingBrands = false;
+let pendingBrandSaves = 0;
+
+async function loadBrands() {
+  if (isLoadingBrands) return;
+  if (pendingBrandSaves > 0) return;
+  isLoadingBrands = true;
+  try {
+    const { data, error } = await sb.from('ttt_brands').select('*').order('created_at', { ascending: true });
+    if (error) throw error;
+    if (data && data.length) {
+      brands = data.map(rowToBrand);
+    } else if (!brands.length) {
+      brands = [
+        { id: uidBrand(), ...SEED_STRATEGY_NOTE },
+        ...SEED_BRANDS.map(b => ({ id: uidBrand(), ...b }))
+      ];
+      await saveBrands();
+    }
+  } catch (e) {
+    console.error('Brand load error:', (e && e.message) || e);
+  }
+  isLoadingBrands = false;
+  refreshAllBrandDropdowns();
+  if (currentView === 'outreach') renderOutreach();
+}
+
+async function saveBrands(brandId) {
+  if (!brands.length) return true;
+  pendingBrandSaves++;
+  try {
+    const targets = brandId ? brands.filter(b => b.id === brandId) : brands;
+    if (!targets.length) return true;
+    const rows = targets.map(brandToRow);
+    const { error } = await sb.from('ttt_brands').upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.error('Brand save error:', (e && e.message) || e);
+    return false;
+  } finally {
+    pendingBrandSaves--;
+  }
+}
+
+async function deleteBrandRemote(id) {
+  try {
+    const { error } = await sb.from('ttt_brands').delete().eq('id', id);
+    if (error) throw error;
+  } catch (e) {
+    console.error('Brand delete error:', (e && e.message) || e);
+  }
+}
+
+// ===== Outreach checklist (Google-Tasks-style todo, stored in our own table) =====
+
+let tasks = [];
+let isLoadingTasks = false;
+let pendingTaskSaves = 0;
+
+const SEED_TASKS = [
+  'Apply to Amazon Associates (affiliate-program.amazon.com)',
+  "Reminder: 3 qualifying sales needed within 180 days of signup or Amazon closes the account — don't apply until ready to actually post links",
+  "Generate Amazon affiliate links for repeat-purchase items (Boxie, Feline Greenies, Hill's Science Diet) and add to bio/linktree",
+  'Set up a linktree (or equivalent) for affiliate + partner links',
+  'Tag small/mid brands organically in regular posts for 1–2 weeks before pitching (FELIWAY, Boxie, kin+Kind, N-Bone, ZuHucpts, Silverquine, Petsters)',
+  "Check each small/mid brand's IG bio / website footer for an ambassador or affiliate application form",
+  'Look up "[brand] pet influencer partnerships" contact pages for big brands (Hill\'s, Purina, Greenies) — email PR/marketing, not a cold DM',
+  'Send first batch of outreach pitches — one ask per email (ambassador program, product-for-content, or affiliate code)',
+  'Set up M/W/F carousel content tying products into "what\'s actually in our lineup" round-ups',
+  'Follow up on any pitch that\'s gone quiet for 1–2 weeks using the follow-up template'
+];
+
+function uidTask() { return 't' + Date.now() + Math.floor(Math.random()*1000); }
+
+function rowToTask(row) {
+  return { id: row.id, text: row.text, done: !!row.done, brandId: row.brand_id || '', created: row.created_at };
+}
+
+function taskToRow(t) {
+  return { id: t.id, text: t.text, done: !!t.done, brand_id: t.brandId || null, updated_at: new Date().toISOString() };
+}
+
+async function loadTasks() {
+  if (isLoadingTasks) return;
+  if (pendingTaskSaves > 0) return;
+  isLoadingTasks = true;
+  try {
+    const { data, error } = await sb.from('ttt_tasks').select('*').order('created_at', { ascending: true });
+    if (error) throw error;
+    if (data && data.length) {
+      tasks = data.map(rowToTask);
+    } else if (!tasks.length) {
+      tasks = SEED_TASKS.map(text => ({ id: uidTask(), text, done: false, brandId: '' }));
+      await saveTasks();
+    }
+  } catch (e) {
+    console.error('Task load error:', (e && e.message) || e);
+  }
+  isLoadingTasks = false;
+  if (currentView === 'outreach') renderTasks();
+}
+
+async function saveTasks(taskId) {
+  if (!tasks.length) return true;
+  pendingTaskSaves++;
+  try {
+    const targets = taskId ? tasks.filter(t => t.id === taskId) : tasks;
+    if (!targets.length) return true;
+    const rows = targets.map(taskToRow);
+    const { error } = await sb.from('ttt_tasks').upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.error('Task save error:', (e && e.message) || e);
+    return false;
+  } finally {
+    pendingTaskSaves--;
+  }
+}
+
+async function deleteTaskRemote(id) {
+  try {
+    const { error } = await sb.from('ttt_tasks').delete().eq('id', id);
+    if (error) throw error;
+  } catch (e) {
+    console.error('Task delete error:', (e && e.message) || e);
+  }
 }
 
 function addTask() {
@@ -2509,6 +2933,172 @@ function removeClip(id) {
   render();
 }
 
+// Fixed hashtag sets — always used as-is, never generated, so they stay exactly on-brand.
+const FIXED_HASHTAGS_IG = '#catsofig #catsofinstagram #catlife';
+const FIXED_HASHTAGS_TT = '#catsoftiktok #bengalsoftiktok #catlife';
+
+async function generateCaptions(id) {
+  const clip = clips.find(c => c.id === id);
+  if (!clip) return;
+  loadingCaptions[id] = true;
+  render();
+
+  const tones = (clip.selectedTones && clip.selectedTones.length) ? clip.selectedTones : ['Deadpan nature-doc'];
+  const toneGuide = {
+    'Deadpan nature-doc': 'Attenborough-style narration, dry and scientific, treating mundane behavior as a serious phenomenon. No exclamation points.',
+    'Funny': 'Straightforwardly comedic, punchy, built for a laugh in one read.',
+    'Educational': 'Frames the moment around a real (or plausibly real) cat behavior fact, teaches the viewer something.',
+    'Meme-style': 'Short, internet-native phrasing, leans on a recognizable meme format or rhythm rather than full sentences.',
+    'Relatable': 'Written like a knowing aside to other pet owners, "when your cat does X" energy.',
+    'Multi-cat tie-in': 'Explicitly references the dynamic or contrast between two or more of the four cats (Cali, Neo, Ramses, Diego).',
+    'Wholesome': 'Warm, affectionate, sincere, no irony.'
+  };
+  const toneInstructions = tones.map(t => '- ' + t + ': ' + (toneGuide[t] || '')).join('\n');
+
+  const platform = clip.platform || 'Both';
+  const platformGuide = {
+    'Instagram': 'Optimize for Instagram (Reels/carousel). Caption can be slightly longer (1-3 sentences).',
+    'TikTok': 'Optimize for TikTok. Captions should be punchier and shorter, built to be read in under 2 seconds.',
+    'Both': 'Write for cross-posting to Instagram and TikTok. Keep captions short enough to work as an on-screen TikTok caption but complete enough to stand alone on Instagram.'
+  };
+
+  const systemPrompt = `You write social captions for a cat content account. The account features four cats: Cali and Neo (domestic shorthairs, downstairs territory) and Ramses (Savannah) and Diego (Bengal, upstairs territory).
+
+Critical rule: never include the account's own name or handle anywhere in the captions. The account is small and growing, so its own name has no search reach.
+
+Platform: ${platform}
+${platformGuide[platform]}
+
+The user has selected the following tone(s)/vibe(s) for this specific caption batch:
+${toneInstructions}
+
+If multiple tones are selected, write one caption option per tone (in the order given) so the user can compare vibes side by side. If only one tone is selected, write 3 options in that tone.
+
+Respond ONLY with valid JSON, no markdown fences, no preamble, in this exact shape:
+{
+  "captions": ["option 1", "option 2", "option 3"]
+}
+Each caption should be 1-3 sentences. Label-free — just the caption text itself. Do not include any hashtags in the caption text.`;
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-captions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ systemPrompt, userMessage: `Clip description: ${clip.desc}` })
+    });
+    const data = await response.json();
+    if (!response.ok || data.error) {
+      throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error || data));
+    }
+    const textBlock = data.content.find(b => b.type === 'text');
+    let raw = textBlock ? textBlock.text : '{}';
+    raw = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(raw);
+    clip.captions = { captions: parsed.captions, hashtagsInstagram: FIXED_HASHTAGS_IG, hashtagsTiktok: FIXED_HASHTAGS_TT };
+    clip.captionTones = tones.length > 1 ? tones : [];
+    if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
+    await saveClips(clip.id);
+  } catch (e) {
+    console.error('Caption generation failed', e);
+    if (isLikelyArtifactPreview()) {
+      clip.captions = buildPlaceholderCaptions(clip, tones, platform);
+      clip.captionTones = tones.length > 1 ? tones : [];
+      if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
+      await saveClips(clip.id);
+    } else {
+      clip.captions = { captions: ['Could not generate captions' + NETWORK_HINT + '.'], hashtagsInstagram: '', hashtagsTiktok: '' };
+    }
+  }
+  loadingCaptions[id] = false;
+  render();
+}
+
+function buildPlaceholderCaptions(clip, tones, platform) {
+  const toneCaptionMap = {
+    'Deadpan nature-doc': 'Observed: the subject pauses mid-task, assesses the room, and resumes as if nothing occurred.',
+    'Funny': 'The audacity. The confidence. The complete lack of remorse.',
+    'Educational': 'Cats do this to reset their sense of territory — it\'s a normal behavioral marker, not mischief.',
+    'Meme-style': 'no thoughts. just vibes. and chaos.',
+    'Relatable': 'when you do something unhinged and immediately act like it never happened',
+    'Multi-cat tie-in': 'One cat causes the chaos, the other watches from a safe distance judging silently.',
+    'Wholesome': 'Just a small, ordinary moment that made the whole day better.'
+  };
+  const list = (tones && tones.length ? tones : ['Deadpan nature-doc']).map(t => toneCaptionMap[t] || toneCaptionMap['Deadpan nature-doc']);
+  while (list.length < 3) list.push(list[0]);
+
+  return {
+    captions: list.slice(0, 3),
+    hashtagsInstagram: FIXED_HASHTAGS_IG,
+    hashtagsTiktok: FIXED_HASHTAGS_TT
+  };
+}
+
+function copyText(text, el) {
+  const showCopied = () => {
+    const orig = el.textContent;
+    el.textContent = 'Copied ✓';
+    el.classList.add('just-copied');
+    setTimeout(() => { el.textContent = orig; el.classList.remove('just-copied'); }, 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopy(text, showCopied));
+  } else {
+    fallbackCopy(text, showCopied);
+  }
+}
+
+// Same as copyText, but swaps a checkmark in over an icon button without wiping its SVG
+function copyWithIconFeedback(text, btn) {
+  const origHTML = btn.innerHTML;
+  const finish = () => {
+    btn.innerHTML = '✓';
+    btn.classList.add('just-copied');
+    setTimeout(() => { btn.innerHTML = origHTML; btn.classList.remove('just-copied'); }, 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(finish).catch(() => fallbackCopy(text, finish));
+  } else {
+    fallbackCopy(text, finish);
+  }
+}
+
+function fallbackCopy(text, onSuccess) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    onSuccess();
+  } catch (e) {
+    console.error('Copy failed', e);
+  }
+}
+
+function timeAgo(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'today';
+  if (days === 1) return '1 day ago';
+  return days + ' days ago';
+}
+
+function formatDateLong(dateStr) {
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function renderOutreach() {
   renderOutreachStats();
   renderQuickAddBrands();
@@ -2566,8 +3156,7 @@ function renderQuickAddBrands() {
         contact: '',
         product: p ? p.product : '',
         date: '',
-        notes: p ? `From Amazon order history — ${p.orders}.` : '',
-        updatedAt: new Date().toISOString()
+        notes: p ? `From Amazon order history — ${p.orders}.` : ''
       });
       saveBrands();
       renderOutreach();
@@ -2663,6 +3252,8 @@ function resetBrandForm() {
   document.getElementById('ot-f-status').value = 'researching';
 }
 
+// ===== Outreach Templates sub-view =====
+
 function switchOutreachSubView(view) {
   document.getElementById('otPipelineSection').style.display = view === 'pipeline' ? '' : 'none';
   document.getElementById('otTemplatesSection').style.display = view === 'templates' ? '' : 'none';
@@ -2706,25 +3297,6 @@ function getTplContext() {
     upstairsCat: document.getElementById('tplUpstairsCat').value,
     downstairsCat: document.getElementById('tplDownstairsCat').value
   };
-}
-
-function fillTemplate(text, vars) {
-  return text
-    .replace(/\[BRAND\]/gi, vars.brand || '[BRAND]')
-    .replace(/\[PRODUCT\]/gi, vars.product || '[PRODUCT]')
-    .replace(/\[CATEGORY\]/gi, vars.category || '[CATEGORY]')
-    .replace(/\[X\s*(MONTHS|WEEKS)\]/gi, vars.duration || '[X $1]')
-    .replace(/\[NAME\]/gi, vars.name || '[NAME]')
-    .replace(/\[CAT\]/gi, vars.cat || '[CAT]');
-}
-
-function fillTwoFloorTemplate(text, vars) {
-  let occurrence = 0;
-  let filled = text.replace(/\[CAT\]/gi, () => {
-    occurrence++;
-    return occurrence === 1 ? (vars.upstairsCat || '[CAT]') : (vars.downstairsCat || '[CAT]');
-  });
-  return fillTemplate(filled, vars);
 }
 
 function makeCopyableBlock(text, tagLabel) {
@@ -2828,7 +3400,7 @@ function initTemplatesSection() {
   document.getElementById('tplCarouselFilter').addEventListener('input', renderCarouselIdeas);
   document.getElementById('taskAddBtn').addEventListener('click', addTask);
   document.getElementById('taskInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') addTask(); });
-  
+  // Seed output panels once so sections aren't empty on first visit
   generatePitchOutput();
   generateCaptionOutput();
   renderCarouselIdeas();
@@ -2845,8 +3417,7 @@ function saveBrandForm() {
     contact: document.getElementById('ot-f-contact').value.trim(),
     product: document.getElementById('ot-f-product').value.trim(),
     date: document.getElementById('ot-f-date').value,
-    notes: document.getElementById('ot-f-notes').value.trim(),
-    updatedAt: new Date().toISOString()
+    notes: document.getElementById('ot-f-notes').value.trim()
   };
   if (editingBrandId) {
     const b = brands.find(x => x.id === editingBrandId);
@@ -2867,6 +3438,7 @@ function buildFullCard(clip, forceExpanded) {
 
   const isCompact = !forceExpanded && compactCardIds.has(clip.id);
 
+  // Status + platform form one unified badge (left), date on the right
   const headerRow = document.createElement('div');
   headerRow.className = 'card-header-row';
 
@@ -2894,6 +3466,7 @@ function buildFullCard(clip, forceExpanded) {
   statusPlatformGroup.appendChild(statusPlatformDivider);
 
   if (!clip.platform) clip.platform = 'Both';
+  const PLATFORM_ORDER = ['Instagram', 'TikTok', 'Both'];
   const platformBadgeBtn = document.createElement('button');
   platformBadgeBtn.className = 'platform-badge-btn';
   platformBadgeBtn.title = 'Shared on: ' + clip.platform + ' (tap to change)';
@@ -2983,6 +3556,7 @@ function buildFullCard(clip, forceExpanded) {
     return card;
   }
 
+  // Generated caption options (if any) render below the main caption
   if (clip.captions) {
     const box = document.createElement('div');
     box.className = 'captions-box';
@@ -3114,6 +3688,7 @@ function buildFullCard(clip, forceExpanded) {
   genBtn.onclick = () => generateCaptions(clip.id);
   bottomRow.appendChild(genBtn);
 
+  // Same look/size as the date pill, just placed opposite the generate button on this row
   const trashBtn = document.createElement('button');
   trashBtn.className = 'date-pill-btn trash-footer-btn';
   trashBtn.innerHTML = NAV_ICONS.trash;
@@ -3122,6 +3697,23 @@ function buildFullCard(clip, forceExpanded) {
   bottomRow.appendChild(trashBtn);
 
   card.appendChild(bottomRow);
+
+  if (clip.unsynced) {
+    const warn = document.createElement('div');
+    warn.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding:8px 12px; border:1px solid var(--rust); border-radius:10px; background:color-mix(in srgb, var(--rust) 10%, transparent);';
+    const warnText = document.createElement('span');
+    warnText.style.cssText = 'font-family:\'IBM Plex Mono\',monospace; font-size:10.5px; color:var(--rust);';
+    warnText.textContent = '⚠ Not saved: ' + (clip.saveError || 'unknown error');
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'ghost';
+    retryBtn.style.cssText = 'padding:5px 10px; font-size:10px; flex-shrink:0;';
+    retryBtn.textContent = 'Retry';
+    retryBtn.onclick = async () => { await saveClips(clip.id); refreshOpenModal(); render(); };
+    warn.appendChild(warnText);
+    warn.appendChild(retryBtn);
+    card.appendChild(warn);
+  }
+
   return card;
 }
 
@@ -3159,6 +3751,13 @@ function buildGridTile(clip, mode) {
     copyWithIconFeedback(textToCopy, copyBtn);
   };
   tile.appendChild(copyBtn);
+
+  if (clip.unsynced) {
+    const unsyncedBadge = document.createElement('div');
+    unsyncedBadge.style.cssText = 'font-family:\'IBM Plex Mono\',monospace; font-size:9px; color:var(--rust); margin-top:4px;';
+    unsyncedBadge.textContent = '⚠ not saved';
+    tile.appendChild(unsyncedBadge);
+  }
 
   const desc = document.createElement('div');
   desc.className = mode === 'list' ? 'list-tile-desc' : 'grid-tile-desc';
@@ -3239,7 +3838,7 @@ function isMobile() {
 function playViewAnim(el) {
   if (!el) return;
   el.classList.remove('view-anim');
-  void el.offsetWidth;
+  void el.offsetWidth; // force reflow so the animation restarts
   el.classList.add('view-anim');
 }
 
@@ -3359,7 +3958,9 @@ function renderCardListOnly() {
   const filtered = getFilteredClips();
 
   if (filtered.length === 0) {
-    if (searchQuery || activeBrandFilter) {
+    if (isOfflinePreview) {
+      list.innerHTML = '<div class="empty-state">Preview mode: can\'t reach the cloud database here, so nothing\'s loaded. Add a caption to test the UI — it\'ll stay local to this preview. Your real data is safe and will show up on the deployed site.</div>';
+    } else if (searchQuery || activeBrandFilter) {
       list.innerHTML = '<div class="empty-state">Nothing matches that search/filter.</div>';
     } else {
       list.innerHTML = '<div class="empty-state">No captions logged yet. The field is quiet.</div>';
@@ -3370,6 +3971,8 @@ function renderCardListOnly() {
     });
   }
 }
+
+// ===== Mass select / delete =====
 
 function toggleSelectMode() {
   selectMode = !selectMode;
@@ -3522,6 +4125,8 @@ document.getElementById('otCancelBtn').addEventListener('click', () => {
 });
 document.getElementById('otSaveBtn').addEventListener('click', saveBrandForm);
 
+// ===== Backup: export / import all data =====
+
 function exportAllData() {
   const payload = {
     exportedFrom: 'TwoStoryCaptions',
@@ -3606,20 +4211,20 @@ function loadTheme() {
   applyTheme(THEMES[saved] ? saved : 'pixelSage', true);
 }
 
-// UI Initialization
 renderNewClipTones();
 renderNewClipPlatform();
 renderNewClipDateRow();
 loadTheme();
+loadClips();
+loadBrands();
+loadTasks();
 initTemplatesSection();
-
 document.getElementById('searchIcon').innerHTML = NAV_ICONS.search;
 document.getElementById('searchToggleBtn').innerHTML = NAV_ICONS.search;
 document.getElementById('filterToggleBtn').innerHTML = NAV_ICONS.filter;
 document.getElementById('searchToggleBtn').addEventListener('click', () => toggleQuickFilter('search'));
 document.getElementById('filterToggleBtn').addEventListener('click', () => toggleQuickFilter('select'));
 renderLayoutToggle();
-
 document.getElementById('layoutToggleBtn').addEventListener('click', () => {
   gridLayoutMode = gridLayoutMode === 'list' ? 'grid' : 'list';
   try { localStorage.setItem('ttt-layout-mode', gridLayoutMode); } catch (e) {}
@@ -3654,7 +4259,13 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
   renderCardListOnly();
 });
 
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') { loadClips(); loadBrands(); loadTasks(); }
+});
+window.addEventListener('focus', () => { loadClips(); loadBrands(); loadTasks(); });
 window.addEventListener('resize', () => { render(); syncHeaderSpacing(); });
+
+// ===== Fixed header: reserve space for it below, and hide/show based on scroll direction =====
 
 function syncHeaderSpacing() {
   const header = document.getElementById('mainHeader');
@@ -3680,20 +4291,6 @@ window.addEventListener('scroll', () => {
   lastScrollY = y;
 }, { passive: true });
 
-async function bootupApp() {
-  try {
-    setSyncStatus('Loading local DB...');
-    await initDB();
-    await Promise.all([loadClips(), loadBrands(), loadTasks()]);
-    render();
-    setSyncStatus('Saved locally ✓');
-  } catch (err) {
-    setSyncStatus('Database Error', true);
-    console.error('Failed to bootup local database:', err);
-  }
-}
-
-bootupApp();
 </script>
 </body>
 </html>
