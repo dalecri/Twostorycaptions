@@ -1046,13 +1046,14 @@
   .stack-card:first-child { margin-top: 0; }
   .stack-card:active { filter: brightness(0.97); }
   .stack-card.selected { outline: 3px solid var(--moss); outline-offset: -3px; }
-  .stack-card.c0 { --card-bg: #A8D8BE; }
-  .stack-card.c1 { --card-bg: #F0B8D8; }
-  .stack-card.c2 { --card-bg: #F2A64B; }
-  .stack-card.c3 { --card-bg: #9CCBEE; }
-  .stack-card.c4 { --card-bg: #1C1C1C; --card-ink: #FFFFFF; }
-  .stack-card.c5 { --card-bg: #B4A0D2; }
-  .stack-card.c6 { --card-bg: #F7EB8A; }
+  /* Card palette, shared by every card-styled surface in the app */
+  .c0 { --card-bg: #A8D8BE; --card-ink: #141414; }
+  .c1 { --card-bg: #F0B8D8; --card-ink: #141414; }
+  .c2 { --card-bg: #F2A64B; --card-ink: #141414; }
+  .c3 { --card-bg: #9CCBEE; --card-ink: #141414; }
+  .c4 { --card-bg: #1C1C1C; --card-ink: #FFFFFF; }
+  .c5 { --card-bg: #B4A0D2; --card-ink: #141414; }
+  .c6 { --card-bg: #F7EB8A; --card-ink: #141414; }
   .stack-head {
     display: flex;
     align-items: flex-start;
@@ -1688,6 +1689,224 @@
     header.masthead .title-block h1 { font-size: 19px; }
     .cardlist-grid { grid-template-columns: repeat(2, 1fr); }
   }
+
+  /* =====================================================================
+     CARD LANGUAGE — everything below restyles the app to match the deck.
+     Kept last so it wins over the older rules (including their media queries).
+     ===================================================================== */
+
+  /* A .surface is a colored card. It re-scopes the theme variables, so every existing
+     component placed inside (buttons, chips, selects, inputs, pills) adapts automatically. */
+  /* Needs a palette class too (.c0–.c6); don't set --card-bg here or it would override the palette. */
+  .surface {
+    --ink: var(--card-ink);
+    --ink-soft: color-mix(in srgb, var(--card-ink) 62%, transparent);
+    --line: color-mix(in srgb, var(--card-ink) 16%, transparent);
+    --paper: color-mix(in srgb, var(--card-bg) 25%, #FFFFFF);
+    --paper-light: color-mix(in srgb, #FFFFFF 42%, transparent);
+    --moss: var(--card-ink);
+    --moss-dark: var(--card-ink);
+    --spark: var(--card-ink);
+    --spark-dark: var(--card-ink);
+    --stamp-idea: var(--card-ink); --stamp-filmed: var(--card-ink); --stamp-captioned: var(--card-ink);
+    --stamp-scheduled: var(--card-ink); --stamp-posted: var(--card-ink);
+    background:
+      linear-gradient(to bottom, rgba(255,255,255,0.14), transparent 40%, rgba(0,0,0,0.06)),
+      var(--card-bg);
+    color: var(--card-ink);
+    border: none !important;
+    border-radius: 18px;
+  }
+  .surface.c4 { --paper: #141414; --paper-light: rgba(255,255,255,0.08); }
+  .surface input, .surface textarea, .surface select { color: var(--card-ink); }
+  .surface input::placeholder, .surface textarea::placeholder { color: color-mix(in srgb, var(--card-ink) 45%, transparent); }
+  .surface select option { color: #141414; background: #FFFFFF; }
+
+  /* Primary buttons are ink pills, like the buttons on the cards (adapts to light/dark themes) */
+  button { background: var(--ink); color: var(--paper); }
+  button:hover { background: var(--ink); filter: brightness(1.15); }
+  .ot-toolbar button, .gen-caption-btn { text-transform: uppercase; letter-spacing: 1px; font-size: 11.5px; }
+  .status-platform-group { border-radius: 12px; overflow: hidden; }
+
+  /* Shared card typography: tiny spaced kicker over a bold uppercase title */
+  .card-kicker {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .card-title {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 2px 0 0;
+  }
+
+  /* ----- Header ----- */
+  header.masthead .title-block h1 {
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  header.masthead .title-block p {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* ----- Bottom nav: the black card ----- */
+  .floating-nav {
+    background: #1C1C1C;
+    border: none;
+    border-radius: 22px;
+    padding: 8px;
+    gap: 4px;
+    box-shadow: 0 18px 40px -16px rgba(0,0,0,0.7);
+  }
+  .floating-nav button { color: rgba(255,255,255,0.62); border-radius: 16px; }
+  .floating-nav button .nav-label { letter-spacing: 1px; text-transform: uppercase; font-size: 7.5px; }
+  .floating-nav button:hover { background: rgba(255,255,255,0.08); color: #FFFFFF; }
+  .floating-nav button.active { color: #141414; background: #A8D8BE; }
+  .floating-nav .nav-add-btn { background: #F7EB8A; color: #141414; border-radius: 16px; min-width: 56px; }
+  .floating-nav .nav-add-btn:hover { background: #F7EB8A; color: #141414; filter: brightness(1.05); }
+
+  /* ----- Small panels: filters, selection ----- */
+  .quick-filter-panel, .selection-bar { border: none; border-radius: 18px; padding: 14px 16px; }
+  .selection-bar { position: sticky; top: calc(var(--stack-top, 80px) - 4px); z-index: 40; }
+
+  /* ----- New-caption sheet: a yellow card rising from the bottom ----- */
+  .entry-form { border-radius: 22px 22px 0 0; box-shadow: 0 -24px 60px -20px rgba(0,0,0,0.55); }
+  .entry-form .sheet-header { border-bottom: none; padding-bottom: 4px; align-items: flex-start; }
+  .entry-form textarea { background: var(--paper-light); border: 1px solid var(--line); font-family: 'Space Mono', monospace; }
+  #addBtn { padding: 12px 22px; letter-spacing: 1px; text-transform: uppercase; font-size: 12px; }
+
+  /* ----- Settings: blue card ----- */
+  #settingsModalBox { box-shadow: 0 30px 70px -24px rgba(0,0,0,0.7); }
+  .settings-theme-card { border-radius: 14px; }
+
+  /* ----- Focused card: picked out of the deck ----- */
+  /* Only the backdrop fades; the card itself is animated from JS so it's never see-through mid-flight */
+  #cardModalOverlay {
+    opacity: 1;
+    visibility: hidden;
+    background: transparent;
+    transition: none;
+    align-items: center;
+    padding: 16px;
+    z-index: 100;
+  }
+  #cardModalOverlay.open {
+    visibility: visible;
+    background: rgba(12, 12, 16, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: background 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease;
+  }
+  #cardModalOverlay.open.closing {
+    background: transparent;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    pointer-events: none;
+  }
+  /* Lock page scroll while a card is out (on <html> only — locking <body> would break the sticky deck) */
+  html.focus-open { overflow: hidden; }
+  #cardModalBox.focus-card {
+    max-width: 560px;
+    max-height: calc(100dvh - 48px);
+    padding: 20px 22px 26px;
+    border-radius: 18px;
+    transform: none;
+    transition: none;
+    overscroll-behavior: contain;
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.75);
+    transform-origin: top left;
+  }
+  #cardModalBox.focus-card .stack-head { padding-right: 40px; }
+  .focus-card .card-header-row { flex-wrap: wrap; row-gap: 10px; }
+  #cardModalBox.focus-card .modal-close {
+    top: 16px; right: 14px;
+    width: 32px; height: 32px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    color: var(--card-ink);
+    font-size: 13px;
+  }
+  #cardModalBox.focus-card .modal-close:hover { background: color-mix(in srgb, var(--card-ink) 12%, transparent); }
+  .focus-divider { height: 1px; background: var(--line); margin: 18px 0 14px; }
+  /* The editor inside the focused card */
+  .focus-card .card { background: transparent; }
+  .focus-card .card-top { padding: 0; margin-top: 14px; }
+  .focus-card .card-meta { padding: 0; }
+  .focus-card .status-platform-group { border-radius: 12px; overflow: hidden; background: color-mix(in srgb, var(--card-ink) 8%, transparent); }
+  .focus-card .captions-box { border-top: 1px solid var(--line); }
+  .focus-card .caption-opt { background: var(--paper-light); border: none; border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+  .focus-card .caption-opt .copy-tag { font-weight: 700; }
+  .focus-card .gen-caption-btn { letter-spacing: 1px; text-transform: uppercase; }
+  .stack-card.picked { visibility: hidden; }
+  @media (max-width: 600px) {
+    #cardModalOverlay { align-items: center; padding: 12px; }
+    #cardModalBox.focus-card { border-radius: 18px; max-height: calc(100dvh - 24px); padding: 18px 18px 22px; }
+  }
+
+  /* ----- Calendar ----- */
+  .cal-grid { border: none; border-radius: 18px; overflow: hidden; gap: 2px; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .cal-dow { letter-spacing: 1.6px; font-weight: 700; }
+  .cal-cell.today { box-shadow: inset 0 0 0 2px var(--ink); }
+  .cal-header h2 { text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+  .cal-post {
+    border-left: none;
+    border-radius: 6px;
+    background: var(--card-bg, #A8D8BE);
+    color: var(--card-ink, #141414);
+    font-family: 'Space Mono', monospace;
+    padding: 3px 6px;
+  }
+  .cal-post.posted { opacity: 0.6; }
+  @media (max-width: 600px) {
+    .cal-grid { margin: 0 12px; }
+  }
+
+  /* ----- Brands: stats as the black card, columns as colored cards ----- */
+  .ot-stats { padding: 18px 20px; gap: 14px 26px; box-shadow: none; }
+  .ot-stat-item { flex-direction: column; align-items: flex-start; gap: 2px; font-size: 9.5px; letter-spacing: 1.6px; text-transform: uppercase; }
+  .ot-stat-item strong { font-size: 26px; letter-spacing: 1px; order: -1; color: var(--ink); }
+  .ot-col { padding: 16px 14px; }
+  .ot-col-title { font-weight: 700; letter-spacing: 1.6px; color: var(--card-ink) !important; }
+  .ot-col-count { background: color-mix(in srgb, var(--card-ink) 12%, transparent); color: var(--card-ink); font-weight: 700; }
+  .ot-card {
+    background: color-mix(in srgb, #FFFFFF 55%, transparent);
+    border: none !important;
+    border-radius: 14px;
+    box-shadow: 0 6px 14px -10px rgba(0,0,0,0.4);
+  }
+  .surface.c4 .ot-card { background: rgba(255,255,255,0.08); }
+  .ot-card-name { font-family: 'Space Mono', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; font-size: 12.5px; }
+  .ot-col.passed .ot-card { opacity: 0.75; }
+  .ot-mini-btn, .ot-mini-select { border-radius: 999px; padding: 5px 10px; }
+  .ot-panel { box-shadow: 0 10px 30px -20px rgba(0,0,0,0.5); padding: 22px; }
+  .ot-panel::before { display: none; }
+  .ot-panel h3 { text-transform: uppercase; letter-spacing: 1.4px; font-weight: 700; }
+  .ot-chip { border-radius: 999px; }
+
+  /* ----- Tasks ----- */
+  .task-group-title { font-weight: 700; letter-spacing: 1.6px; }
+  .task-row { border-bottom-color: var(--line); }
+  .task-checkbox { accent-color: #141414; }
+  .task-progress-bar { background: color-mix(in srgb, var(--card-ink, #141414) 12%, transparent); }
+
+  /* ----- Empty state + tally ----- */
+  .empty-state {
+    border: 2px dashed color-mix(in srgb, var(--ink) 20%, transparent);
+    border-radius: 18px;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    line-height: 1.7;
+  }
+  footer.tally { border-top: none; text-transform: uppercase; letter-spacing: 1.4px; font-size: 9.5px; }
 </style>
 </head>
 <body>
@@ -1716,9 +1935,9 @@
 <div class="wrap">
 
   <div class="modal-overlay" id="settingsModalOverlay">
-    <div class="modal-box" id="settingsModalBox">
+    <div class="modal-box surface c3" id="settingsModalBox">
       <button class="modal-close" id="settingsModalClose">✕</button>
-      <h3 class="settings-title">Settings</h3>
+      <div class="settings-title"><div class="card-kicker">Settings</div><div class="card-title">Preferences</div></div>
 
       <div class="field-label" style="margin-top:0;">Theme</div>
       <div class="settings-theme-grid" id="settingsThemeGrid"></div>
@@ -1740,9 +1959,9 @@ alter table ttt_clips add column if not exists archived boolean default false;</
     </div>
   </div>
 
-  <div class="entry-form" id="entryForm">
+  <div class="entry-form surface c6" id="entryForm">
     <div class="sheet-header">
-      <span>New caption</span>
+      <div><div class="card-kicker">New card</div><div class="card-title">Log a clip</div></div>
       <button class="sheet-close" id="sheetCloseBtn">✕</button>
     </div>
     <textarea id="descInput" rows="2" placeholder="e.g. Diego knocked a mug off the counter, then stared directly at the camera for four seconds"></textarea>
@@ -1782,7 +2001,7 @@ alter table ttt_clips add column if not exists archived boolean default false;</
 
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
-  <div class="selection-bar" id="selectionBar" style="display:none;">
+  <div class="selection-bar surface c4" id="selectionBar" style="display:none;">
     <span id="selectionCount">0 selected</span>
     <div class="selection-bar-actions">
       <select id="bulkStatusSelect" class="filter-select"><option value="">Set status…</option></select>
@@ -1793,7 +2012,7 @@ alter table ttt_clips add column if not exists archived boolean default false;</
     </div>
   </div>
 
-  <div class="quick-filter-panel" id="quickFilterPanel" style="display:none;">
+  <div class="quick-filter-panel surface c5" id="quickFilterPanel" style="display:none;">
     <div id="quickFilterSearch" style="display:none;">
       <div class="search-wrap">
         <span class="search-icon" id="searchIcon"></span>
@@ -1811,14 +2030,14 @@ alter table ttt_clips add column if not exists archived boolean default false;</
 
   <div id="outreachView" style="display:none;">
     <div id="otPipelineSection">
-      <div class="ot-stats" id="otStats"></div>
+      <div class="ot-stats surface c4" id="otStats"></div>
       <div class="ot-toolbar">
         <button id="otOpenForm">+ Add brand</button>
         <button class="ghost" id="otToggleQuick">Quick-add from Amazon history</button>
       </div>
       <div class="ot-quickadd" id="otQuickadd"></div>
 
-      <div class="ot-panel" id="otPanel">
+      <div class="ot-panel surface c6" id="otPanel">
         <h3 id="otPanelTitle">Add a brand</h3>
         <div class="ot-grid2">
           <div>
@@ -1869,7 +2088,7 @@ alter table ttt_clips add column if not exists archived boolean default false;</
 
     <div id="otTemplatesSection" style="display:none;">
 
-      <div class="ot-panel open">
+      <div class="ot-panel open surface c1">
         <h3>Pitch email / DM</h3>
         <label>Pitch type</label>
         <select id="tplPitchType">
@@ -1883,13 +2102,13 @@ alter table ttt_clips add column if not exists archived boolean default false;</
         <div id="tplPitchOutput" style="margin-top:14px;"></div>
       </div>
 
-      <div class="ot-panel open">
+      <div class="ot-panel open surface c3">
         <h3>Caption templates</h3>
         <button type="button" id="tplGenerateCaptionsBtn">Fill in captions below</button>
         <div id="tplCaptionOutput" style="margin-top:14px;"></div>
       </div>
 
-      <div class="ot-panel open">
+      <div class="ot-panel open surface c5">
         <h3>Carousel idea bank</h3>
         <input id="tplCarouselFilter" placeholder="Search ideas or pillars (e.g. litter, grooming, exotic)...">
         <div id="tplCarouselOutput" style="margin-top:14px;"></div>
@@ -1897,7 +2116,7 @@ alter table ttt_clips add column if not exists archived boolean default false;</
     </div>
 
     <div id="otTasksSection" style="display:none;">
-      <div class="ot-panel open">
+      <div class="ot-panel open surface c0">
         <h3>Outreach checklist</h3>
         <div class="ot-grid2">
           <div style="grid-column:1/-1;">
@@ -3012,7 +3231,7 @@ function toggleClipArchived(clipId) {
   if (!c) return;
   c.archived = !c.archived;
   saveClips(clipId);
-  closeCardModal();
+  closeCardModal(true);
   render();
 }
 
@@ -3287,10 +3506,12 @@ function renderQuickAddBrands() {
 function renderBrandBoard() {
   const board = document.getElementById('otBoard');
   if (!board) return;
+  // Each pipeline column is a colored card
+  const COL_COLORS = { researching: 'c2', applied: 'c1', waiting: 'c6', partnered: 'c0', passed: 'c5' };
   board.innerHTML = BRAND_STATUSES.map(col => {
     const items = brands.filter(b => b.status === col.key);
     return `
-      <div class="ot-col ${col.key}">
+      <div class="ot-col ${col.key} surface ${COL_COLORS[col.key] || 'c3'}">
         <div class="ot-col-head">
           <div class="ot-col-title">${col.label}</div>
           <div class="ot-col-count">${items.length}</div>
@@ -3868,7 +4089,7 @@ function buildFullCard(clip, forceExpanded) {
   trashBtn.className = 'date-pill-btn trash-footer-btn';
   trashBtn.innerHTML = NAV_ICONS.trash;
   trashBtn.title = 'Remove';
-  trashBtn.onclick = () => { removeClip(clip.id); closeCardModal(); };
+  trashBtn.onclick = () => { removeClip(clip.id); closeCardModal(true); };
   bottomRow.appendChild(trashBtn);
 
   card.appendChild(bottomRow);
@@ -3987,45 +4208,30 @@ function buildGridTile(clip, mode) {
   return tile;
 }
 
-// Wallet-style card for the stacked Home view. `index` drives its color and how far down it sticks.
-function buildStackCard(clip, index) {
+// Each clip gets a stable card color (0–6) from its id, so it looks the same in the deck,
+// the calendar and when focused.
+function clipColorIndex(clip) {
+  let h = 0;
+  for (const ch of String(clip.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return h % 7;
+}
+
+// Wallet-style card for the stacked Home view. `index` drives how far down it sticks.
+function buildStackCard(clip, index, colorIdx) {
   const card = document.createElement('div');
-  card.className = 'stack-card c' + (index % 7);
+  card.className = 'stack-card c' + colorIdx;
+  card.dataset.color = colorIdx;
   card.setAttribute('data-highlight-id', clip.id);
   // Each card sticks 12px lower than the last; capped so a long list doesn't eat the screen.
   card.style.setProperty('--stack-off', (Math.min(index, 8) * 12) + 'px');
   if (selectMode && selectedClipIds.has(clip.id)) card.classList.add('selected');
+  // Keep its slot empty if this card is currently picked out (the deck re-renders on edits)
+  if (document.getElementById('cardModalOverlay').dataset.clipId === clip.id) card.classList.add('picked');
 
   const caps = (clip.captions && clip.captions.captions) || [];
   const brand = clip.brandId ? brands.find(b => b.id === clip.brandId) : null;
 
-  let sideLabel, sideValue;
-  if (clip.scheduledDate) {
-    const [y, m, d] = clip.scheduledDate.split('-').map(Number);
-    sideLabel = 'Posts';
-    sideValue = new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  } else if (caps.length) {
-    sideLabel = 'Captions';
-    sideValue = String(caps.length);
-  } else {
-    sideLabel = 'Logged';
-    const days = Math.floor((Date.now() - new Date(clip.created).getTime()) / 86400000);
-    sideValue = days <= 0 ? 'Today' : days + 'd';
-  }
-
-  const head = document.createElement('div');
-  head.className = 'stack-head';
-  head.innerHTML =
-    '<div class="stack-icon">' + (PLATFORM_ICONS[clip.platform] || PLATFORM_ICONS['Both']) + '</div>' +
-    '<div class="stack-title-block">' +
-      '<div class="stack-kicker">' + escapeHtml(STATUS_LABELS[clip.status] || clip.status) + ' · ' + escapeHtml(clip.platform || 'Both') + '</div>' +
-      '<div class="stack-title">' + escapeHtml(clip.desc || 'Untitled') + '</div>' +
-    '</div>' +
-    '<div class="stack-side">' +
-      '<div class="stack-side-label">' + sideLabel + '</div>' +
-      '<div class="stack-side-value">' + escapeHtml(sideValue) + '</div>' +
-    '</div>';
-  card.appendChild(head);
+  card.appendChild(buildStackHead(clip));
 
   const body = document.createElement('div');
   body.className = 'stack-body';
@@ -4077,42 +4283,173 @@ function buildStackCard(clip, index) {
 
   card.onclick = () => {
     if (selectMode) toggleClipSelection(clip.id);
-    else openCardModal(clip.id);
+    else openCardModal(clip.id, card);
   };
   return card;
 }
 
-function openCardModal(id) {
-  const overlay = document.getElementById('cardModalOverlay');
-  const box = document.getElementById('cardModalBox');
+// Icon + status/platform kicker + title + date/count — shared by deck cards and the focused card.
+function buildStackHead(clip) {
+  const caps = (clip.captions && clip.captions.captions) || [];
+  let sideLabel, sideValue;
+  if (clip.scheduledDate) {
+    const [y, m, d] = clip.scheduledDate.split('-').map(Number);
+    sideLabel = 'Posts';
+    sideValue = new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } else if (caps.length) {
+    sideLabel = 'Captions';
+    sideValue = String(caps.length);
+  } else {
+    sideLabel = 'Logged';
+    const days = Math.floor((Date.now() - new Date(clip.created).getTime()) / 86400000);
+    sideValue = days <= 0 ? 'Today' : days + 'd';
+  }
+
+  const head = document.createElement('div');
+  head.className = 'stack-head';
+  head.innerHTML =
+    '<div class="stack-icon">' + (PLATFORM_ICONS[clip.platform] || PLATFORM_ICONS['Both']) + '</div>' +
+    '<div class="stack-title-block">' +
+      '<div class="stack-kicker">' + escapeHtml(STATUS_LABELS[clip.status] || clip.status) + ' · ' + escapeHtml(clip.platform || 'Both') + '</div>' +
+      '<div class="stack-title">' + escapeHtml(clip.desc || 'Untitled') + '</div>' +
+    '</div>' +
+    '<div class="stack-side">' +
+      '<div class="stack-side-label">' + sideLabel + '</div>' +
+      '<div class="stack-side-value">' + escapeHtml(sideValue) + '</div>' +
+    '</div>';
+  return head;
+}
+
+// ===== Focused card: tapping a deck card "picks it out" =====
+// The card grows from its slot in the deck into the centre of the screen. FLIP: measure the deck
+// card and the final card, then animate a transform (uniform scale, so text isn't squashed) plus a
+// clip-path that unfolds the part of the card that wasn't visible in the deck.
+
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function deckToFocusFrames(from, to) {
+  const s = from.width / to.width;
+  const dx = from.left - to.left;
+  const dy = from.top - to.top;
+  const hiddenBottom = Math.max(0, to.height - from.height / s);
+  return [
+    {
+      transform: `translate(${dx}px, ${dy}px) scale(${s})`,
+      clipPath: `inset(0px 0px ${hiddenBottom}px 0px round ${18 / s}px)`,
+      boxShadow: '0 -6px 18px -8px rgba(0,0,0,0.35)'
+    },
+    {
+      transform: 'translate(0px, 0px) scale(1)',
+      clipPath: 'inset(0px 0px 0px 0px round 18px)',
+      boxShadow: '0 40px 80px -30px rgba(0,0,0,0.75)'
+    }
+  ];
+}
+
+function fillFocusCard(box, clip) {
   box.innerHTML = '';
   const closeBtn = document.createElement('button');
   closeBtn.className = 'modal-close';
   closeBtn.textContent = '✕';
-  closeBtn.onclick = closeCardModal;
+  closeBtn.title = 'Put it back';
+  closeBtn.onclick = () => closeCardModal();
   box.appendChild(closeBtn);
-
-  const clip = clips.find(c => c.id === id);
-  if (clip) box.appendChild(buildFullCard(clip, true));
-
-  overlay.classList.add('open');
-  overlay.dataset.clipId = id;
+  box.appendChild(buildStackHead(clip));
+  const divider = document.createElement('div');
+  divider.className = 'focus-divider';
+  box.appendChild(divider);
+  box.appendChild(buildFullCard(clip, true));
 }
 
-function closeCardModal() {
-  document.getElementById('cardModalOverlay').classList.remove('open');
-  document.getElementById('cardModalOverlay').removeAttribute('data-clip-id');
+// sourceEl: the element that was tapped. A deck card flies out; anything else just fades in.
+function openCardModal(id, sourceEl) {
+  const overlay = document.getElementById('cardModalOverlay');
+  const box = document.getElementById('cardModalBox');
+  const clip = clips.find(c => c.id === id);
+  if (!clip) return;
+
+  const alreadyOpen = overlay.classList.contains('open') && overlay.dataset.clipId === id;
+  const keepScroll = box.scrollTop;
+  let colorIdx = clipColorIndex(clip);
+  if (sourceEl && sourceEl.dataset.color != null) colorIdx = Number(sourceEl.dataset.color);
+  else if (alreadyOpen && box.dataset.color != null) colorIdx = Number(box.dataset.color);
+  box.className = 'modal-box focus-card surface c' + colorIdx;
+  box.dataset.color = colorIdx;
+  fillFocusCard(box, clip);
+
+  if (alreadyOpen) { box.scrollTop = keepScroll; return; } // re-render in place after an edit
+
+  overlay.dataset.clipId = id;
+  overlay.classList.remove('closing');
+  overlay.classList.add('open');
+  document.documentElement.classList.add('focus-open');
+  box.scrollTop = 0;
+
+  const fromDeck = sourceEl && sourceEl.classList.contains('stack-card');
+  if (fromDeck && !prefersReducedMotion()) {
+    const from = sourceEl.getBoundingClientRect();
+    const to = box.getBoundingClientRect();
+    sourceEl.classList.add('picked');
+    box.animate(deckToFocusFrames(from, to), { duration: 460, easing: 'cubic-bezier(.2,.9,.25,1)' });
+  } else {
+    if (fromDeck) sourceEl.classList.add('picked');
+    box.animate(
+      [{ opacity: 0, transform: 'translateY(24px) scale(0.96)' }, { opacity: 1, transform: 'none' }],
+      { duration: prefersReducedMotion() ? 1 : 260, easing: 'cubic-bezier(.2,.9,.25,1)' }
+    );
+  }
+}
+
+// Puts the card back into its slot in the deck. Pass skipFlyBack when the card is leaving the
+// deck (archived/deleted) so it fades instead of flying into a slot that's about to disappear.
+function closeCardModal(skipFlyBack) {
+  const overlay = document.getElementById('cardModalOverlay');
+  const box = document.getElementById('cardModalBox');
+  if (!overlay.classList.contains('open') || overlay.classList.contains('closing')) return;
+  const id = overlay.dataset.clipId;
+
+  const finish = (anim) => {
+    overlay.classList.remove('open', 'closing');
+    overlay.removeAttribute('data-clip-id');
+    document.documentElement.classList.remove('focus-open');
+    document.querySelectorAll('.stack-card.picked').forEach(el => el.classList.remove('picked'));
+    if (anim) anim.cancel();
+  };
+  overlay.classList.add('closing');
+
+  // The deck may have re-rendered while the card was open, so look up its slot now.
+  const target = id && document.querySelector('#cardList .stack-card[data-highlight-id="' + CSS.escape(id) + '"]');
+  const from = target ? target.getBoundingClientRect() : null;
+  const slotVisible = from && from.height > 0 && from.bottom > 0 && from.top < window.innerHeight;
+  if (!skipFlyBack && slotVisible && !prefersReducedMotion()) {
+    box.scrollTop = 0;
+    const to = box.getBoundingClientRect();
+    target.classList.add('picked');
+    const anim = box.animate(deckToFocusFrames(from, to).reverse(), { duration: 380, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+    anim.onfinish = () => finish(anim);
+    return;
+  }
+  const anim = box.animate(
+    [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(24px) scale(0.96)' }],
+    { duration: prefersReducedMotion() ? 1 : 200, fill: 'forwards' }
+  );
+  anim.onfinish = () => finish(anim);
 }
 
 function refreshOpenModal() {
   const overlay = document.getElementById('cardModalOverlay');
-  if (overlay.classList.contains('open') && overlay.dataset.clipId) {
+  if (overlay.classList.contains('open') && !overlay.classList.contains('closing') && overlay.dataset.clipId) {
     openCardModal(overlay.dataset.clipId);
   }
 }
 
 document.getElementById('cardModalOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'cardModalOverlay') closeCardModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeCardModal();
 });
 
 function isMobile() {
@@ -4294,8 +4631,14 @@ function renderCardListOnly() {
       list.innerHTML = '<div class="empty-state">No captions logged yet. The field is quiet.</div>';
     }
   } else {
+    let prevColor = -1;
     filtered.forEach((clip, i) => {
-      list.appendChild(gridLayoutMode === 'stack' ? buildStackCard(clip, i) : buildGridTile(clip, gridLayoutMode));
+      if (gridLayoutMode !== 'stack') { list.appendChild(buildGridTile(clip, gridLayoutMode)); return; }
+      // Stable color per clip, nudged when it would match the card right above it
+      let color = clipColorIndex(clip);
+      if (color === prevColor) color = (color + 1) % 7;
+      prevColor = color;
+      list.appendChild(buildStackCard(clip, i, color));
     });
     syncStackTop();
   }
@@ -4444,7 +4787,7 @@ function renderCalendar() {
     html += '<div class="cal-cell' + (isToday ? ' today' : '') + '">';
     html += '<div class="cal-daynum">' + day + '</div>';
     (clipsByDate[dateStr] || []).forEach(c => {
-      html += '<div class="cal-post ' + c.status + '" data-clip-id="' + c.id + '" title="' + c.desc.replace(/"/g,'&quot;') + '">' + escapeHtml(c.desc) + '</div>';
+      html += '<div class="cal-post ' + c.status + ' c' + clipColorIndex(c) + '" data-clip-id="' + c.id + '" title="' + c.desc.replace(/"/g,'&quot;') + '">' + escapeHtml(c.desc) + '</div>';
     });
     html += '</div>';
   }
