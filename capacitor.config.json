@@ -1,0 +1,8 @@
+{
+  "appId": "com.dalecri.twostorycaptions",
+  "appName": "TwoStoryCaptions",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#F0F5FF"
+  }
+}

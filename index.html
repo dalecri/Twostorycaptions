@@ -4254,7 +4254,7 @@ document.getElementById('otSaveBtn').addEventListener('click', saveBrandForm);
 
 // ===== Backup: export / import all data =====
 
-function exportAllData() {
+async function exportAllData() {
   const payload = {
     exportedFrom: 'TwoStoryCaptions',
     exportedAt: new Date().toISOString(),
@@ -4262,11 +4262,27 @@ function exportAllData() {
     brands,
     tasks
   };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const json = JSON.stringify(payload, null, 2);
+  const filename = 'twostorycaptions-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+
+  // In the Capacitor app, <a download> does nothing — write the file and open the share sheet instead.
+  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+    try {
+      const { Filesystem, Share } = window.Capacitor.Plugins;
+      const { uri } = await Filesystem.writeFile({ path: filename, data: json, directory: 'CACHE', encoding: 'utf8' });
+      await Share.share({ title: 'TwoStoryCaptions backup', files: [uri] });
+      setSyncStatus('Backup exported ✓');
+    } catch (e) {
+      if (!/cancel/i.test(e && e.message || '')) setSyncStatus('Export failed: ' + (e && e.message || e), true);
+    }
+    return;
+  }
+
+  const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'twostorycaptions-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

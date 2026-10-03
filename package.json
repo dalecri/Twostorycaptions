@@ -1,0 +1,36 @@
+{
+  "name": "twostorycaptions",
+  "version": "1.0.0",
+  "description": "TwoStoryCaptions as a Capacitor app",
+  "scripts": {
+    "build": "node scripts/build-www.js",
+    "sync": "npm run build && npx cap sync",
+    "android": "npm run sync && npx cap open android",
+    "android:run": "npm run sync && npx cap run android",
+    "icons": "npx capacitor-assets generate --android --iconBackgroundColor #F0F5FF --splashBackgroundColor #F0F5FF"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dalecri/TwoStoryCaptions.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dalecri/TwoStoryCaptions/issues"
+  },
+  "homepage": "https://github.com/dalecri/TwoStoryCaptions#readme",
+  "dependencies": {
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/share": "^8.0.3",
+    "@supabase/supabase-js": "^2.117.2",
+    "@capacitor/android": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2"
+  },
+  "private": true
+}
