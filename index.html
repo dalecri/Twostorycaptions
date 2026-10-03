@@ -44,6 +44,8 @@
     min-height: 100vh;
     padding: 32px 20px 104px;
     overflow-x: hidden;
+    /* clip (not hidden) so body doesn't become a scroll container — that would break the sticky card stack */
+    overflow-x: clip;
   }
   .wrap { max-width: 780px; margin: 0 auto; }
 
@@ -1010,6 +1012,143 @@
     letter-spacing: 0.3px;
   }
 
+  /* ===== Stacked "wallet" cards (Home default) ===== */
+  /* Each card is sticky with a slightly larger top offset than the one before, so scrolling
+     slides the next card up over the previous one and they pile into slivers under the header. */
+  .cardlist-stack {
+    --stack-top: 80px;
+  }
+  /* Room for the last card to slide all the way up. Must be content, not padding:
+     sticky children are confined to the container's content box. */
+  .cardlist-stack::after { content: ''; display: block; height: 55vh; }
+  .stack-card {
+    --card-bg: #A8D8BE;
+    --card-ink: #141414;
+    position: sticky;
+    top: calc(var(--stack-top) + var(--stack-off, 0px));
+    transition: top 0.25s ease;
+    /* Uniform height so a taller card never peeks out below the one piled on top of it */
+    height: 290px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-top: -26px;
+    padding: 20px 22px 44px;
+    border-radius: 18px;
+    background:
+      linear-gradient(to bottom, rgba(255,255,255,0.14), transparent 40%, rgba(0,0,0,0.06)),
+      var(--card-bg);
+    color: var(--card-ink);
+    box-shadow: 0 -6px 18px -8px rgba(0,0,0,0.35);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .stack-card:first-child { margin-top: 0; }
+  .stack-card:active { filter: brightness(0.97); }
+  .stack-card.selected { outline: 3px solid var(--moss); outline-offset: -3px; }
+  .stack-card.c0 { --card-bg: #A8D8BE; }
+  .stack-card.c1 { --card-bg: #F0B8D8; }
+  .stack-card.c2 { --card-bg: #F2A64B; }
+  .stack-card.c3 { --card-bg: #9CCBEE; }
+  .stack-card.c4 { --card-bg: #1C1C1C; --card-ink: #FFFFFF; }
+  .stack-card.c5 { --card-bg: #B4A0D2; }
+  .stack-card.c6 { --card-bg: #F7EB8A; }
+  .stack-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .stack-icon {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    margin-top: 6px;
+    opacity: 0.75;
+  }
+  .stack-icon svg { width: 100%; height: 100%; }
+  .stack-title-block { flex: 1; min-width: 0; }
+  .stack-kicker, .stack-side-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .stack-title {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  .stack-side { text-align: right; flex-shrink: 0; }
+  .stack-side-value {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: 1.5px;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+  .stack-body { margin-top: 20px; padding-left: 38px; min-height: 0; }
+  .stack-body-label {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .stack-body-text {
+    font-size: 13px;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .stack-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 10px;
+    padding-left: 38px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.4px;
+    opacity: 0.75;
+  }
+  .stack-foot-tags { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stack-copy-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    padding: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .stack-copy-btn:hover { background: color-mix(in srgb, currentColor 12%, transparent); color: inherit; transform: none; }
+  .stack-copy-btn svg { width: 100%; height: 100%; }
+  @media (max-width: 600px) {
+    .stack-card { padding: 18px 18px 42px; }
+    .stack-side-value { font-size: 20px; }
+    .stack-body, .stack-foot { padding-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stack-card { transition: none; }
+  }
+
   /* ===== Mobile "notes app" list ===== */
   .note-list { border-top: 1px solid var(--line); }
   .note-row {
@@ -1806,6 +1945,7 @@ const NAV_ICONS = {
   link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
   gridView: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>',
+  stack: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path d="M5 7h14"></path><path d="M7 3h10"></path></svg>',
   checkSquare: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>',
   paw: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="17" rx="5" ry="4"></ellipse><circle cx="5" cy="9" r="2"></circle><circle cx="10" cy="5" r="2"></circle><circle cx="15" cy="5" r="2"></circle><circle cx="19" cy="9" r="2"></circle></svg>',
   archive: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>'
@@ -1827,8 +1967,10 @@ let activeBrandFilter = '';
 let activeCatFilter = '';
 let searchQuery = '';
 let activeQuickFilter = null; // null | 'search' | 'select'
-let gridLayoutMode = 'grid'; // 'grid' | 'list'
-try { gridLayoutMode = localStorage.getItem('ttt-layout-mode') || 'grid'; } catch (e) {}
+let gridLayoutMode = 'stack'; // 'stack' | 'grid' | 'list'
+// v2 key so everyone lands on the new stacked home once, instead of a previously saved grid/list
+try { gridLayoutMode = localStorage.getItem('ttt-layout-mode-v2') || 'stack'; } catch (e) {}
+const LAYOUT_MODES = ['stack', 'grid', 'list'];
 let selectMode = false;
 let selectedClipIds = new Set();
 let loadingCaptions = {};
@@ -3845,6 +3987,101 @@ function buildGridTile(clip, mode) {
   return tile;
 }
 
+// Wallet-style card for the stacked Home view. `index` drives its color and how far down it sticks.
+function buildStackCard(clip, index) {
+  const card = document.createElement('div');
+  card.className = 'stack-card c' + (index % 7);
+  card.setAttribute('data-highlight-id', clip.id);
+  // Each card sticks 12px lower than the last; capped so a long list doesn't eat the screen.
+  card.style.setProperty('--stack-off', (Math.min(index, 8) * 12) + 'px');
+  if (selectMode && selectedClipIds.has(clip.id)) card.classList.add('selected');
+
+  const caps = (clip.captions && clip.captions.captions) || [];
+  const brand = clip.brandId ? brands.find(b => b.id === clip.brandId) : null;
+
+  let sideLabel, sideValue;
+  if (clip.scheduledDate) {
+    const [y, m, d] = clip.scheduledDate.split('-').map(Number);
+    sideLabel = 'Posts';
+    sideValue = new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } else if (caps.length) {
+    sideLabel = 'Captions';
+    sideValue = String(caps.length);
+  } else {
+    sideLabel = 'Logged';
+    const days = Math.floor((Date.now() - new Date(clip.created).getTime()) / 86400000);
+    sideValue = days <= 0 ? 'Today' : days + 'd';
+  }
+
+  const head = document.createElement('div');
+  head.className = 'stack-head';
+  head.innerHTML =
+    '<div class="stack-icon">' + (PLATFORM_ICONS[clip.platform] || PLATFORM_ICONS['Both']) + '</div>' +
+    '<div class="stack-title-block">' +
+      '<div class="stack-kicker">' + escapeHtml(STATUS_LABELS[clip.status] || clip.status) + ' · ' + escapeHtml(clip.platform || 'Both') + '</div>' +
+      '<div class="stack-title">' + escapeHtml(clip.desc || 'Untitled') + '</div>' +
+    '</div>' +
+    '<div class="stack-side">' +
+      '<div class="stack-side-label">' + sideLabel + '</div>' +
+      '<div class="stack-side-value">' + escapeHtml(sideValue) + '</div>' +
+    '</div>';
+  card.appendChild(head);
+
+  const body = document.createElement('div');
+  body.className = 'stack-body';
+  const bodyLabel = document.createElement('div');
+  bodyLabel.className = 'stack-body-label';
+  const bodyText = document.createElement('div');
+  bodyText.className = 'stack-body-text';
+  if (caps.length) {
+    bodyLabel.textContent = 'Option 1 of ' + caps.length + (clip.captionTones && clip.captionTones[0] ? ' · ' + clip.captionTones[0] : '');
+    bodyText.textContent = caps[0];
+  } else {
+    bodyLabel.textContent = 'The clip';
+    bodyText.textContent = clip.desc;
+  }
+  body.appendChild(bodyLabel);
+  body.appendChild(bodyText);
+  card.appendChild(body);
+
+  const foot = document.createElement('div');
+  foot.className = 'stack-foot';
+  const tags = [];
+  if (brand) tags.push('🏷 ' + brand.name);
+  if (clip.catTags && clip.catTags.length) tags.push('🐾 ' + clip.catTags.join(', '));
+  if (clip.videoLink) tags.push('🔗 video');
+  if (clip.archived) tags.push('📦 archived');
+  if (clip.unsynced) tags.push('⚠ not saved');
+  const tagSpan = document.createElement('span');
+  tagSpan.className = 'stack-foot-tags';
+  tagSpan.textContent = tags.join('   ') || (caps.length ? 'Logged ' + timeAgo(clip.created) : 'Tap to generate captions');
+  foot.appendChild(tagSpan);
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'stack-copy-btn';
+  copyBtn.title = caps.length ? 'Copy caption + hashtags' : 'Copy description';
+  copyBtn.innerHTML = NAV_ICONS.copy;
+  copyBtn.onclick = (e) => {
+    e.stopPropagation();
+    let text = clip.desc;
+    if (caps.length) {
+      const tagsText = clip.platform === 'TikTok'
+        ? (clip.captions.hashtagsTiktok || clip.captions.hashtags || '')
+        : (clip.captions.hashtagsInstagram || clip.captions.hashtags || '');
+      text = caps[0] + (tagsText ? '\n\n' + tagsText : '');
+    }
+    copyWithIconFeedback(text, copyBtn);
+  };
+  foot.appendChild(copyBtn);
+  card.appendChild(foot);
+
+  card.onclick = () => {
+    if (selectMode) toggleClipSelection(clip.id);
+    else openCardModal(clip.id);
+  };
+  return card;
+}
+
 function openCardModal(id) {
   const overlay = document.getElementById('cardModalOverlay');
   const box = document.getElementById('cardModalBox');
@@ -3935,7 +4172,7 @@ function render() {
     return;
   }
 
-  document.getElementById('cardList').style.display = showList ? 'grid' : 'none';
+  document.getElementById('cardList').style.display = showList ? (gridLayoutMode === 'stack' ? 'block' : 'grid') : 'none';
   document.getElementById('calendarView').style.display = currentView === 'calendar' ? 'block' : 'none';
 
   if (currentView === 'calendar') {
@@ -4044,7 +4281,8 @@ function renderCardListOnly() {
   const list = document.getElementById('cardList');
   if (!list) return;
   list.innerHTML = '';
-  list.className = gridLayoutMode === 'list' ? 'cardlist-list' : 'cardlist-grid';
+  list.className = 'cardlist-' + gridLayoutMode;
+  if (list.style.display !== 'none') list.style.display = gridLayoutMode === 'stack' ? 'block' : 'grid';
   const filtered = getFilteredClips();
 
   if (filtered.length === 0) {
@@ -4056,9 +4294,10 @@ function renderCardListOnly() {
       list.innerHTML = '<div class="empty-state">No captions logged yet. The field is quiet.</div>';
     }
   } else {
-    filtered.forEach(clip => {
-      list.appendChild(buildGridTile(clip, gridLayoutMode));
+    filtered.forEach((clip, i) => {
+      list.appendChild(gridLayoutMode === 'stack' ? buildStackCard(clip, i) : buildGridTile(clip, gridLayoutMode));
     });
+    syncStackTop();
   }
 }
 
@@ -4374,22 +4613,22 @@ document.getElementById('searchToggleBtn').addEventListener('click', () => toggl
 document.getElementById('filterToggleBtn').addEventListener('click', () => toggleQuickFilter('select'));
 renderLayoutToggle();
 document.getElementById('layoutToggleBtn').addEventListener('click', () => {
-  gridLayoutMode = gridLayoutMode === 'list' ? 'grid' : 'list';
-  try { localStorage.setItem('ttt-layout-mode', gridLayoutMode); } catch (e) {}
+  const i = LAYOUT_MODES.indexOf(gridLayoutMode);
+  gridLayoutMode = LAYOUT_MODES[(i + 1) % LAYOUT_MODES.length];
+  try { localStorage.setItem('ttt-layout-mode-v2', gridLayoutMode); } catch (e) {}
   renderLayoutToggle();
   renderCardListOnly();
   playViewAnim(document.getElementById('cardList'));
 });
 
+// The button shows the layout you'll switch *to*: stack → grid → list → stack
 function renderLayoutToggle() {
   const btn = document.getElementById('layoutToggleBtn');
-  if (gridLayoutMode === 'list') {
-    btn.innerHTML = NAV_ICONS.gridView;
-    btn.title = 'Switch to grid view';
-  } else {
-    btn.innerHTML = NAV_ICONS.list;
-    btn.title = 'Switch to list view';
-  }
+  const i = LAYOUT_MODES.indexOf(gridLayoutMode);
+  const next = LAYOUT_MODES[(i + 1) % LAYOUT_MODES.length];
+  const icons = { stack: NAV_ICONS.stack, grid: NAV_ICONS.gridView, list: NAV_ICONS.list };
+  btn.innerHTML = icons[next];
+  btn.title = 'Switch to ' + next + ' view';
 }
 
 document.getElementById('selectModeToggleBtn').innerHTML = NAV_ICONS.checkSquare;
@@ -4428,6 +4667,16 @@ function syncHeaderSpacing() {
   const wrap = document.querySelector('.wrap');
   if (!header || !wrap) return;
   wrap.style.setProperty('padding-top', (header.offsetHeight + 16) + 'px', 'important');
+  syncStackTop();
+}
+
+// Stacked cards pile up just under the header, or at the very top while the header is scrolled away.
+function syncStackTop() {
+  const header = document.getElementById('mainHeader');
+  const list = document.getElementById('cardList');
+  if (!header || !list) return;
+  const hidden = header.classList.contains('header-hidden');
+  list.style.setProperty('--stack-top', (hidden ? 12 : header.offsetHeight + 12) + 'px');
 }
 syncHeaderSpacing();
 window.addEventListener('load', syncHeaderSpacing);
@@ -4445,6 +4694,7 @@ window.addEventListener('scroll', () => {
     header.classList.remove('header-hidden');
   }
   lastScrollY = y;
+  syncStackTop();
 }, { passive: true });
 
 </script>
