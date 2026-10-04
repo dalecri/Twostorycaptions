@@ -1,7 +1,7 @@
 {
   "name": "twostorycaptions",
   "version": "1.0.0",
-  "description": "TwoStoryCaptions as a Capacitor app",
+  "description": "TwoStoryCaptions: an offline caption planner, packaged with Capacitor",
   "scripts": {
     "build": "node scripts/build-www.js",
     "sync": "npm run build && npx cap sync",
@@ -22,15 +22,16 @@
   },
   "homepage": "https://github.com/dalecri/TwoStoryCaptions#readme",
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
     "@capacitor/core": "^8.5.2",
     "@capacitor/filesystem": "^8.1.4",
-    "@capacitor/share": "^8.0.3",
-    "@supabase/supabase-js": "^2.117.2",
-    "@capacitor/android": "^8.5.2"
+    "@capacitor/share": "^8.0.3"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^8.5.2"
+    "@capacitor/cli": "^8.5.2",
+    "@fontsource/press-start-2p": "^5.3.0",
+    "@fontsource/space-mono": "^5.3.0"
   },
   "private": true
 }

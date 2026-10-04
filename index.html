@@ -11,7 +11,6 @@
 <link rel="shortcut icon" type="image/png" href="tst.png">
 <link rel="apple-touch-icon" href="tst.png">
 <title>TwoStoryCaptions</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
@@ -1990,20 +1989,6 @@
   .cat-pick-sub { font-size: 9px; font-weight: 400; letter-spacing: 0.4px; opacity: 0.6; }
 
   .card-meta-row .brand-select { flex: 1 1 140px; min-width: 0; border-radius: 999px; }
-  .unsynced-warn {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-top: 12px;
-    padding: 9px 12px;
-    border: 1.5px solid #E2551A;
-    border-radius: 14px;
-    font-family: 'Space Mono', monospace;
-    font-size: 10.5px;
-    color: #B83E0B;
-  }
-  .unsynced-warn button { padding: 5px 12px; font-size: 10px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -2011,7 +1996,7 @@
   <div class="masthead-inner">
     <div class="title-block">
       <h1 id="pageTitle">Home</h1>
-      <p id="syncStatus">Connecting…</p>
+      <p id="syncStatus">Loading…</p>
     </div>
     <div class="header-icons">
       <span class="header-filter-icons" id="headerFilterIcons">
@@ -2043,15 +2028,9 @@
         <button class="ghost" id="exportBtn">⬇ Export backup</button>
         <button class="ghost" id="importBtn">⬆ Import backup</button>
       </div>
-      <p class="settings-hint">Export downloads everything here as a JSON file. Import merges a backup JSON file into what's already here — existing items with matching IDs get overwritten, everything else is added alongside it. Nothing is deleted.</p>
+      <p class="settings-hint">Everything is stored on this device only, so export a backup now and then. Export saves everything as a JSON file. Import merges a backup JSON file into what's already here — existing items with matching IDs get overwritten, everything else is added alongside it. Nothing is deleted.</p>
       <input type="file" id="importFileInput" accept="application/json" style="display:none;">
 
-      <div id="metaColumnsHint" style="display:none; margin-top:16px;">
-        <div class="field-label">One-time setup</div>
-        <p class="settings-hint">Cat tags and archiving need two extra columns in your Supabase <code>ttt_clips</code> table — they're working locally for now, but won't survive a reload until this is run. Paste this once into the Supabase SQL editor:</p>
-        <pre style="background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:10.5px; overflow-x:auto; white-space:pre-wrap; font-family:'Space Mono',monospace; color:var(--ink);">alter table ttt_clips add column if not exists cat_tags text;
-alter table ttt_clips add column if not exists archived boolean default false;</pre>
-      </div>
     </div>
   </div>
 
@@ -2276,13 +2255,11 @@ try { gridLayoutMode = localStorage.getItem('ttt-layout-mode-v2') || 'stack'; } 
 const LAYOUT_MODES = ['stack', 'grid', 'list'];
 let selectMode = false;
 let selectedClipIds = new Set();
-let loadingCaptions = {};
 let newClipTones = ['Deadpan nature-doc'];
 let currentView = 'grid';
 let lastAnimatedView = null;
 let calMonthOffset = 0;
 let currentTheme = 'marina';
-let isOfflinePreview = false;
 let editingDateIds = new Set();
 let collapsedCaptionIds = new Set();
 let compactCardIds = new Set();
@@ -2290,7 +2267,6 @@ let brandPickerOpenIds = new Set();
 let linkPickerOpenIds = new Set();
 let catPickerOpenIds = new Set();
 let newClipCats = [];
-let clipMetaColumnsSupported = true; // flips false for this session if the DB is missing cat_tags/archived columns
 
 let brands = [];
 let editingBrandId = '';
@@ -2816,11 +2792,18 @@ function setPlatform(clipId, platform) {
   render();
 }
 
-const SUPABASE_URL = 'https://kumlmoecgnpkhgpxuopk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_qQZRlaTbMm3kEs5n2Fikfg_K5OaciqO';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
-});
+// ===== On-device storage =====
+// Everything lives on this device, no account or server. In the Android app the data is a
+// JSON file in the app's private storage (Capacitor Filesystem), mirrored to localStorage so a
+// half-written file can never lose everything. In a browser it's localStorage only.
+const STORE_KEY = 'tsc-data-v1';
+const STORE_FILE = 'twostorycaptions-data.json';
+
+function nativeFs() {
+  const cap = window.Capacitor;
+  if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return null;
+  return (cap.Plugins && cap.Plugins.Filesystem) || null;
+}
 
 function setSyncStatus(text, isError) {
   const el = document.getElementById('syncStatus');
@@ -2831,221 +2814,165 @@ function setSyncStatus(text, isError) {
 
 function safeParseJSON(val, fallback) {
   if (val === null || val === undefined || val === '') return fallback;
-  if (typeof val === 'object') return val; // already decoded (jsonb column)
+  if (typeof val === 'object') return val;
   try { return JSON.parse(val); } catch (e) { return fallback; }
 }
 
-function rowToClip(row) {
-  return {
-    id: row.id,
-    desc: row.desc_text,
-    status: row.status,
-    created: row.created,
-    scheduledDate: row.scheduled_date || '',
-    selectedTones: safeParseJSON(row.selected_tones, ['Deadpan nature-doc']),
-    platform: row.platform || 'Both',
-    captionTones: safeParseJSON(row.caption_tones, []),
-    captions: safeParseJSON(row.captions, null),
-    videoLink: row.video_link || '',
-    brandId: row.brand_id || '',
-    catTags: safeParseJSON(row.cat_tags, []),
-    archived: row.archived === true
-  };
+function parseStore(text) {
+  const d = safeParseJSON(text, null);
+  return d && typeof d === 'object' && !Array.isArray(d) ? d : null;
 }
 
-function clipToRow(clip) {
-  const row = {
-    id: clip.id,
-    desc_text: clip.desc,
-    status: clip.status,
-    created: clip.created,
-    scheduled_date: clip.scheduledDate || null,
-    // Stringified explicitly: works whether the DB column is jsonb or plain text,
-    // which avoids a silent type-mismatch failure on the one field (captions)
-    // that's actually an object instead of a plain string/number.
-    selected_tones: JSON.stringify(clip.selectedTones || ['Deadpan nature-doc']),
-    platform: clip.platform || 'Both',
-    caption_tones: JSON.stringify(clip.captionTones || []),
-    captions: clip.captions ? JSON.stringify(clip.captions) : null,
-    video_link: clip.videoLink || null,
-    brand_id: clip.brandId || null,
-    updated_at: new Date().toISOString()
-  };
-  // Only sent once we know the DB has these columns — see saveClips' fallback below.
-  if (clipMetaColumnsSupported) {
-    row.cat_tags = JSON.stringify(clip.catTags || []);
-    row.archived = !!clip.archived;
+async function readStore() {
+  const fs = nativeFs();
+  if (fs) {
+    try {
+      const { data } = await fs.readFile({ path: STORE_FILE, directory: 'DATA', encoding: 'utf8' });
+      const parsed = parseStore(data);
+      if (parsed) return parsed;
+    } catch (e) { /* no file yet, fall back to the mirror */ }
   }
-  return row;
+  try { return parseStore(localStorage.getItem(STORE_KEY)); } catch (e) { return null; }
 }
 
-function isLikelyArtifactPreview() {
-  try { return window.self !== window.top; } catch (e) { return true; }
-}
+let persistTimer = null;
 
-const NETWORK_HINT = isLikelyArtifactPreview()
-  ? ' (Claude\'s artifact preview blocks calls to Supabase — this works once deployed, e.g. on GitHub Pages)'
-  : ' — check your connection';
-
-let isLoadingClips = false;
-let pendingClipSaves = 0;
-
-async function loadClips() {
-  if (isLoadingClips) return;
-  if (pendingClipSaves > 0) return; // don't clobber local changes that are still being saved
-  isLoadingClips = true;
-  const hadDataBefore = clips.length > 0;
-  setSyncStatus('Syncing…');
-  try {
-    const { data, error } = await sb.from('ttt_clips').select('*').order('created', { ascending: false });
-    if (error) throw error;
-    if (data && data.length) {
-      clips = data.map(rowToClip);
-    } else if (!hadDataBefore) {
-      clips = SEED_CLIPS.map(c => ({ id: uid(), created: new Date().toISOString(), captionTones: [], videoLink: '', brandId: '', catTags: [], archived: false, ...c }));
-      await saveClips();
+async function writeStore() {
+  clearTimeout(persistTimer);
+  persistTimer = null;
+  const json = JSON.stringify({ version: 1, savedAt: new Date().toISOString(), clips, brands, tasks });
+  let ok = false;
+  try { localStorage.setItem(STORE_KEY, json); ok = true; } catch (e) { console.error('localStorage save failed', e); }
+  const fs = nativeFs();
+  if (fs) {
+    try {
+      await fs.writeFile({ path: STORE_FILE, data: json, directory: 'DATA', encoding: 'utf8' });
+      ok = true;
+    } catch (e) {
+      console.error('File save failed', e);
     }
-    setSyncStatus('Synced ✓');
-  } catch (e) {
-    console.error('Load error:', (e && (e.message || e.toString && e.toString())) || 'unknown error');
-    isOfflinePreview = isLikelyArtifactPreview();
-    if (!hadDataBefore) {
-      clips = SEED_CLIPS.map(c => ({ id: uid(), created: new Date().toISOString(), captionTones: [], videoLink: '', brandId: '', catTags: [], archived: false, ...c }));
-    }
-    setSyncStatus('Offline' + NETWORK_HINT, true);
   }
-  isLoadingClips = false;
-  render();
+  setSyncStatus(ok ? 'Saved on this device' : 'Save failed, export a backup', !ok);
+  return ok;
 }
 
-async function saveClips(clipId) {
-  if (!clips.length) return true;
-  pendingClipSaves++;
-  try {
-    const targets = clipId ? clips.filter(c => c.id === clipId) : clips;
-    if (!targets.length) return true;
-    const rows = targets.map(clipToRow);
-    const { error } = await sb.from('ttt_clips').upsert(rows, { onConflict: 'id' });
-    if (error) throw error;
-    setSyncStatus('Synced ✓');
-    targets.forEach(c => { c.unsynced = false; c.saveError = ''; });
-    return true;
-  } catch (e) {
-    const msg = (e && e.message) || (e && e.toString && e.toString()) || 'unknown error';
-    // If the DB doesn't have the cat_tags/archived columns yet, drop them and retry once so the
-    // rest of the save still goes through — cat tags & archiving just stay local until the
-    // migration in Settings → Data is run.
-    const isMissingMetaColumn = clipMetaColumnsSupported && (e && e.code === '42703' || /column .*(cat_tags|archived).* does not exist/i.test(msg));
-    if (isMissingMetaColumn) {
-      clipMetaColumnsSupported = false;
-      console.warn('ttt_clips is missing cat_tags/archived columns — see Settings → Data for the migration SQL. Cat tags and archiving will only persist locally until then.');
-      const hint = document.getElementById('metaColumnsHint');
-      if (hint) hint.style.display = 'block';
-      return await saveClips(clipId);
-    }
-    console.error('Save error', e);
-    setSyncStatus('Sync failed' + NETWORK_HINT, true);
-    const targets = clipId ? clips.filter(c => c.id === clipId) : clips;
-    targets.forEach(c => { c.unsynced = true; c.saveError = msg; });
-    return false;
-  } finally {
-    pendingClipSaves--;
-  }
+// Edits come in bursts (toggling chips, bulk actions), so batch them into one write.
+function persist() {
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(writeStore, 250);
 }
+// Flush right away if the app is backgrounded or closed inside that window.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && persistTimer) writeStore();
+});
+window.addEventListener('pagehide', () => { if (persistTimer) writeStore(); });
 
-async function deleteClipRemote(id) {
-  try {
-    const { error } = await sb.from('ttt_clips').delete().eq('id', id);
-    if (error) throw error;
-  } catch (e) {
-    console.error('Delete error', e);
-    setSyncStatus('Delete failed' + NETWORK_HINT, true);
-  }
-}
+// Kept as separate names so call sites read naturally; all three land in the same store.
+function saveClips() { persist(); }
+function saveBrands() { persist(); }
+function saveTasks() { persist(); }
 
 function uid() { return 'c' + Date.now() + Math.floor(Math.random()*1000); }
 function uidBrand() { return 'b' + Date.now() + Math.floor(Math.random()*1000); }
+function uidTask() { return 't' + Date.now() + Math.floor(Math.random()*1000); }
 
-function rowToBrand(row) {
-  return {
-    id: row.id,
-    name: row.name,
-    category: row.category || '',
-    status: row.status || 'researching',
-    contact: row.contact || '',
-    product: row.product || '',
-    date: row.date_contacted || '',
-    notes: row.notes || '',
-    updatedAt: row.updated_at || row.created_at || null
-  };
+// ===== Validation =====
+// Stored data and imported backups are both untrusted input: coerce every field to the shape the
+// app expects so a bad or hand-edited file can't inject markup or break rendering.
+const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+function str(v, max) { return typeof v === 'string' ? v.slice(0, max || 5000) : ''; }
+function strList(v, allowed) {
+  if (!Array.isArray(v)) return [];
+  return v.filter(x => typeof x === 'string' && (!allowed || allowed.includes(x))).slice(0, 50);
 }
+function safeId(v, make) { return typeof v === 'string' && SAFE_ID.test(v) ? v : make(); }
+function safeDay(v) { return typeof v === 'string' && ISO_DAY.test(v) ? v : ''; }
+function safeIso(v) { return typeof v === 'string' && !isNaN(Date.parse(v)) ? v : new Date().toISOString(); }
+function safeUrl(v) { return typeof v === 'string' && /^https?:\/\//i.test(v) ? v.slice(0, 2000) : ''; }
 
-function brandToRow(b) {
-  return {
-    id: b.id,
-    name: b.name,
-    category: b.category || null,
-    status: b.status || 'researching',
-    contact: b.contact || null,
-    product: b.product || null,
-    date_contacted: b.date || null,
-    notes: b.notes || null,
-    updated_at: new Date().toISOString()
-  };
-}
-
-let isLoadingBrands = false;
-let pendingBrandSaves = 0;
-
-async function loadBrands() {
-  if (isLoadingBrands) return;
-  if (pendingBrandSaves > 0) return;
-  isLoadingBrands = true;
-  try {
-    const { data, error } = await sb.from('ttt_brands').select('*').order('created_at', { ascending: true });
-    if (error) throw error;
-    if (data && data.length) {
-      brands = data.map(rowToBrand);
-    } else if (!brands.length) {
-      brands = [
-        { id: uidBrand(), ...SEED_STRATEGY_NOTE },
-        ...SEED_BRANDS.map(b => ({ id: uidBrand(), ...b }))
-      ];
-      await saveBrands();
-    }
-  } catch (e) {
-    console.error('Brand load error:', (e && e.message) || e);
+function normalizeClip(c) {
+  if (!c || typeof c !== 'object') return null;
+  const tones = strList(c.selectedTones, TONES);
+  let captions = null;
+  if (c.captions && typeof c.captions === 'object' && Array.isArray(c.captions.captions)) {
+    captions = {
+      captions: strList(c.captions.captions).map(s => s.slice(0, 2000)),
+      hashtagsInstagram: str(c.captions.hashtagsInstagram || c.captions.hashtags, 500),
+      hashtagsTiktok: str(c.captions.hashtagsTiktok || c.captions.hashtags, 500)
+    };
   }
-  isLoadingBrands = false;
+  return {
+    id: safeId(c.id, uid),
+    desc: str(c.desc, 2000),
+    status: STATUSES.includes(c.status) ? c.status : 'idea',
+    created: safeIso(c.created),
+    scheduledDate: safeDay(c.scheduledDate),
+    selectedTones: tones.length ? tones : ['Deadpan nature-doc'],
+    platform: PLATFORMS.includes(c.platform) ? c.platform : 'Both',
+    captionTones: strList(c.captionTones, TONES),
+    captions,
+    videoLink: safeUrl(c.videoLink),
+    brandId: typeof c.brandId === 'string' && SAFE_ID.test(c.brandId) ? c.brandId : '',
+    catTags: strList(c.catTags, CATS),
+    archived: c.archived === true
+  };
+}
+
+function normalizeBrand(b) {
+  if (!b || typeof b !== 'object' || !str(b.name).trim()) return null;
+  return {
+    id: safeId(b.id, uidBrand),
+    name: str(b.name, 200),
+    category: str(b.category, 200),
+    status: BRAND_STATUSES.some(s => s.key === b.status) ? b.status : 'researching',
+    contact: str(b.contact, 500),
+    product: str(b.product, 500),
+    date: safeDay(b.date),
+    notes: str(b.notes, 5000),
+    updatedAt: b.updatedAt ? safeIso(b.updatedAt) : null
+  };
+}
+
+function normalizeTask(t) {
+  if (!t || typeof t !== 'object' || !str(t.text).trim()) return null;
+  return {
+    id: safeId(t.id, uidTask),
+    text: str(t.text, 1000),
+    done: t.done === true,
+    brandId: typeof t.brandId === 'string' && SAFE_ID.test(t.brandId) ? t.brandId : ''
+  };
+}
+
+function normalizeList(list, fn) {
+  return Array.isArray(list) ? list.map(fn).filter(Boolean) : [];
+}
+
+function seedData() {
+  clips = SEED_CLIPS.map(c => normalizeClip({ id: uid(), created: new Date().toISOString(), ...c }));
+  brands = [
+    { id: uidBrand(), ...SEED_STRATEGY_NOTE },
+    ...SEED_BRANDS.map(b => ({ id: uidBrand(), ...b }))
+  ].map(normalizeBrand);
+  tasks = SEED_TASKS.map(text => normalizeTask({ id: uidTask(), text, done: false }));
+}
+
+async function loadAll() {
+  const stored = await readStore();
+  if (stored) {
+    clips = normalizeList(stored.clips, normalizeClip);
+    brands = normalizeList(stored.brands, normalizeBrand);
+    tasks = normalizeList(stored.tasks, normalizeTask);
+    setSyncStatus('Saved on this device');
+  } else {
+    seedData();
+    await writeStore();
+  }
+  // Ask the browser not to evict our data under storage pressure (no-op where unsupported).
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   refreshAllBrandDropdowns();
-  if (currentView === 'outreach' || currentView === 'templates' || currentView === 'tasks') renderOutreach();
-}
-
-async function saveBrands(brandId) {
-  if (!brands.length) return true;
-  pendingBrandSaves++;
-  try {
-    const targets = brandId ? brands.filter(b => b.id === brandId) : brands;
-    if (!targets.length) return true;
-    const rows = targets.map(brandToRow);
-    const { error } = await sb.from('ttt_brands').upsert(rows, { onConflict: 'id' });
-    if (error) throw error;
-    return true;
-  } catch (e) {
-    console.error('Brand save error:', (e && e.message) || e);
-    return false;
-  } finally {
-    pendingBrandSaves--;
-  }
-}
-
-async function deleteBrandRemote(id) {
-  try {
-    const { error } = await sb.from('ttt_brands').delete().eq('id', id);
-    if (error) throw error;
-  } catch (e) {
-    console.error('Brand delete error:', (e && e.message) || e);
-  }
+  render();
 }
 
 // ===== Outreach checklist (Google-Tasks-style todo, stored in our own table) =====
@@ -3066,63 +2993,6 @@ const SEED_TASKS = [
   'Set up M/W/F carousel content tying products into "what\'s actually in our lineup" round-ups',
   'Follow up on any pitch that\'s gone quiet for 1–2 weeks using the follow-up template'
 ];
-
-function uidTask() { return 't' + Date.now() + Math.floor(Math.random()*1000); }
-
-function rowToTask(row) {
-  return { id: row.id, text: row.text, done: !!row.done, brandId: row.brand_id || '', created: row.created_at };
-}
-
-function taskToRow(t) {
-  return { id: t.id, text: t.text, done: !!t.done, brand_id: t.brandId || null, updated_at: new Date().toISOString() };
-}
-
-async function loadTasks() {
-  if (isLoadingTasks) return;
-  if (pendingTaskSaves > 0) return;
-  isLoadingTasks = true;
-  try {
-    const { data, error } = await sb.from('ttt_tasks').select('*').order('created_at', { ascending: true });
-    if (error) throw error;
-    if (data && data.length) {
-      tasks = data.map(rowToTask);
-    } else if (!tasks.length) {
-      tasks = SEED_TASKS.map(text => ({ id: uidTask(), text, done: false, brandId: '' }));
-      await saveTasks();
-    }
-  } catch (e) {
-    console.error('Task load error:', (e && e.message) || e);
-  }
-  isLoadingTasks = false;
-  if (currentView === 'outreach' || currentView === 'templates' || currentView === 'tasks') renderTasks();
-}
-
-async function saveTasks(taskId) {
-  if (!tasks.length) return true;
-  pendingTaskSaves++;
-  try {
-    const targets = taskId ? tasks.filter(t => t.id === taskId) : tasks;
-    if (!targets.length) return true;
-    const rows = targets.map(taskToRow);
-    const { error } = await sb.from('ttt_tasks').upsert(rows, { onConflict: 'id' });
-    if (error) throw error;
-    return true;
-  } catch (e) {
-    console.error('Task save error:', (e && e.message) || e);
-    return false;
-  } finally {
-    pendingTaskSaves--;
-  }
-}
-
-async function deleteTaskRemote(id) {
-  try {
-    const { error } = await sb.from('ttt_tasks').delete().eq('id', id);
-    if (error) throw error;
-  } catch (e) {
-    console.error('Task delete error:', (e && e.message) || e);
-  }
-}
 
 function addTask() {
   const input = document.getElementById('taskInput');
@@ -3148,7 +3018,7 @@ function toggleTask(id) {
 
 function deleteTask(id) {
   tasks = tasks.filter(t => t.id !== id);
-  deleteTaskRemote(id);
+  saveTasks();
   renderTasks();
   renderBrandBoard();
 }
@@ -3316,7 +3186,7 @@ function setScheduledDate(id, dateStr) {
 
 function removeClip(id) {
   clips = clips.filter(c => c.id !== id);
-  deleteClipRemote(id);
+  saveClips();
   render();
 }
 
@@ -3324,100 +3194,76 @@ function removeClip(id) {
 const FIXED_HASHTAGS_IG = '#catsofig #catsofinstagram #catlife';
 const FIXED_HASHTAGS_TT = '#catsoftiktok #bengalsoftiktok #catlife';
 
-async function generateCaptions(id) {
+// Offline caption drafts: a few lines per tone, with the tagged cat dropped in.
+// Shuffling picks different lines each time so "Shuffle" actually gives you something new.
+const OFFLINE_CAPTIONS = {
+  'Deadpan nature-doc': [
+    'Observed: [CAT] pauses mid-task, assesses the room, and resumes as if nothing occurred.',
+    'Here we see [CAT] in the natural habitat, conserving energy for reasons science cannot explain.',
+    'A rare sighting. [CAT] has chosen violence, and the household must adapt.'
+  ],
+  'Funny': [
+    'The audacity. The confidence. The complete lack of remorse from [CAT].',
+    '[CAT] said "trust the process" and the process was chaos.',
+    'nobody asked [CAT] to do this. [CAT] did it anyway.'
+  ],
+  'Educational': [
+    'Cats do this to reset their sense of territory. [CAT] is not being dramatic, just thorough.',
+    'Fun fact: slow blinks are a sign of trust. [CAT] has blinked at us zero times today.',
+    'Cats spend up to half their waking hours grooming. [CAT] is clearly going for a record.'
+  ],
+  'Meme-style': [
+    'no thoughts. just vibes. and [CAT].',
+    '[CAT] when the food bowl is 3% empty:',
+    'me: we have a calm evening planned. [CAT]: we do not.'
+  ],
+  'Relatable': [
+    'when you do something unhinged and immediately act like it never happened (ft. [CAT])',
+    'pov: you sat down for one second and [CAT] has decided you are furniture now',
+    'anyone else\'s cat have a full schedule of nonsense or just [CAT]?'
+  ],
+  'Multi-cat tie-in': [
+    'Upstairs causes the chaos. Downstairs watches from a safe distance, judging silently.',
+    'Two floors, four cats, zero agreement on anything.',
+    'One floor is thriving. The other floor is [CAT].'
+  ],
+  'Wholesome': [
+    'Just a small, ordinary moment with [CAT] that made the whole day better.',
+    '[CAT] doesn\'t know it, but this is the best part of our day.',
+    'Soft paws, loud heart. Thank you, [CAT].'
+  ]
+};
+
+function pickRandom(list, avoid) {
+  const options = list.filter(x => !avoid.includes(x));
+  const pool = options.length ? options : list;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function generateCaptions(id) {
   const clip = clips.find(c => c.id === id);
   if (!clip) return;
-  loadingCaptions[id] = true;
-  render();
-
   const tones = (clip.selectedTones && clip.selectedTones.length) ? clip.selectedTones : ['Deadpan nature-doc'];
-  const toneGuide = {
-    'Deadpan nature-doc': 'Attenborough-style narration, dry and scientific, treating mundane behavior as a serious phenomenon. No exclamation points.',
-    'Funny': 'Straightforwardly comedic, punchy, built for a laugh in one read.',
-    'Educational': 'Frames the moment around a real (or plausibly real) cat behavior fact, teaches the viewer something.',
-    'Meme-style': 'Short, internet-native phrasing, leans on a recognizable meme format or rhythm rather than full sentences.',
-    'Relatable': 'Written like a knowing aside to other pet owners, "when your cat does X" energy.',
-    'Multi-cat tie-in': 'Explicitly references the dynamic or contrast between two or more of the four cats (Cali, Neo, Ramses, Diego).',
-    'Wholesome': 'Warm, affectionate, sincere, no irony.'
-  };
-  const toneInstructions = tones.map(t => '- ' + t + ': ' + (toneGuide[t] || '')).join('\n');
+  const cat = (clip.catTags && clip.catTags[0]) || 'this one';
+  const previous = (clip.captions && clip.captions.captions) || [];
 
-  const platform = 'Both'; // posts go out the same on Instagram and TikTok
-  const platformGuide = {
-    'Instagram': 'Optimize for Instagram (Reels/carousel). Caption can be slightly longer (1-3 sentences).',
-    'TikTok': 'Optimize for TikTok. Captions should be punchier and shorter, built to be read in under 2 seconds.',
-    'Both': 'Write for cross-posting to Instagram and TikTok. Keep captions short enough to work as an on-screen TikTok caption but complete enough to stand alone on Instagram.'
-  };
+  // One option per tone when several are picked, otherwise three in the one tone
+  const toneSlots = tones.length > 1 ? tones.slice(0, 3) : [tones[0], tones[0], tones[0]];
+  const picked = [];
+  toneSlots.forEach(tone => {
+    const lines = OFFLINE_CAPTIONS[tone] || OFFLINE_CAPTIONS['Deadpan nature-doc'];
+    picked.push(pickRandom(lines, picked.concat(previous)));
+  });
 
-  const systemPrompt = `You write social captions for a cat content account. The account features four cats: Cali and Neo (domestic shorthairs, downstairs territory) and Ramses (Savannah) and Diego (Bengal, upstairs territory).
-
-Critical rule: never include the account's own name or handle anywhere in the captions. The account is small and growing, so its own name has no search reach.
-
-Platform: ${platform}
-${platformGuide[platform]}
-
-The user has selected the following tone(s)/vibe(s) for this specific caption batch:
-${toneInstructions}
-
-If multiple tones are selected, write one caption option per tone (in the order given) so the user can compare vibes side by side. If only one tone is selected, write 3 options in that tone.
-
-Respond ONLY with valid JSON, no markdown fences, no preamble, in this exact shape:
-{
-  "captions": ["option 1", "option 2", "option 3"]
-}
-Each caption should be 1-3 sentences. Label-free — just the caption text itself. Do not include any hashtags in the caption text.`;
-
-  try {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-captions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SUPABASE_KEY}` },
-      body: JSON.stringify({ systemPrompt, userMessage: `Clip description: ${clip.desc}` })
-    });
-    const data = await response.json();
-    if (!response.ok || data.error) {
-      throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error || data));
-    }
-    const textBlock = data.content.find(b => b.type === 'text');
-    let raw = textBlock ? textBlock.text : '{}';
-    raw = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(raw);
-    clip.captions = { captions: parsed.captions, hashtagsInstagram: FIXED_HASHTAGS_IG, hashtagsTiktok: FIXED_HASHTAGS_TT };
-    clip.captionTones = tones.length > 1 ? tones : [];
-    if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
-    await saveClips(clip.id);
-  } catch (e) {
-    console.error('Caption generation failed', e);
-    if (isLikelyArtifactPreview()) {
-      clip.captions = buildPlaceholderCaptions(clip, tones, platform);
-      clip.captionTones = tones.length > 1 ? tones : [];
-      if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
-      await saveClips(clip.id);
-    } else {
-      clip.captions = { captions: ['Could not generate captions' + NETWORK_HINT + '.'], hashtagsInstagram: '', hashtagsTiktok: '' };
-    }
-  }
-  loadingCaptions[id] = false;
-  render();
-}
-
-function buildPlaceholderCaptions(clip, tones, platform) {
-  const toneCaptionMap = {
-    'Deadpan nature-doc': 'Observed: the subject pauses mid-task, assesses the room, and resumes as if nothing occurred.',
-    'Funny': 'The audacity. The confidence. The complete lack of remorse.',
-    'Educational': 'Cats do this to reset their sense of territory — it\'s a normal behavioral marker, not mischief.',
-    'Meme-style': 'no thoughts. just vibes. and chaos.',
-    'Relatable': 'when you do something unhinged and immediately act like it never happened',
-    'Multi-cat tie-in': 'One cat causes the chaos, the other watches from a safe distance judging silently.',
-    'Wholesome': 'Just a small, ordinary moment that made the whole day better.'
-  };
-  const list = (tones && tones.length ? tones : ['Deadpan nature-doc']).map(t => toneCaptionMap[t] || toneCaptionMap['Deadpan nature-doc']);
-  while (list.length < 3) list.push(list[0]);
-
-  return {
-    captions: list.slice(0, 3),
+  clip.captions = {
+    captions: picked.map(line => line.replace(/\[CAT\]/g, cat)),
     hashtagsInstagram: FIXED_HASHTAGS_IG,
     hashtagsTiktok: FIXED_HASHTAGS_TT
   };
+  clip.captionTones = tones.length > 1 ? toneSlots : [];
+  if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
+  saveClips();
+  render();
 }
 
 function copyText(text, el) {
@@ -3480,10 +3326,11 @@ function formatDateLong(dateStr) {
   return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+// Safe for both text and attribute values (quotes included)
 function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  return String(str == null ? '' : str).replace(/[&<>"']/g, ch => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+  ));
 }
 
 function renderOutreach() {
@@ -3498,7 +3345,7 @@ function fillBrandOptions(select, includeNoneLabel) {
   if (!select) return;
   const prevValue = select.value;
   select.innerHTML = `<option value="">${includeNoneLabel}</option>` +
-    brands.filter(b => b.category !== 'Pinned').map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+    brands.filter(b => b.category !== 'Pinned').map(b => `<option value="${escapeHtml(b.id)}">${escapeHtml(b.name)}</option>`).join('');
   if (brands.some(b => b.id === prevValue)) select.value = prevValue;
 }
 
@@ -3574,7 +3421,7 @@ function renderBrandBoard() {
   board.querySelectorAll('[data-brand-move]').forEach(sel => {
     sel.addEventListener('change', (e) => {
       const b = brands.find(x => x.id === sel.dataset.brandMove);
-      if (b) { b.status = e.target.value; saveBrands(); renderOutreach(); }
+      if (b) { b.status = e.target.value; b.updatedAt = new Date().toISOString(); saveBrands(); renderOutreach(); }
     });
   });
 }
@@ -3588,7 +3435,7 @@ function daysSince(isoDate) {
 function brandCardHtml(b) {
   const statusOptions = BRAND_STATUSES.map(c => `<option value="${c.key}" ${c.key === b.status ? 'selected' : ''}>${c.label}</option>`).join('');
   const linkedCount = clips.filter(c => c.brandId === b.id).length;
-  const idle = b.status === 'waiting' ? daysSince(b.updatedAt) : null;
+  const idle = b.status === 'waiting' ? daysSince(b.date || b.updatedAt) : null;
   const isStale = idle !== null && idle >= 14;
   const brandTasks = tasks.filter(t => t.brandId === b.id);
   const tasksDone = brandTasks.filter(t => t.done).length;
@@ -3601,11 +3448,11 @@ function brandCardHtml(b) {
       ${b.date ? `<div class="ot-card-date">${escapeHtml(b.date)}</div>` : ''}
       ${linkedCount ? `<div class="ot-card-date">🔗 ${linkedCount} caption${linkedCount === 1 ? '' : 's'} linked</div>` : ''}
       ${brandTasks.length ? `<div class="ot-card-date">✓ ${tasksDone}/${brandTasks.length} tasks done</div>` : ''}
-      ${isStale ? `<div class="ot-stale-badge">⏰ ${idle} days since last contact — <button type="button" class="ot-mini-btn" data-brand-followup="${b.id}">Draft follow-up</button></div>` : ''}
+      ${isStale ? `<div class="ot-stale-badge">⏰ ${idle} days since last contact — <button type="button" class="ot-mini-btn" data-brand-followup="${escapeHtml(b.id)}">Draft follow-up</button></div>` : ''}
       <div class="ot-card-actions">
-        <select class="ot-mini-select" data-brand-move="${b.id}">${statusOptions}</select>
-        <button type="button" class="ot-mini-btn" data-brand-edit="${b.id}">Edit</button>
-        <button type="button" class="ot-mini-btn" data-brand-del="${b.id}">Delete</button>
+        <select class="ot-mini-select" data-brand-move="${escapeHtml(b.id)}">${statusOptions}</select>
+        <button type="button" class="ot-mini-btn" data-brand-edit="${escapeHtml(b.id)}">Edit</button>
+        <button type="button" class="ot-mini-btn" data-brand-del="${escapeHtml(b.id)}">Delete</button>
       </div>
     </div>
   `;
@@ -3613,7 +3460,7 @@ function brandCardHtml(b) {
 
 function deleteBrand(id) {
   brands = brands.filter(b => b.id !== id);
-  deleteBrandRemote(id);
+  saveBrands();
   renderOutreach();
 }
 
@@ -3827,9 +3674,9 @@ function saveBrandForm() {
   };
   if (editingBrandId) {
     const b = brands.find(x => x.id === editingBrandId);
-    if (b) Object.assign(b, data);
+    if (b) Object.assign(b, data, { updatedAt: new Date().toISOString() });
   } else {
-    brands.push({ id: uidBrand(), ...data });
+    brands.push({ id: uidBrand(), ...data, updatedAt: new Date().toISOString() });
   }
   saveBrands();
   document.getElementById('otPanel').classList.remove('open');
@@ -4035,12 +3882,7 @@ function buildFullCard(clip) {
   bottomRow.className = 'card-bottom-row';
   const genBtn = document.createElement('button');
   genBtn.className = 'gen-caption-btn';
-  if (loadingCaptions[clip.id]) {
-    genBtn.disabled = true;
-    genBtn.innerHTML = 'Writing <span class="spinner"></span>';
-  } else {
-    genBtn.textContent = clip.captions ? 'Regenerate captions' : 'Generate captions';
-  }
+  genBtn.textContent = clip.captions ? 'Shuffle captions' : 'Draft captions';
   genBtn.onclick = () => generateCaptions(clip.id);
   bottomRow.appendChild(genBtn);
   const archiveBtn = document.createElement('button');
@@ -4057,19 +3899,6 @@ function buildFullCard(clip) {
   bottomRow.appendChild(trashBtn);
   card.appendChild(bottomRow);
 
-  if (clip.unsynced) {
-    const warn = document.createElement('div');
-    warn.className = 'unsynced-warn';
-    const warnText = document.createElement('span');
-    warnText.textContent = '⚠ Not saved to the cloud — ' + (clip.saveError || 'unknown error');
-    const retryBtn = document.createElement('button');
-    retryBtn.className = 'ghost';
-    retryBtn.textContent = 'Retry';
-    retryBtn.onclick = async () => { await saveClips(clip.id); refreshOpenModal(); render(); };
-    warn.appendChild(warnText);
-    warn.appendChild(retryBtn);
-    card.appendChild(warn);
-  }
 
   return card;
 }
@@ -4109,12 +3938,6 @@ function buildGridTile(clip, mode) {
   };
   tile.appendChild(copyBtn);
 
-  if (clip.unsynced) {
-    const unsyncedBadge = document.createElement('div');
-    unsyncedBadge.style.cssText = 'font-family:\'Space Mono\',monospace; font-size:9px; color:var(--rust); margin-top:4px;';
-    unsyncedBadge.textContent = '⚠ not saved';
-    tile.appendChild(unsyncedBadge);
-  }
 
   const desc = document.createElement('div');
   desc.className = mode === 'list' ? 'list-tile-desc' : 'grid-tile-desc';
@@ -4214,7 +4037,6 @@ function buildStackCard(clip, index, colorIdx) {
   if (!caps.length) tags.push('No captions yet');
   if (brand) tags.push('🏷 ' + brand.name);
   if (clip.archived) tags.push('Archived');
-  if (clip.unsynced) tags.push('⚠ Not saved');
   if (!tags.length) tags.push('Logged ' + timeAgo(clip.created));
   tags.forEach(t => {
     const chip = document.createElement('span');
@@ -4624,9 +4446,7 @@ function renderCardListOnly() {
   const filtered = getFilteredClips();
 
   if (filtered.length === 0) {
-    if (isOfflinePreview) {
-      list.innerHTML = '<div class="empty-state">Preview mode: can\'t reach the cloud database here, so nothing\'s loaded. Add a caption to test the UI — it\'ll stay local to this preview. Your real data is safe and will show up on the deployed site.</div>';
-    } else if (searchQuery || activeBrandFilter) {
+    if (searchQuery || activeBrandFilter) {
       list.innerHTML = '<div class="empty-state">Nothing matches that search/filter.</div>';
     } else {
       list.innerHTML = '<div class="empty-state">No captions logged yet. The field is quiet.</div>';
@@ -4719,7 +4539,7 @@ async function deleteSelectedClips() {
   document.getElementById('selectModeToggleBtn').classList.remove('select-mode-active');
   document.getElementById('selectionBar').style.display = 'none';
   render();
-  await Promise.all(ids.map(id => deleteClipRemote(id)));
+  saveClips();
 }
 
 function renderHeaderNav() {
@@ -4788,7 +4608,7 @@ function renderCalendar() {
     html += '<div class="cal-cell' + (isToday ? ' today' : '') + '">';
     html += '<div class="cal-daynum">' + day + '</div>';
     (clipsByDate[dateStr] || []).forEach(c => {
-      html += '<div class="cal-post ' + c.status + ' c' + clipColorIndex(c) + '" data-clip-id="' + c.id + '" title="' + c.desc.replace(/"/g,'&quot;') + '">' + escapeHtml(c.desc) + '</div>';
+      html += '<div class="cal-post ' + c.status + ' c' + clipColorIndex(c) + '" data-clip-id="' + escapeHtml(c.id) + '" title="' + escapeHtml(c.desc) + '">' + escapeHtml(c.desc) + '</div>';
     });
     html += '</div>';
   }
@@ -4873,58 +4693,58 @@ async function exportAllData() {
   setSyncStatus('Backup downloaded ✓');
 }
 
+// Upsert imported items: same id, or same content (so a fresh install's starter cards, brands
+// and tasks don't end up duplicated next to the backup's copies), replaces; anything else is added.
+// Returns { oldId: newId } for replaced items whose id changed, so links can follow them.
+function mergeInto(list, incoming, keyOf) {
+  const renamed = {};
+  incoming.forEach(item => {
+    const key = keyOf(item);
+    const idx = list.findIndex(x => x.id === item.id || (key && keyOf(x) === key));
+    if (idx > -1) {
+      if (list[idx].id !== item.id) renamed[list[idx].id] = item.id;
+      list[idx] = item;
+    } else {
+      list.push(item);
+    }
+  });
+  return renamed;
+}
+
 async function handleImportFile(e) {
   const file = e.target.files[0];
+  e.target.value = '';
   if (!file) return;
   try {
-    const text = await file.text();
-    const data = JSON.parse(text);
-
-    const clipCount = Array.isArray(data.clips) ? data.clips.length : 0;
-    const brandCount = Array.isArray(data.brands) ? data.brands.length : 0;
-    const taskCount = Array.isArray(data.tasks) ? data.tasks.length : 0;
-    if (!clipCount && !brandCount && !taskCount) {
+    if (file.size > 20 * 1024 * 1024) throw new Error('File too large');
+    const data = JSON.parse(await file.text());
+    if (!data || typeof data !== 'object') throw new Error('Not an object');
+    const inClips = normalizeList(data.clips, normalizeClip);
+    const inBrands = normalizeList(data.brands, normalizeBrand);
+    const inTasks = normalizeList(data.tasks, normalizeTask);
+    if (!inClips.length && !inBrands.length && !inTasks.length) {
       alert("That file doesn't look like a TwoStoryCaptions backup — no captions, brands, or tasks found in it.");
       return;
     }
     const ok = confirm(
-      `Import ${clipCount} caption(s), ${brandCount} brand(s), and ${taskCount} task(s)?\n\n` +
-      `This merges into what you already have — existing items with matching IDs get overwritten, everything else is added alongside it. Nothing is deleted.`
+      `Import ${inClips.length} caption(s), ${inBrands.length} brand(s), and ${inTasks.length} task(s)?\n\n` +
+      `This merges into what you already have — matching items get overwritten, everything else is added alongside it. Nothing is deleted.`
     );
     if (!ok) return;
 
-    if (Array.isArray(data.clips)) {
-      data.clips.forEach(c => {
-        if (!c || !c.id) return;
-        const idx = clips.findIndex(x => x.id === c.id);
-        if (idx > -1) clips[idx] = c; else clips.push(c);
-      });
-      await saveClips();
-    }
-    if (Array.isArray(data.brands)) {
-      data.brands.forEach(b => {
-        if (!b || !b.id) return;
-        const idx = brands.findIndex(x => x.id === b.id);
-        if (idx > -1) brands[idx] = b; else brands.push(b);
-      });
-      await saveBrands();
-    }
-    if (Array.isArray(data.tasks)) {
-      data.tasks.forEach(t => {
-        if (!t || !t.id) return;
-        const idx = tasks.findIndex(x => x.id === t.id);
-        if (idx > -1) tasks[idx] = t; else tasks.push(t);
-      });
-      await saveTasks();
-    }
+    mergeInto(clips, inClips, c => c.desc.trim().toLowerCase());
+    const brandIds = mergeInto(brands, inBrands, b => b.name.trim().toLowerCase());
+    clips.concat(tasks).forEach(x => { if (brandIds[x.brandId]) x.brandId = brandIds[x.brandId]; });
+    mergeInto(tasks, inTasks, t => t.text.trim().toLowerCase());
+    await writeStore();
 
+    refreshAllBrandDropdowns();
     render();
-    alert(`Imported ${clipCount} caption(s), ${brandCount} brand(s), ${taskCount} task(s).`);
+    alert(`Imported ${inClips.length} caption(s), ${inBrands.length} brand(s), ${inTasks.length} task(s).`);
   } catch (err) {
     console.error('Import failed', err);
     alert("Could not read that file — make sure it's a JSON backup exported from this app.");
   }
-  e.target.value = '';
 }
 
 document.getElementById('exportBtn').addEventListener('click', exportAllData);
@@ -4941,9 +4761,7 @@ renderNewClipTones();
 renderNewClipDateRow();
 renderNewClipCats();
 loadTheme();
-loadClips();
-loadBrands();
-loadTasks();
+loadAll();
 initTemplatesSection();
 document.getElementById('searchIcon').innerHTML = NAV_ICONS.search;
 document.getElementById('calendarToggleBtn').addEventListener('click', () => {
@@ -5000,10 +4818,6 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
   renderCardListOnly();
 });
 
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') { loadClips(); loadBrands(); loadTasks(); }
-});
-window.addEventListener('focus', () => { loadClips(); loadBrands(); loadTasks(); });
 window.addEventListener('resize', () => { render(); syncHeaderSpacing(); });
 
 // ===== Fixed header: reserve space for it below, and hide/show based on scroll direction =====
