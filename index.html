@@ -1989,6 +1989,102 @@
   .cat-pick-sub { font-size: 9px; font-weight: 400; letter-spacing: 0.4px; opacity: 0.6; }
 
   .card-meta-row .brand-select { flex: 1 1 140px; min-width: 0; border-radius: 999px; }
+
+  /* ----- Brands: pinned notes + status tabs on phones ----- */
+  .ot-pinned { padding: 16px 18px; margin-bottom: 16px; }
+  .ot-pinned .ot-card-name { margin-top: 2px; }
+  .ot-pinned .ot-card-notes { margin-top: 8px; font-size: 12.5px; line-height: 1.55; }
+  .ot-tabs { display: none; }
+  @media (max-width: 600px) {
+    .ot-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -12px 12px; padding: 2px 12px; }
+    .ot-tabs::-webkit-scrollbar { display: none; }
+    .ot-tab {
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 14px;
+      background: var(--paper-light); color: var(--ink); border: 1px solid var(--line);
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .ot-tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+    .ot-tab-count { font-size: 10px; opacity: 0.7; }
+    .ot-col:not(.tab-active) { display: none; }
+    .ot-col .ot-col-head { display: none; }
+  }
+
+  /* ----- Open card footer: labelled archive / delete instead of bare icons ----- */
+  .card-footer-actions { display: flex; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .card-footer-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .card-footer-btn svg { width: 16px; height: 16px; }
+  .card-footer-btn.danger { margin-left: auto; }
+  .focus-card .card-bottom-row { margin-top: 12px; }
+  .focus-card .captions-box { margin-top: 16px; }
+
+  /* ----- Touch targets: at least 44px, without changing how the small icons look ----- */
+  .icon-btn { min-width: 44px; min-height: 44px; }
+  .floating-nav .nav-add-btn { align-self: stretch; min-height: 44px; }
+  .stack-copy-btn, .platform-copy-btn, .desc-copy-btn, .task-del-btn, .date-pill-clear, .sheet-close { position: relative; }
+  .stack-copy-btn::after, .platform-copy-btn::after, .desc-copy-btn::after, .task-del-btn::after,
+  .date-pill-clear::after, .sheet-close::after, .modal-close::after, .tile-copy-btn::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+  .platform-copy-group { gap: 14px; }
+  .tone-chip { min-height: 36px; }
+  .date-pill-btn { min-height: 36px; }
+  #cardModalBox.focus-card .modal-close { width: 40px; height: 40px; font-size: 15px; }
+
+  /* ----- Legibility: nothing below ~9px ----- */
+  .floating-nav button .nav-label { font-size: 9px; letter-spacing: 0.6px; }
+  .stack-tag { font-size: 10px; }
+  .cal-cell[data-date] { cursor: pointer; }
+  .cal-cell[data-date]:hover { background: color-mix(in srgb, var(--ink) 4%, var(--paper-light)); }
+  @media (max-width: 600px) {
+    .floating-nav button .nav-label { font-size: 8.5px; }
+    .cal-post { font-size: 10px; line-height: 1.25; }
+    .cal-daynum { font-size: 10.5px; }
+    .tone-chip, .platform-chip { font-size: 10px; }
+    .task-add-row input { flex-basis: 100%; }
+  }
+
+  /* Keyboard focus that's visible on every card colour */
+  :focus-visible { outline: 3px solid #2F6BFF; outline-offset: 2px; }
+  .stack-card:focus-visible { outline-offset: -3px; }
+
+  /* ----- Toast: confirmations with an Undo, sits just above the bottom nav ----- */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 16px);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: calc(100vw - 32px);
+    padding: 10px 10px 10px 18px;
+    border-radius: 16px;
+    background: #1C1C1C;
+    color: #FFFFFF;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    box-shadow: 0 18px 40px -16px rgba(0,0,0,0.7);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+    z-index: 120;
+  }
+  .toast.show { opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%, 0); transition: opacity 0.2s ease, transform 0.2s ease; }
+  .toast.error { background: #B83E0B; }
+  .toast button {
+    min-height: 40px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: #F7EB8A;
+    color: #141414;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .toast button:empty { display: none; }
 </style>
 </head>
 <body>
@@ -2039,7 +2135,7 @@
       <div><div class="card-kicker">New card</div><div class="card-title">Log a clip</div></div>
       <button class="sheet-close" id="sheetCloseBtn">✕</button>
     </div>
-    <textarea id="descInput" rows="2" placeholder="e.g. Diego knocked a mug off the counter, then stared directly at the camera for four seconds"></textarea>
+    <textarea id="descInput" rows="3" placeholder="e.g. Diego knocked a mug off the counter, then stared directly at the camera for four seconds"></textarea>
 
     <div class="field-group">
       <div class="field-label">Starring</div>
@@ -2146,10 +2242,27 @@
         </div>
       </div>
 
+      <div id="otPinned"></div>
+      <div class="ot-tabs" id="otTabs" role="tablist" aria-label="Brand status"></div>
       <div class="ot-board" id="otBoard"></div>
     </div>
 
     <div id="otTemplatesSection" style="display:none;">
+
+      <div class="ot-panel open surface c4">
+        <h3>Fill in for</h3>
+        <div class="ot-grid2">
+          <div>
+            <label for="tplBrandSelect">Brand</label>
+            <select id="tplBrandSelect"><option value="">Pick a brand…</option></select>
+          </div>
+          <div>
+            <label for="tplCatSelect">Starring</label>
+            <select id="tplCatSelect"><option value="">Pick a cat…</option></select>
+          </div>
+        </div>
+        <p class="settings-hint" style="margin-top:0;">Fills [BRAND], [PRODUCT], [CATEGORY] and [CAT] in the pitches and captions below.</p>
+      </div>
 
       <div class="ot-panel open surface c1">
         <h3>Pitch email / DM</h3>
@@ -2203,6 +2316,8 @@
 
   <footer class="tally" id="tally"></footer>
 </div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button type="button" id="toastAction"></button></div>
 
 <script>
 const STATUSES = ['idea','filmed','captioned','scheduled','posted'];
@@ -2761,16 +2876,20 @@ const PLATFORM_ICONS = { Instagram: NAV_ICONS.instagram, TikTok: NAV_ICONS.tikto
 const PLATFORM_ORDER = ['Instagram', 'TikTok', 'Both'];
 
 
+function buildToneChip(tone, selected, onToggle) {
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'tone-chip' + (selected ? ' selected' : '');
+  chip.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  chip.textContent = tone;
+  chip.onclick = onToggle;
+  return chip;
+}
+
 function renderNewClipTones() {
   const row = document.getElementById('newClipToneRow');
   row.innerHTML = '';
-  TONES.forEach(tone => {
-    const chip = document.createElement('div');
-    chip.className = 'tone-chip' + (newClipTones.includes(tone) ? ' selected' : '');
-    chip.textContent = tone;
-    chip.onclick = () => toggleNewClipTone(tone);
-    row.appendChild(chip);
-  });
+  TONES.forEach(tone => row.appendChild(buildToneChip(tone, newClipTones.includes(tone), () => toggleNewClipTone(tone))));
 }
 
 function toggleTone(clipId, tone) {
@@ -2853,6 +2972,7 @@ async function writeStore() {
     }
   }
   setSyncStatus(ok ? 'Saved on this device' : 'Save failed, export a backup', !ok);
+  if (!ok) showToast("Couldn't save. Export a backup from Settings.", { error: true, duration: 6000 });
   return ok;
 }
 
@@ -3017,10 +3137,7 @@ function toggleTask(id) {
 }
 
 function deleteTask(id) {
-  tasks = tasks.filter(t => t.id !== id);
-  saveTasks();
-  renderTasks();
-  renderBrandBoard();
+  removeWithUndo(tasks, [id], 'Task deleted', saveTasks, () => { renderTasks(); renderBrandBoard(); });
 }
 
 function renderTasks() {
@@ -3150,6 +3267,9 @@ function toggleClipArchived(clipId) {
   saveClips(clipId);
   closeCardModal(true);
   render();
+  showToast(c.archived ? 'Card archived' : 'Card restored', {
+    onUndo: () => { c.archived = !c.archived; saveClips(clipId); render(); }
+  });
 }
 
 function openEntrySheet() {
@@ -3185,9 +3305,7 @@ function setScheduledDate(id, dateStr) {
 }
 
 function removeClip(id) {
-  clips = clips.filter(c => c.id !== id);
-  saveClips();
-  render();
+  removeWithUndo(clips, [id], 'Card deleted', saveClips, render);
 }
 
 // Fixed hashtag sets — always used as-is, never generated, so they stay exactly on-brand.
@@ -3326,6 +3444,57 @@ function formatDateLong(dateStr) {
   return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+// ===== Accessible names for icon-only buttons =====
+// Most icon buttons only carry a title, which phones never show and screen readers may skip.
+function labelIconButtons(root) {
+  root.querySelectorAll('button[title]:not([aria-label])').forEach(btn => {
+    if (!btn.textContent.trim()) btn.setAttribute('aria-label', btn.title);
+  });
+}
+new MutationObserver(() => labelIconButtons(document.body)).observe(document.body, { childList: true, subtree: true });
+
+// ===== Toast =====
+let toastTimer = null;
+let toastUndo = null;
+function showToast(message, opts) {
+  const o = opts || {};
+  const el = document.getElementById('toast');
+  const action = document.getElementById('toastAction');
+  document.getElementById('toastText').textContent = message;
+  toastUndo = o.onUndo || null;
+  action.textContent = toastUndo ? 'Undo' : '';
+  el.classList.toggle('error', !!o.error);
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, o.duration || (toastUndo ? 6000 : 2500));
+}
+function hideToast() {
+  clearTimeout(toastTimer);
+  toastUndo = null;
+  document.getElementById('toast').classList.remove('show');
+}
+document.getElementById('toastAction').addEventListener('click', () => {
+  const undo = toastUndo;
+  hideToast();
+  if (undo) undo();
+});
+
+// Remove items from a list, with an Undo that puts them back where they were.
+function removeWithUndo(list, ids, label, save, rerender) {
+  const removed = [];
+  list.forEach((item, i) => { if (ids.includes(item.id)) removed.push({ item, i }); });
+  for (let k = removed.length - 1; k >= 0; k--) list.splice(removed[k].i, 1);
+  save();
+  rerender();
+  showToast(label, {
+    onUndo: () => {
+      removed.forEach(({ item, i }) => list.splice(Math.min(i, list.length), 0, item));
+      save();
+      rerender();
+    }
+  });
+}
+
 // Safe for both text and attribute values (quotes included)
 function escapeHtml(str) {
   return String(str == null ? '' : str).replace(/[&<>"']/g, ch => (
@@ -3349,17 +3518,43 @@ function fillBrandOptions(select, includeNoneLabel) {
   if (brands.some(b => b.id === prevValue)) select.value = prevValue;
 }
 
+function setTemplateBrand(brandId) {
+  const b = brands.find(x => x.id === brandId);
+  tplContext.brand = b ? b.name : '';
+  tplContext.product = b ? b.product : '';
+  tplContext.category = b ? b.category : '';
+  const sel = document.getElementById('tplBrandSelect');
+  if (sel) sel.value = b ? b.id : '';
+}
+
+function setTemplateCat(cat) {
+  const p = CAT_PROFILES[cat];
+  tplContext.cat = p ? cat : '';
+  // Two-floor captions need one cat from each floor: the picked cat plus a default from the other floor
+  tplContext.upstairsCat = p ? (p.home === 'Upstairs' ? cat : 'Ramses') : '';
+  tplContext.downstairsCat = p ? (p.home === 'Downstairs' ? cat : 'Cali') : '';
+}
+
+function refreshTemplateOutputs() {
+  generatePitchOutput();
+  generateCaptionOutput();
+}
+
 function refreshAllBrandDropdowns() {
+  fillBrandOptions(document.getElementById('tplBrandSelect'), 'Pick a brand…');
   fillBrandOptions(document.getElementById('newClipBrandSelect'), '🏷 No brand');
   fillBrandOptions(document.getElementById('brandFilterSelect'), 'All brands');
   fillBrandOptions(document.getElementById('taskBrandSelect'), 'General');
 }
 
+function isPinnedBrand(b) { return b.category === 'Pinned'; }
+
 function renderOutreachStats() {
-  const total = brands.length;
-  const applied = brands.filter(b => ['applied','waiting','partnered'].includes(b.status)).length;
-  const waiting = brands.filter(b => b.status === 'waiting').length;
-  const partnered = brands.filter(b => b.status === 'partnered').length;
+  const pipeline = brands.filter(b => !isPinnedBrand(b));
+  const total = pipeline.length;
+  const applied = pipeline.filter(b => ['applied','waiting','partnered'].includes(b.status)).length;
+  const waiting = pipeline.filter(b => b.status === 'waiting').length;
+  const partnered = pipeline.filter(b => b.status === 'partnered').length;
   const el = document.getElementById('otStats');
   if (!el) return;
   el.innerHTML = `
@@ -3397,15 +3592,40 @@ function renderQuickAddBrands() {
   });
 }
 
+// On phones the five columns would stack into one very long scroll, so only the selected
+// status shows, picked with tabs. Wider screens show every column side by side.
+let brandTab = 'researching';
+
 function renderBrandBoard() {
   const board = document.getElementById('otBoard');
   if (!board) return;
+  const section = document.getElementById('otPipelineSection');
+  const pipeline = brands.filter(b => !isPinnedBrand(b));
+
+  // Pinned notes (strategy reminders) sit above the board instead of inside a column
+  document.getElementById('otPinned').innerHTML = brands.filter(isPinnedBrand).map(b => `
+    <div class="ot-pinned surface c6">
+      <div class="card-kicker">Pinned note</div>
+      <div class="ot-card-name">${escapeHtml(b.name.replace(/^★\s*/, ''))}</div>
+      ${b.notes ? `<div class="ot-card-notes">${escapeHtml(b.notes)}</div>` : ''}
+      <div class="ot-card-actions">
+        <button type="button" class="ot-mini-btn" data-brand-edit="${escapeHtml(b.id)}">Edit</button>
+        <button type="button" class="ot-mini-btn" data-brand-del="${escapeHtml(b.id)}">Delete</button>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('otTabs').innerHTML = BRAND_STATUSES.map(col => {
+    const n = pipeline.filter(b => b.status === col.key).length;
+    const on = col.key === brandTab;
+    return `<button type="button" role="tab" aria-selected="${on}" class="ot-tab${on ? ' active' : ''}" data-brand-tab="${col.key}">${col.label}<span class="ot-tab-count">${n}</span></button>`;
+  }).join('');
+
   // Each pipeline column is a colored card
   const COL_COLORS = { researching: 'c2', applied: 'c1', waiting: 'c6', partnered: 'c0', passed: 'c5' };
   board.innerHTML = BRAND_STATUSES.map(col => {
-    const items = brands.filter(b => b.status === col.key);
+    const items = pipeline.filter(b => b.status === col.key);
     return `
-      <div class="ot-col ${col.key} surface ${COL_COLORS[col.key] || 'c3'}">
+      <div class="ot-col ${col.key} surface ${COL_COLORS[col.key] || 'c3'}${col.key === brandTab ? ' tab-active' : ''}">
         <div class="ot-col-head">
           <div class="ot-col-title">${col.label}</div>
           <div class="ot-col-count">${items.length}</div>
@@ -3415,13 +3635,21 @@ function renderBrandBoard() {
     `;
   }).join('');
 
-  board.querySelectorAll('[data-brand-edit]').forEach(b => b.addEventListener('click', () => openBrandEdit(b.dataset.brandEdit)));
-  board.querySelectorAll('[data-brand-del]').forEach(b => b.addEventListener('click', () => deleteBrand(b.dataset.brandDel)));
-  board.querySelectorAll('[data-brand-followup]').forEach(b => b.addEventListener('click', () => goToFollowUpPitch(b.dataset.brandFollowup)));
-  board.querySelectorAll('[data-brand-move]').forEach(sel => {
+  section.querySelectorAll('[data-brand-tab]').forEach(b => b.addEventListener('click', () => { brandTab = b.dataset.brandTab; renderBrandBoard(); }));
+  section.querySelectorAll('[data-brand-edit]').forEach(b => b.addEventListener('click', () => openBrandEdit(b.dataset.brandEdit)));
+  section.querySelectorAll('[data-brand-del]').forEach(b => b.addEventListener('click', () => deleteBrand(b.dataset.brandDel)));
+  section.querySelectorAll('[data-brand-followup]').forEach(b => b.addEventListener('click', () => goToFollowUpPitch(b.dataset.brandFollowup)));
+  section.querySelectorAll('[data-brand-move]').forEach(sel => {
     sel.addEventListener('change', (e) => {
       const b = brands.find(x => x.id === sel.dataset.brandMove);
-      if (b) { b.status = e.target.value; b.updatedAt = new Date().toISOString(); saveBrands(); renderOutreach(); }
+      if (!b) return;
+      const label = (BRAND_STATUSES.find(c => c.key === e.target.value) || {}).label || e.target.value;
+      b.status = e.target.value;
+      b.updatedAt = new Date().toISOString();
+      saveBrands();
+      renderOutreach();
+      // On phones the card just left the visible column, so say where it went
+      if (isMobile()) showToast(b.name + ' moved to ' + label);
     });
   });
 }
@@ -3459,9 +3687,8 @@ function brandCardHtml(b) {
 }
 
 function deleteBrand(id) {
-  brands = brands.filter(b => b.id !== id);
-  saveBrands();
-  renderOutreach();
+  const b = brands.find(x => x.id === id);
+  removeWithUndo(brands, [id], (b ? b.name : 'Brand') + ' deleted', saveBrands, () => { refreshAllBrandDropdowns(); renderOutreach(); });
 }
 
 function openBrandEdit(id) {
@@ -3497,11 +3724,7 @@ function switchOutreachSubView(view) {
 
 function goToFollowUpPitch(brandId) {
   const b = brands.find(x => x.id === brandId);
-  if (b) {
-    tplContext.brand = b.name || '';
-    tplContext.product = b.product || '';
-    tplContext.category = b.category || '';
-  }
+  if (b) setTemplateBrand(b.id);
   currentView = 'templates';
   render();
   document.getElementById('tplPitchType').value = 'followUp';
@@ -3649,6 +3872,16 @@ function renderCarouselIdeas() {
 
 function initTemplatesSection() {
   document.getElementById('tplGeneratePitchBtn').addEventListener('click', generatePitchOutput);
+  const catSelect = document.getElementById('tplCatSelect');
+  CATS.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat + ' (' + CAT_PROFILES[cat].breed + ')';
+    catSelect.appendChild(opt);
+  });
+  catSelect.addEventListener('change', () => { setTemplateCat(catSelect.value); refreshTemplateOutputs(); });
+  document.getElementById('tplBrandSelect').addEventListener('change', (e) => { setTemplateBrand(e.target.value); refreshTemplateOutputs(); });
+  document.getElementById('tplPitchType').addEventListener('change', generatePitchOutput);
   document.getElementById('tplGenerateCaptionsBtn').addEventListener('click', generateCaptionOutput);
   document.getElementById('tplCarouselFilter').addEventListener('input', renderCarouselIdeas);
   document.getElementById('taskAddBtn').addEventListener('click', addTask);
@@ -3822,7 +4055,26 @@ function buildFullCard(clip) {
   metaRow.appendChild(buildDatePillForClip(clip));
   card.appendChild(metaRow);
 
-  // Generated caption options (if any)
+  // Tones, then the button that uses them, then the options it produced
+  const toneLabel = document.createElement('div');
+  toneLabel.className = 'field-label';
+  toneLabel.style.marginTop = '16px';
+  toneLabel.textContent = 'Tone (pick one or more)';
+  card.appendChild(toneLabel);
+  const toneRow = document.createElement('div');
+  toneRow.className = 'tone-row';
+  TONES.forEach(tone => toneRow.appendChild(buildToneChip(tone, clip.selectedTones.includes(tone), () => { toggleTone(clip.id, tone); refreshOpenModal(); })));
+  card.appendChild(toneRow);
+
+  const genRow = document.createElement('div');
+  genRow.className = 'card-bottom-row';
+  const genBtn = document.createElement('button');
+  genBtn.className = 'gen-caption-btn';
+  genBtn.textContent = clip.captions ? 'Shuffle captions' : 'Draft captions';
+  genBtn.onclick = () => generateCaptions(clip.id);
+  genRow.appendChild(genBtn);
+  card.appendChild(genRow);
+
   if (clip.captions) {
     const box = document.createElement('div');
     box.className = 'captions-box';
@@ -3860,41 +4112,18 @@ function buildFullCard(clip) {
       box.appendChild(optDiv);
     });
     card.appendChild(box);
-  } else {
-    const toneLabel = document.createElement('div');
-    toneLabel.className = 'field-label';
-    toneLabel.style.marginTop = '16px';
-    toneLabel.textContent = 'Tone (pick one or more)';
-    card.appendChild(toneLabel);
-    const toneRow = document.createElement('div');
-    toneRow.className = 'tone-row';
-    TONES.forEach(tone => {
-      const chip = document.createElement('div');
-      chip.className = 'tone-chip' + (clip.selectedTones.includes(tone) ? ' selected' : '');
-      chip.textContent = tone;
-      chip.onclick = () => { toggleTone(clip.id, tone); refreshOpenModal(); };
-      toneRow.appendChild(chip);
-    });
-    card.appendChild(toneRow);
   }
 
   const bottomRow = document.createElement('div');
-  bottomRow.className = 'card-bottom-row';
-  const genBtn = document.createElement('button');
-  genBtn.className = 'gen-caption-btn';
-  genBtn.textContent = clip.captions ? 'Shuffle captions' : 'Draft captions';
-  genBtn.onclick = () => generateCaptions(clip.id);
-  bottomRow.appendChild(genBtn);
+  bottomRow.className = 'card-footer-actions';
   const archiveBtn = document.createElement('button');
-  archiveBtn.className = 'date-pill-btn trash-footer-btn';
-  archiveBtn.innerHTML = NAV_ICONS.archive;
-  archiveBtn.title = clip.archived ? 'Unarchive' : 'Archive (hides it from the main views)';
+  archiveBtn.className = 'ghost card-footer-btn';
+  archiveBtn.innerHTML = NAV_ICONS.archive + '<span>' + (clip.archived ? 'Unarchive' : 'Archive') + '</span>';
   archiveBtn.onclick = () => toggleClipArchived(clip.id);
   bottomRow.appendChild(archiveBtn);
   const trashBtn = document.createElement('button');
-  trashBtn.className = 'date-pill-btn trash-footer-btn';
-  trashBtn.innerHTML = NAV_ICONS.trash;
-  trashBtn.title = 'Delete';
+  trashBtn.className = 'ghost card-footer-btn danger';
+  trashBtn.innerHTML = NAV_ICONS.trash + '<span>Delete</span>';
   trashBtn.onclick = () => { removeClip(clip.id); closeCardModal(true); };
   bottomRow.appendChild(trashBtn);
   card.appendChild(bottomRow);
@@ -3981,6 +4210,7 @@ function buildGridTile(clip, mode) {
   footer.textContent = footerText;
   tile.appendChild(footer);
 
+  makePressable(tile, clip.desc || 'Untitled card');
   tile.onclick = () => {
     if (selectMode) {
       toggleClipSelection(clip.id);
@@ -4033,6 +4263,7 @@ function buildStackCard(clip, index, colorIdx) {
   const tagWrap = document.createElement('div');
   tagWrap.className = 'stack-foot-tags';
   const tags = [];
+  if (isOverdue(clip)) tags.push('⚠ Overdue');
   if (caps.length && clip.scheduledDate) tags.push(caps.length + ' captions');
   if (!caps.length) tags.push('No captions yet');
   if (brand) tags.push('🏷 ' + brand.name);
@@ -4088,6 +4319,7 @@ function buildStackCard(clip, index, colorIdx) {
     cancelPress();
   }));
   card.addEventListener('contextmenu', (e) => e.preventDefault());
+  makePressable(card, clip.desc || 'Untitled card');
   return card;
 }
 
@@ -4437,13 +4669,51 @@ function getFilteredClips() {
   return list;
 }
 
+// Clickable non-button elements: focusable, announced as buttons, Enter/Space activates
+function makePressable(el, label) {
+  el.setAttribute('role', 'button');
+  el.tabIndex = 0;
+  if (label) el.setAttribute('aria-label', label.length > 120 ? label.slice(0, 117) + '…' : label);
+  el.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); el.click(); }
+  });
+}
+
+function localToday() {
+  const n = new Date();
+  return [n.getFullYear(), String(n.getMonth() + 1).padStart(2, '0'), String(n.getDate()).padStart(2, '0')].join('-');
+}
+
+function isOverdue(clip) {
+  return clip.status !== 'posted' && !!clip.scheduledDate && clip.scheduledDate < localToday();
+}
+
+// Home answers "what do I post next?": dated posts soonest first (overdue on top), then
+// captioned, filmed and ideas, with posted ones last (newest first).
+function upNextRank(clip) {
+  if (clip.status === 'posted') return 4;
+  if (clip.scheduledDate) return 0;
+  return { captioned: 1, filmed: 2 }[clip.status] || 3;
+}
+function sortUpNext(list) {
+  return list
+    .map((clip, i) => ({ clip, i, rank: upNextRank(clip) }))
+    .sort((a, b) => {
+      if (a.rank !== b.rank) return a.rank - b.rank;
+      if (a.rank === 0) return a.clip.scheduledDate.localeCompare(b.clip.scheduledDate);
+      if (a.rank === 4) return (b.clip.scheduledDate || '').localeCompare(a.clip.scheduledDate || '') || a.i - b.i;
+      return a.i - b.i;
+    })
+    .map(x => x.clip);
+}
+
 function renderCardListOnly() {
   const list = document.getElementById('cardList');
   if (!list) return;
   list.innerHTML = '';
   list.className = 'cardlist-' + gridLayoutMode;
   if (list.style.display !== 'none') list.style.display = gridLayoutMode === 'stack' ? 'block' : 'grid';
-  const filtered = getFilteredClips();
+  const filtered = sortUpNext(getFilteredClips());
 
   if (filtered.length === 0) {
     if (searchQuery || activeBrandFilter) {
@@ -4516,30 +4786,28 @@ async function bulkSetStatus(status) {
 async function bulkArchiveSelected() {
   const ids = Array.from(selectedClipIds);
   if (!ids.length) return;
-  ids.forEach(id => {
-    const c = clips.find(c => c.id === id);
-    if (c) c.archived = true;
-  });
-  selectedClipIds.clear();
-  selectMode = false;
-  document.getElementById('selectModeToggleBtn').classList.remove('select-mode-active');
-  document.getElementById('selectionBar').style.display = 'none';
+  const changed = clips.filter(c => ids.includes(c.id) && !c.archived);
+  changed.forEach(c => { c.archived = true; });
+  exitSelectMode();
   render();
-  await Promise.all(ids.map(id => saveClips(id)));
+  saveClips();
+  showToast(changed.length + ' card' + (changed.length === 1 ? '' : 's') + ' archived', {
+    onUndo: () => { changed.forEach(c => { c.archived = false; }); saveClips(); render(); }
+  });
 }
 
 async function deleteSelectedClips() {
   const ids = Array.from(selectedClipIds);
   if (!ids.length) return;
-  const ok = confirm('Delete ' + ids.length + ' caption' + (ids.length === 1 ? '' : 's') + '? This can\'t be undone.');
-  if (!ok) return;
-  clips = clips.filter(c => !selectedClipIds.has(c.id));
+  exitSelectMode();
+  removeWithUndo(clips, ids, ids.length + ' card' + (ids.length === 1 ? '' : 's') + ' deleted', saveClips, render);
+}
+
+function exitSelectMode() {
   selectedClipIds.clear();
   selectMode = false;
   document.getElementById('selectModeToggleBtn').classList.remove('select-mode-active');
   document.getElementById('selectionBar').style.display = 'none';
-  render();
-  saveClips();
 }
 
 function renderHeaderNav() {
@@ -4605,7 +4873,7 @@ function renderCalendar() {
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
     const isToday = dateStr === todayStr;
-    html += '<div class="cal-cell' + (isToday ? ' today' : '') + '">';
+    html += '<div class="cal-cell' + (isToday ? ' today' : '') + '" data-date="' + dateStr + '">';
     html += '<div class="cal-daynum">' + day + '</div>';
     (clipsByDate[dateStr] || []).forEach(c => {
       html += '<div class="cal-post ' + c.status + ' c' + clipColorIndex(c) + '" data-clip-id="' + escapeHtml(c.id) + '" title="' + escapeHtml(c.desc) + '">' + escapeHtml(c.desc) + '</div>';
@@ -4627,7 +4895,17 @@ function renderCalendar() {
   document.getElementById('calToday').onclick = () => { calMonthOffset = 0; renderCalendar(); };
 
   container.querySelectorAll('.cal-post').forEach(el => {
-    el.onclick = () => openCardModal(el.dataset.clipId);
+    makePressable(el, el.textContent);
+    el.onclick = (e) => { e.stopPropagation(); openCardModal(el.dataset.clipId); };
+  });
+  container.querySelectorAll('.cal-cell[data-date]').forEach(cell => {
+    cell.title = 'Log a clip for ' + formatDateLong(cell.dataset.date);
+    cell.onclick = () => {
+      newClipDate = cell.dataset.date;
+      newClipDateEditing = false;
+      renderNewClipDateRow();
+      openEntrySheet();
+    };
   });
 }
 
