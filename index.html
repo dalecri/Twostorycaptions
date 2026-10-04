@@ -283,50 +283,6 @@
   button.ghost:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); border-color: var(--ink-soft); }
   button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-  /* ===== Date pill (shared design: new-caption form + card) ===== */
-  .date-pill-row { display: flex; align-items: center; gap: 8px; }
-  .date-pill-row input[type="date"] {
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    padding: 8px 12px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: var(--paper-light);
-    color: var(--ink);
-  }
-  .date-pill-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    padding: 7px 14px;
-    border-radius: 999px;
-    border: none;
-    background: var(--paper-light);
-    color: var(--ink-soft);
-    cursor: pointer;
-    transition: all 0.12s ease;
-  }
-  .date-pill-btn svg { width: 14px; height: 14px; display: block; }
-  .date-pill-btn:hover { background: color-mix(in srgb, var(--stamp-scheduled) 16%, var(--paper-light)); color: var(--stamp-scheduled); transform: none; }
-  .date-pill-btn.confirmed {
-    background: color-mix(in srgb, var(--stamp-scheduled) 16%, var(--paper-light));
-    color: var(--stamp-scheduled);
-  }
-  .date-pill-clear {
-    background: transparent;
-    border: none;
-    color: var(--ink-soft);
-    font-size: 11px;
-    padding: 6px 8px;
-    opacity: 0.6;
-  }
-  .date-pill-clear:hover { opacity: 1; background: transparent; transform: none; }
-  .card-footer-row { display: flex; justify-content: flex-end; margin-top: 10px; }
-  .trash-footer-btn:hover { background: color-mix(in srgb, var(--rust) 16%, var(--paper-light)); color: var(--rust); }
 
   /* ===== Minimal dropdown filter ===== */
   .icon-btn.select-mode-active { color: var(--moss); }
@@ -1714,7 +1670,6 @@
   @media (max-width: 600px) {
     .masthead-inner { flex-direction: row; align-items: center; padding-bottom: 14px; }
   }
-  #selectModeToggleBtn { padding: 9px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
 
   /* ----- Bottom nav: the black card ----- */
   .floating-nav {
@@ -1919,28 +1874,138 @@
   .stack-body { margin-top: 12px; }
   .stack-body-text { font-size: 16px; font-weight: 700; line-height: 1.45; }
 
-  /* ----- Cat profile picker ----- */
-  .cat-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .cat-pick, .cat-pick:hover {
-    display: flex;
-    flex-direction: column;
+
+
+  /* ----- Chips: one style for every pick-one/pick-many control (tones, cats, dates, filters) ----- */
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip, .chip:hover {
+    display: inline-flex;
     align-items: center;
-    gap: 3px;
-    padding: 12px 4px 10px;
-    border-radius: 16px;
-    border: 2px solid transparent;
-    background: color-mix(in srgb, #FFFFFF 30%, transparent);
-    color: var(--card-ink, var(--ink));
+    gap: 6px;
+    min-height: 36px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--paper-light);
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
     filter: none;
     transform: none;
   }
-  .cat-pick .cat-avatar { width: 46px; height: 46px; margin-bottom: 4px; opacity: 0.55; filter: grayscale(0.5); transition: opacity 0.15s ease, filter 0.15s ease, transform 0.15s ease; }
-  .cat-pick.on { border-color: var(--card-ink, var(--ink)); background: color-mix(in srgb, #FFFFFF 60%, transparent); }
-  .cat-pick.on .cat-avatar { opacity: 1; filter: none; transform: scale(1.06); }
-  .cat-pick-name { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
-  .cat-pick-sub { font-size: 9px; font-weight: 400; letter-spacing: 0.4px; opacity: 0.6; }
+  .chip:hover { border-color: var(--ink-soft); }
+  .chip.selected, .chip.selected:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .chip svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .chip-clear { padding: 6px 12px; color: var(--ink-soft); }
+  .chip-count { font-weight: 400; opacity: 0.65; }
+  /* Tone chips share the look */
+  .tone-chip, .tone-chip:hover { min-height: 36px; padding: 6px 14px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; color: var(--ink); }
+  .tone-chip.selected { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
-  .card-meta-row .brand-select { flex: 1 1 140px; min-width: 0; border-radius: 999px; }
+  /* The reused native date input sits invisibly over the tapped chip */
+  #datePickerProxy { position: fixed; opacity: 0; pointer-events: none; border: 0; padding: 0; z-index: 130; }
+  #datePickerProxy.fallback { opacity: 1; pointer-events: auto; border-radius: 999px; font-size: 16px; padding: 0 10px; background: #FFFFFF; color: #141414; }
+
+  /* Quiet "Brand: None ▾" line */
+  .inline-select {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .inline-select-label::after { content: ':'; }
+  .inline-select-value { color: var(--ink); font-weight: 700; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .inline-select:not(.has-value) .inline-select-value { color: var(--ink-soft); font-weight: 400; }
+  .inline-select select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+  .card-brand-row { margin-top: 14px; }
+  .sheet-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+  @media (max-width: 600px) {
+    .sheet-footer #addBtn { flex: 1 1 100%; }
+  }
+
+  /* Search panel: one field and a single scrolling row of status chips */
+  .quick-filter-panel { padding: 12px; }
+  .quick-filter-panel .search-wrap { margin-bottom: 10px; }
+  .quick-filter-panel .filters-bar-search { width: 100%; min-height: 44px; border-radius: 999px; padding-left: 38px; }
+  .filter-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -12px; padding: 0 12px 2px; }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chips .chip { flex-shrink: 0; }
+
+  /* ----- Onboarding ----- */
+  .onboarding {
+    position: fixed;
+    inset: 0;
+    z-index: 140;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(12, 12, 16, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .onboarding[hidden] { display: none; }
+  .ob-card {
+    position: relative;
+    width: min(420px, 100%);
+    min-height: min(520px, calc(100dvh - 40px));
+    display: flex;
+    flex-direction: column;
+    padding: 26px 24px 22px;
+    border-radius: 22px;
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.75);
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .ob-skip, .ob-skip:hover {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    min-height: 40px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    filter: none;
+  }
+  .ob-art { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 180px; color: var(--card-ink); }
+  .ob-icon { width: 96px; height: 96px; stroke-width: 1.6; }
+  .ob-cats { display: flex; }
+  .ob-cats .cat-avatar { width: 72px; height: 72px; }
+  .ob-cats .cat-avatar + .cat-avatar { margin-left: -14px; }
+  .ob-plus {
+    display: flex; align-items: center; justify-content: center;
+    width: 104px; height: 78px; border-radius: 22px;
+    background: #F7EB8A; color: #141414; font-size: 48px; font-weight: 400;
+    box-shadow: 0 0 0 6px #1C1C1C;
+  }
+  .ob-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin: 6px 0 10px;
+  }
+  .ob-text { font-size: 14px; line-height: 1.6; margin: 0 0 22px; }
+  .ob-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .ob-foot button { min-height: 48px; padding: 12px 26px; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+  .ob-dots { display: flex; gap: 6px; }
+  .ob-dot { width: 8px; height: 8px; border-radius: 50%; background: color-mix(in srgb, var(--card-ink) 25%, transparent); transition: width 0.2s ease; }
+  .ob-dot.on { width: 22px; border-radius: 4px; background: var(--card-ink); }
 
   /* ----- Brands: pinned notes + status tabs on phones ----- */
   .ot-pinned { padding: 16px 18px; margin-bottom: 16px; }
@@ -1972,16 +2037,15 @@
   /* ----- Touch targets: at least 44px, without changing how the small icons look ----- */
   .icon-btn { min-width: 44px; min-height: 44px; }
   .floating-nav .nav-add-btn { align-self: stretch; min-height: 44px; }
-  .stack-copy-btn, .platform-copy-btn, .desc-copy-btn, .task-del-btn, .date-pill-clear, .sheet-close { position: relative; }
+  .stack-copy-btn, .platform-copy-btn, .desc-copy-btn, .task-del-btn, .sheet-close { position: relative; }
   .stack-copy-btn::after, .platform-copy-btn::after, .desc-copy-btn::after, .task-del-btn::after,
-  .date-pill-clear::after, .sheet-close::after, .modal-close::after, .tile-copy-btn::after {
+  .sheet-close::after, .modal-close::after, .tile-copy-btn::after {
     content: '';
     position: absolute;
     inset: -8px;
   }
   .platform-copy-group { gap: 14px; }
   .tone-chip { min-height: 36px; }
-  .date-pill-btn { min-height: 36px; }
   #cardModalBox.focus-card .modal-close { width: 40px; height: 40px; font-size: 15px; }
 
   /* ----- Legibility: nothing below ~9px ----- */
@@ -1999,6 +2063,8 @@
 
   /* Keyboard focus that's visible on every card colour */
   :focus-visible { outline: 3px solid #2F6BFF; outline-offset: 2px; }
+  /* Text fields show focus with their border instead of a heavy ring */
+  input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
   .stack-card:focus-visible { outline-offset: -3px; }
 
   /* ----- Toast: confirmations with an Undo, sits just above the bottom nav ----- */
@@ -2071,6 +2137,11 @@
       <div class="field-label" style="margin-top:18px;">Home layout</div>
       <div class="settings-data-row" id="settingsLayoutRow"></div>
 
+      <div class="field-label" style="margin-top:18px;">Help</div>
+      <div class="settings-data-row">
+        <button class="ghost" id="replayIntroBtn">Show intro again</button>
+      </div>
+
       <div class="field-label" style="margin-top:18px;">Data</div>
       <div class="settings-data-row">
         <button class="ghost" id="exportBtn">⬇ Export backup</button>
@@ -2094,9 +2165,9 @@
       <div id="newClipCatRow"></div>
     </div>
 
-    <div class="card-meta-row">
-      <select id="newClipBrandSelect" class="filter-select brand-select"><option value="">No brand</option></select>
-      <div class="date-pill-row" id="newClipDateRow"></div>
+    <div class="field-group">
+      <div class="field-label">Post date</div>
+      <div id="newClipDateRow"></div>
     </div>
 
     <div class="field-group">
@@ -2104,7 +2175,13 @@
       <div class="tone-row" id="newClipToneRow"></div>
     </div>
 
-    <div style="display:flex; justify-content:flex-end;">
+    <div class="sheet-footer">
+      <label class="inline-select" id="newClipBrandRow">
+        <span class="inline-select-label">Brand</span>
+        <span class="inline-select-value" id="newClipBrandValue">None</span>
+        <span class="status-caret">▾</span>
+        <select id="newClipBrandSelect" aria-label="Brand"><option value="">None</option></select>
+      </label>
       <button id="addBtn">Log Entry</button>
     </div>
   </div>
@@ -2123,17 +2200,11 @@
   </div>
 
   <div class="quick-filter-panel surface c5" id="quickFilterPanel" style="display:none;">
-    <div id="quickFilterSearch" style="display:none;">
-      <div class="search-wrap">
-        <span class="search-icon" id="searchIcon"></span>
-        <input id="searchInput" class="filters-bar-search" placeholder="Search captions...">
-      </div>
+    <div class="search-wrap">
+      <span class="search-icon" id="searchIcon"></span>
+      <input id="searchInput" class="filters-bar-search" type="search" placeholder="Captions, cats, brands…" aria-label="Search">
     </div>
-    <div id="quickFilterSelects" style="display:none;">
-      <div class="filter-row" id="filterRow"></div>
-      <select id="brandFilterSelect" class="filter-select"><option value="">All brands</option></select>
-      <button type="button" class="ghost" id="selectModeToggleBtn" title="Select several cards to change or delete them">Select cards</button>
-    </div>
+    <div class="chip-row filter-chips" id="filterRow" role="group" aria-label="Filter by status"></div>
   </div>
 
   <div id="cardList"></div>
@@ -2269,6 +2340,20 @@
   <footer class="tally" id="tally"></footer>
 </div>
 
+<div class="onboarding" id="onboarding" role="dialog" aria-modal="true" aria-labelledby="obTitle" hidden>
+  <div class="ob-card surface c3" id="obCard">
+    <button type="button" class="ob-skip" id="obSkip">Skip</button>
+    <div class="ob-art" id="obArt" aria-hidden="true"></div>
+    <div class="card-kicker" id="obKicker"></div>
+    <h2 class="ob-title" id="obTitle"></h2>
+    <p class="ob-text" id="obText"></p>
+    <div class="ob-foot">
+      <div class="ob-dots" id="obDots"></div>
+      <button type="button" id="obNext">Next</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button type="button" id="toastAction"></button></div>
 
 <script>
@@ -2311,8 +2396,6 @@ const VIEW_META = {
 let clips = [];
 let activeFilter = 'all';
 let tplContext = { brand: '', product: '', category: '', duration: '', name: 'Cris', cat: '', upstairsCat: '', downstairsCat: '' };
-let activeBrandFilter = '';
-let activeCatFilter = '';
 let searchQuery = '';
 let activeQuickFilter = null; // null | 'search' | 'select'
 const LAYOUT_MODES = ['stack', 'list'];
@@ -2327,7 +2410,6 @@ let currentView = 'grid';
 let lastAnimatedView = null;
 let calMonthOffset = 0;
 let currentTheme = 'marina';
-let editingDateIds = new Set();
 let collapsedCaptionIds = new Set();
 let compactCardIds = new Set();
 let brandPickerOpenIds = new Set();
@@ -2739,82 +2821,176 @@ document.getElementById('settingsModalOverlay').addEventListener('click', (e) =>
 
 let newClipPlatform = 'Both';
 let newClipDate = '';
-let newClipDateEditing = false;
+// A chip that opens the phone's own date picker. One hidden <input type="date"> is reused and
+// placed over the tapped chip so the picker anchors there.
+function openDatePicker(anchor, value, onPick) {
+  let input = document.getElementById('datePickerProxy');
+  if (!input) {
+    input = document.createElement('input');
+    input.type = 'date';
+    input.id = 'datePickerProxy';
+    input.tabIndex = -1;
+    input.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(input);
+    input.addEventListener('change', () => {
+      input.classList.remove('fallback');
+      if (input._onPick && input.value) input._onPick(input.value);
+    });
+    input.addEventListener('blur', () => input.classList.remove('fallback'));
+  }
+  const r = anchor.getBoundingClientRect();
+  Object.assign(input.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+  input.value = value || '';
+  input._onPick = onPick;
+  input.classList.remove('fallback');
+  try {
+    input.showPicker();
+  } catch (e) {
+    // Older browsers: show the native field over the chip instead
+    input.classList.add('fallback');
+    input.focus();
+  }
+}
+
+function buildDateChip(value, onChange) {
+  const wrap = document.createElement('div');
+  wrap.className = 'chip-row';
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip date-chip' + (value ? ' selected' : '');
+  chip.innerHTML = NAV_ICONS.calendar + '<span>' + (value ? escapeHtml(formatDateLong(value)) : 'Add a date') + '</span>';
+  chip.onclick = () => openDatePicker(chip, value, onChange);
+  wrap.appendChild(chip);
+  if (value) {
+    const clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'chip chip-clear';
+    clear.title = 'Remove date';
+    clear.textContent = '✕';
+    clear.onclick = () => onChange('');
+    wrap.appendChild(clear);
+  }
+  return wrap;
+}
+
+// ===== Onboarding: a few swipeable cards on first launch, replayable from Settings =====
+const ONBOARDED_KEY = 'tsc-onboarded';
+const BIG_ICON = svg => svg.replace('<svg ', '<svg class="ob-icon" ');
+const ONBOARDING_SLIDES = [
+  { color: 'c3', kicker: 'Welcome', title: 'Two floors, four cats, one plan',
+    text: 'Plan posts for Cali and Neo downstairs and Ramses and Diego upstairs. Everything stays on this phone. No account needed.',
+    art: () => '<div class="ob-cats">' + CATS.map(c => '<span class="cat-avatar">' + catAvatarSvg(c) + '</span>').join('') + '</div>' },
+  { color: 'c6', kicker: 'Step 1', title: 'Log a clip',
+    text: 'Tap + to jot down a moment. Tag who\'s starring, pick a tone, and add a post date if you know it.',
+    art: () => '<span class="ob-plus">+</span>' },
+  { color: 'c1', kicker: 'Step 2', title: 'Draft captions',
+    text: 'Open a card and tap Draft captions. Shuffle for new ones, then copy with Instagram or TikTok hashtags.',
+    art: () => BIG_ICON(NAV_ICONS.copy) },
+  { color: 'c0', kicker: 'Step 3', title: 'Plan and pitch',
+    text: 'Home shows what\'s next, overdue posts first. Tap a calendar day to plan one, and use Brands and Templates for outreach.',
+    art: () => BIG_ICON(NAV_ICONS.calendar) },
+  { color: 'c2', kicker: 'Good to know', title: 'Two handy tricks',
+    text: 'Long-press a card to select several at once. And export a backup from Settings now and then, since your data only lives on this device.',
+    art: () => BIG_ICON(NAV_ICONS.paw) }
+];
+let obIndex = 0;
+
+function renderOnboarding(direction) {
+  const slide = ONBOARDING_SLIDES[obIndex];
+  const card = document.getElementById('obCard');
+  card.className = 'ob-card surface ' + slide.color;
+  document.getElementById('obArt').innerHTML = slide.art();
+  document.getElementById('obKicker').textContent = slide.kicker;
+  document.getElementById('obTitle').textContent = slide.title;
+  document.getElementById('obText').textContent = slide.text;
+  const last = obIndex === ONBOARDING_SLIDES.length - 1;
+  document.getElementById('obNext').textContent = last ? "Let's go" : 'Next';
+  document.getElementById('obSkip').style.visibility = last ? 'hidden' : 'visible';
+  document.getElementById('obDots').innerHTML = ONBOARDING_SLIDES
+    .map((_, i) => '<span class="ob-dot' + (i === obIndex ? ' on' : '') + '"></span>').join('');
+  if (direction && !prefersReducedMotion()) {
+    card.animate(
+      [{ opacity: 0, transform: 'translateX(' + (direction * 24) + 'px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 220, easing: 'cubic-bezier(.2,.9,.25,1)' }
+    );
+  }
+}
+
+function showOnboarding() {
+  obIndex = 0;
+  const el = document.getElementById('onboarding');
+  el.hidden = false;
+  document.documentElement.classList.add('focus-open');
+  renderOnboarding();
+  document.getElementById('obNext').focus({ focusVisible: false });
+}
+
+function finishOnboarding() {
+  document.getElementById('onboarding').hidden = true;
+  document.documentElement.classList.remove('focus-open');
+  try { localStorage.setItem(ONBOARDED_KEY, '1'); } catch (e) {}
+}
+
+function stepOnboarding(delta) {
+  const next = obIndex + delta;
+  if (next >= ONBOARDING_SLIDES.length) { finishOnboarding(); return; }
+  if (next < 0) return;
+  obIndex = next;
+  renderOnboarding(delta);
+}
+
+function maybeShowOnboarding() {
+  let seen = false;
+  try { seen = localStorage.getItem(ONBOARDED_KEY) === '1'; } catch (e) {}
+  if (!seen) showOnboarding();
+}
+
+document.getElementById('obNext').addEventListener('click', () => stepOnboarding(1));
+document.getElementById('obSkip').addEventListener('click', finishOnboarding);
+document.getElementById('onboarding').addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') finishOnboarding();
+  else if (e.key === 'ArrowRight') stepOnboarding(1);
+  else if (e.key === 'ArrowLeft') stepOnboarding(-1);
+});
+(function enableSwipe() {
+  const card = document.getElementById('obCard');
+  let startX = null;
+  card.addEventListener('pointerdown', (e) => { startX = e.clientX; });
+  card.addEventListener('pointerup', (e) => {
+    if (startX === null) return;
+    const dx = e.clientX - startX;
+    startX = null;
+    if (Math.abs(dx) > 50) stepOnboarding(dx < 0 ? 1 : -1);
+  });
+})();
+document.getElementById('replayIntroBtn').addEventListener('click', () => { closeSettingsModal(); showOnboarding(); });
 
 function renderNewClipDateRow() {
   const row = document.getElementById('newClipDateRow');
   row.innerHTML = '';
-  if (newClipDateEditing) {
-    const input = document.createElement('input');
-    input.type = 'date';
-    input.value = newClipDate;
-    input.autofocus = true;
-    input.onchange = () => { newClipDate = input.value; newClipDateEditing = false; renderNewClipDateRow(); };
-    input.onblur = () => { newClipDateEditing = false; renderNewClipDateRow(); };
-    row.appendChild(input);
-  } else if (newClipDate) {
-    const pill = document.createElement('button');
-    pill.type = 'button';
-    pill.className = 'date-pill-btn confirmed';
-    pill.innerHTML = '📅 ' + formatDateLong(newClipDate);
-    pill.title = 'Tap to change';
-    pill.onclick = () => { newClipDateEditing = true; renderNewClipDateRow(); };
-    const clearBtn = document.createElement('button');
-    clearBtn.type = 'button';
-    clearBtn.className = 'date-pill-clear';
-    clearBtn.innerHTML = '✕';
-    clearBtn.title = 'Remove date';
-    clearBtn.onclick = (e) => { e.stopPropagation(); newClipDate = ''; renderNewClipDateRow(); };
-    row.appendChild(pill);
-    row.appendChild(clearBtn);
-  } else {
-    const addBtn = document.createElement('button');
-    addBtn.type = 'button';
-    addBtn.className = 'date-pill-btn';
-    addBtn.textContent = '📅 Add a date';
-    addBtn.onclick = () => { newClipDateEditing = true; renderNewClipDateRow(); };
-    row.appendChild(addBtn);
-  }
+  row.appendChild(buildDateChip(newClipDate, (v) => { newClipDate = v; renderNewClipDateRow(); }));
 }
 
-function buildDatePillForClip(clip) {
-  const wrap = document.createElement('div');
-  wrap.className = 'date-pill-row';
-  const isEditing = editingDateIds.has(clip.id);
-  if (isEditing || !clip.scheduledDate) {
-    if (isEditing) {
-      const input = document.createElement('input');
-      input.type = 'date';
-      input.value = clip.scheduledDate || '';
-      input.autofocus = true;
-      input.onchange = () => { setScheduledDate(clip.id, input.value); editingDateIds.delete(clip.id); refreshOpenModal(); render(); };
-      input.onblur = () => { if (clip.scheduledDate) { editingDateIds.delete(clip.id); render(); } };
-      wrap.appendChild(input);
-    } else {
-      const addBtn = document.createElement('button');
-      addBtn.type = 'button';
-      addBtn.className = 'date-pill-btn';
-      addBtn.textContent = '📅 Add a date';
-      addBtn.onclick = () => { editingDateIds.add(clip.id); render(); refreshOpenModal(); };
-      wrap.appendChild(addBtn);
-    }
-  } else {
-    const pill = document.createElement('button');
-    pill.type = 'button';
-    pill.className = 'date-pill-btn confirmed';
-    pill.innerHTML = '📅 ' + formatDateLong(clip.scheduledDate);
-    pill.title = 'Tap to change';
-    pill.onclick = () => { editingDateIds.add(clip.id); render(); refreshOpenModal(); };
-    const clearBtn = document.createElement('button');
-    clearBtn.type = 'button';
-    clearBtn.className = 'date-pill-clear';
-    clearBtn.innerHTML = '✕';
-    clearBtn.title = 'Remove date';
-    clearBtn.onclick = (e) => { e.stopPropagation(); setScheduledDate(clip.id, ''); refreshOpenModal(); };
-    wrap.appendChild(pill);
-    wrap.appendChild(clearBtn);
-  }
-  return wrap;
+// Quiet "Brand: None ▾" line: an invisible native select over the text opens the phone's picker
+function syncInlineSelect(label) {
+  const sel = label.querySelector('select');
+  const opt = sel.options[sel.selectedIndex];
+  label.querySelector('.inline-select-value').textContent = opt ? opt.textContent : 'None';
+  label.classList.toggle('has-value', !!sel.value);
+}
+
+function buildBrandInlineSelect(selectedId, onChange) {
+  const label = document.createElement('label');
+  label.className = 'inline-select';
+  label.innerHTML = '<span class="inline-select-label">Brand</span><span class="inline-select-value"></span><span class="status-caret">▾</span>';
+  const sel = document.createElement('select');
+  sel.setAttribute('aria-label', 'Brand');
+  label.appendChild(sel);
+  fillBrandOptions(sel, 'None');
+  sel.value = brands.some(b => b.id === selectedId) ? selectedId : '';
+  sel.onchange = () => { syncInlineSelect(label); onChange(sel.value); };
+  syncInlineSelect(label);
+  return label;
 }
 
 function toggleNewClipTone(tone) {
@@ -3045,6 +3221,7 @@ async function loadAll() {
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   refreshAllBrandDropdowns();
   render();
+  maybeShowOnboarding();
 }
 
 // ===== Outreach checklist (Google-Tasks-style todo, stored in our own table) =====
@@ -3177,8 +3354,8 @@ function addClip() {
   });
   document.getElementById('descInput').value = '';
   document.getElementById('newClipBrandSelect').value = '';
+  syncInlineSelect(document.getElementById('newClipBrandRow'));
   newClipDate = '';
-  newClipDateEditing = false;
   renderNewClipDateRow();
   newClipCats = [];
   renderNewClipCats();
@@ -3494,8 +3671,8 @@ function refreshTemplateOutputs() {
 
 function refreshAllBrandDropdowns() {
   fillBrandOptions(document.getElementById('tplBrandSelect'), 'Pick a brand…');
-  fillBrandOptions(document.getElementById('newClipBrandSelect'), '🏷 No brand');
-  fillBrandOptions(document.getElementById('brandFilterSelect'), 'All brands');
+  fillBrandOptions(document.getElementById('newClipBrandSelect'), 'None');
+  syncInlineSelect(document.getElementById('newClipBrandRow'));
   fillBrandOptions(document.getElementById('taskBrandSelect'), 'General');
 }
 
@@ -3932,18 +4109,15 @@ function catStackHtml(cats) {
 // Tap-to-toggle cat profiles (new-caption sheet and the open card)
 function fillCatPicker(container, selected, onToggle) {
   container.innerHTML = '';
-  container.classList.add('cat-picker');
+  container.classList.add('chip-row');
   CATS.forEach(cat => {
-    const p = CAT_PROFILES[cat] || {};
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'cat-pick' + (selected.includes(cat) ? ' on' : '');
-    btn.setAttribute('aria-pressed', selected.includes(cat) ? 'true' : 'false');
-    btn.innerHTML = '<span class="cat-avatar">' + catAvatarSvg(cat) + '</span>' +
-      '<span class="cat-pick-name">' + escapeHtml(cat) + '</span>' +
-      '<span class="cat-pick-sub">' + escapeHtml(p.breed || '') + '</span>';
-    btn.onclick = () => onToggle(cat);
-    container.appendChild(btn);
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip' + (selected.includes(cat) ? ' selected' : '');
+    chip.setAttribute('aria-pressed', selected.includes(cat) ? 'true' : 'false');
+    chip.textContent = cat;
+    chip.onclick = () => onToggle(cat);
+    container.appendChild(chip);
   });
 }
 
@@ -3982,30 +4156,12 @@ function buildFullCard(clip) {
   fillCatPicker(catRow, clip.catTags || [], cat => toggleClipCat(clip.id, cat));
   card.appendChild(catRow);
 
-  // Brand + post date on one row
-  const metaRow = document.createElement('div');
-  metaRow.className = 'card-meta-row';
-  const brandSelect = document.createElement('select');
-  brandSelect.className = 'filter-select brand-select';
-  const noneOpt = document.createElement('option');
-  noneOpt.value = '';
-  noneOpt.textContent = '🏷 No brand';
-  brandSelect.appendChild(noneOpt);
-  brands.filter(b => b.category !== 'Pinned').forEach(b => {
-    const opt = document.createElement('option');
-    opt.value = b.id;
-    opt.textContent = b.name;
-    if (clip.brandId === b.id) opt.selected = true;
-    brandSelect.appendChild(opt);
-  });
-  brandSelect.onchange = () => {
-    clip.brandId = brandSelect.value;
-    saveClips(clip.id);
-    render();
-  };
-  metaRow.appendChild(brandSelect);
-  metaRow.appendChild(buildDatePillForClip(clip));
-  card.appendChild(metaRow);
+  const dateLabel = document.createElement('div');
+  dateLabel.className = 'field-label';
+  dateLabel.style.marginTop = '16px';
+  dateLabel.textContent = 'Post date';
+  card.appendChild(dateLabel);
+  card.appendChild(buildDateChip(clip.scheduledDate, (v) => { setScheduledDate(clip.id, v); refreshOpenModal(); }));
 
   // Tones, then the button that uses them, then the options it produced
   const toneLabel = document.createElement('div');
@@ -4065,6 +4221,10 @@ function buildFullCard(clip) {
     });
     card.appendChild(box);
   }
+
+  const brandRow = buildBrandInlineSelect(clip.brandId, (id) => { clip.brandId = id; saveClips(clip.id); render(); });
+  brandRow.classList.add('card-brand-row');
+  card.appendChild(brandRow);
 
   const bottomRow = document.createElement('div');
   bottomRow.className = 'card-footer-actions';
@@ -4486,8 +4646,6 @@ function render() {
   const showList = currentView === 'grid';
   const showClipFilters = showList || currentView === 'calendar';
   document.getElementById('headerFilterIcons').style.display = showClipFilters ? 'flex' : 'none';
-  // Multi-select only applies to the cards themselves, not the calendar.
-  document.getElementById('selectModeToggleBtn').style.display = showList ? '' : 'none';
   const calBtn = document.getElementById('calendarToggleBtn');
   const homeIcon = gridLayoutMode === 'list' ? NAV_ICONS.list : NAV_ICONS.stack;
   calBtn.innerHTML = currentView === 'calendar' ? homeIcon : NAV_ICONS.calendar;
@@ -4498,7 +4656,6 @@ function render() {
   if (!showList && selectMode) {
     selectMode = false;
     selectedClipIds.clear();
-    document.getElementById('selectModeToggleBtn').classList.remove('select-mode-active');
     document.getElementById('selectionBar').style.display = 'none';
   }
   renderQuickFilterPanel();
@@ -4533,49 +4690,25 @@ function render() {
   if (viewChanged) playViewAnim(document.getElementById('cardList'));
 }
 
+// One row of status chips under the search box (cats and brands are found by searching)
 function renderStatusFilterSelect() {
-  const filterRow = document.getElementById('filterRow');
-  if (!filterRow) return;
-  filterRow.innerHTML = '';
-  const select = document.createElement('select');
-  select.id = 'filterSelect';
-  const activeClips = clips.filter(c => !c.archived);
-  const allOpt = document.createElement('option');
-  allOpt.value = 'all';
-  allOpt.textContent = 'All (' + activeClips.length + ')';
-  select.appendChild(allOpt);
-  STATUSES.forEach(s => {
-    const count = activeClips.filter(c => c.status === s).length;
-    const opt = document.createElement('option');
-    opt.value = s;
-    opt.textContent = STATUS_LABELS[s] + ' (' + count + ')';
-    select.appendChild(opt);
+  const row = document.getElementById('filterRow');
+  if (!row) return;
+  const active = clips.filter(c => !c.archived);
+  const archivedCount = clips.length - active.length;
+  const options = [['all', 'All', active.length]]
+    .concat(STATUSES.map(st => [st, STATUS_LABELS[st], active.filter(c => c.status === st).length]));
+  if (archivedCount || activeFilter === 'archived') options.push(['archived', 'Archived', archivedCount]);
+  row.innerHTML = '';
+  options.forEach(([key, label, n]) => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip' + (activeFilter === key ? ' selected' : '');
+    chip.setAttribute('aria-pressed', activeFilter === key ? 'true' : 'false');
+    chip.innerHTML = escapeHtml(label) + ' <span class="chip-count">' + n + '</span>';
+    chip.onclick = () => { activeFilter = key; render(); };
+    row.appendChild(chip);
   });
-  const archivedCount = clips.filter(c => c.archived).length;
-  const archivedOpt = document.createElement('option');
-  archivedOpt.value = 'archived';
-  archivedOpt.textContent = '📦 Archived (' + archivedCount + ')';
-  select.appendChild(archivedOpt);
-  select.value = activeFilter;
-  select.onchange = () => { activeFilter = select.value; render(); };
-  filterRow.appendChild(select);
-
-  const catSelect = document.createElement('select');
-  catSelect.id = 'catFilterSelect';
-  catSelect.className = 'filter-select';
-  const allCatsOpt = document.createElement('option');
-  allCatsOpt.value = '';
-  allCatsOpt.textContent = 'All cats';
-  catSelect.appendChild(allCatsOpt);
-  CATS.forEach(cat => {
-    const opt = document.createElement('option');
-    opt.value = cat;
-    opt.textContent = cat;
-    catSelect.appendChild(opt);
-  });
-  catSelect.value = activeCatFilter;
-  catSelect.onchange = () => { activeCatFilter = catSelect.value; render(); };
-  filterRow.appendChild(catSelect);
 }
 
 function toggleQuickFilter(type) {
@@ -4588,12 +4721,7 @@ function toggleQuickFilter(type) {
 
 function renderQuickFilterPanel() {
   const panel = document.getElementById('quickFilterPanel');
-  const searchBox = document.getElementById('quickFilterSearch');
-  const selectsBox = document.getElementById('quickFilterSelects');
-  // One panel for finding cards: search box on top, filters + "Select cards" below
   panel.style.display = activeQuickFilter ? 'block' : 'none';
-  searchBox.style.display = activeQuickFilter ? 'block' : 'none';
-  selectsBox.style.display = activeQuickFilter ? 'flex' : 'none';
   document.getElementById('searchToggleBtn').classList.toggle('filter-icon-active', !!activeQuickFilter);
 }
 
@@ -4605,12 +4733,13 @@ function getFilteredClips() {
     list = list.filter(c => !c.archived);
     if (activeFilter !== 'all') list = list.filter(c => c.status === activeFilter);
   }
-  if (activeCatFilter) list = list.filter(c => c.catTags && c.catTags.includes(activeCatFilter));
-  if (activeBrandFilter) list = list.filter(c => c.brandId === activeBrandFilter);
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     list = list.filter(c => {
       if (c.desc && c.desc.toLowerCase().includes(q)) return true;
+      if ((c.catTags || []).some(cat => cat.toLowerCase().includes(q))) return true;
+      const brand = c.brandId && brands.find(b => b.id === c.brandId);
+      if (brand && brand.name.toLowerCase().includes(q)) return true;
       if (c.captions) {
         if (c.captions.hook && c.captions.hook.toLowerCase().includes(q)) return true;
         if (Array.isArray(c.captions.captions) && c.captions.captions.some(cap => cap.toLowerCase().includes(q))) return true;
@@ -4668,7 +4797,7 @@ function renderCardListOnly() {
   const filtered = sortUpNext(getFilteredClips());
 
   if (filtered.length === 0) {
-    if (searchQuery || activeBrandFilter) {
+    if (searchQuery || activeFilter !== 'all') {
       list.innerHTML = '<div class="empty-state">Nothing matches that search/filter.</div>';
     } else {
       list.innerHTML = '<div class="empty-state">No captions logged yet. The field is quiet.</div>';
@@ -4692,7 +4821,6 @@ function renderCardListOnly() {
 function toggleSelectMode() {
   selectMode = !selectMode;
   if (!selectMode) selectedClipIds.clear();
-  document.getElementById('selectModeToggleBtn').classList.toggle('select-mode-active', selectMode);
   document.getElementById('selectionBar').style.display = selectMode ? 'flex' : 'none';
   renderSelectionBar();
   renderCardListOnly();
@@ -4758,7 +4886,6 @@ async function deleteSelectedClips() {
 function exitSelectMode() {
   selectedClipIds.clear();
   selectMode = false;
-  document.getElementById('selectModeToggleBtn').classList.remove('select-mode-active');
   document.getElementById('selectionBar').style.display = 'none';
 }
 
@@ -4854,7 +4981,6 @@ function renderCalendar() {
     cell.title = 'Log a clip for ' + formatDateLong(cell.dataset.date);
     cell.onclick = () => {
       newClipDate = cell.dataset.date;
-      newClipDateEditing = false;
       renderNewClipDateRow();
       openEntrySheet();
     };
@@ -4862,6 +4988,7 @@ function renderCalendar() {
 }
 
 document.getElementById('addBtn').addEventListener('click', addClip);
+document.getElementById('newClipBrandSelect').addEventListener('change', () => syncInlineSelect(document.getElementById('newClipBrandRow')));
 function handleFabAddClick() {
   // + is always "new caption" now, regardless of which page you're on (including Brands).
   openEntrySheet();
@@ -5023,10 +5150,6 @@ function renderLayoutToggle() {
 }
 renderLayoutToggle();
 
-document.getElementById('selectModeToggleBtn').addEventListener('click', () => {
-  toggleQuickFilter(null); // close the search panel so the selection bar takes its place
-  toggleSelectMode();
-});
 document.getElementById('selectAllBtn').addEventListener('click', selectAllVisible);
 document.getElementById('cancelSelectBtn').addEventListener('click', toggleSelectMode);
 document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedClips);
@@ -5039,10 +5162,6 @@ STATUSES.forEach(s => {
 document.getElementById('bulkStatusSelect').addEventListener('change', (e) => bulkSetStatus(e.target.value));
 document.getElementById('bulkArchiveBtn').addEventListener('click', bulkArchiveSelected);
 
-document.getElementById('brandFilterSelect').addEventListener('change', (e) => {
-  activeBrandFilter = e.target.value;
-  renderCardListOnly();
-});
 document.getElementById('searchInput').addEventListener('input', (e) => {
   searchQuery = e.target.value.trim();
   renderCardListOnly();
