@@ -7,7 +7,7 @@
     "sync": "npm run build && npx cap sync",
     "android": "npm run sync && npx cap open android",
     "android:run": "npm run sync && npx cap run android",
-    "icons": "npx capacitor-assets generate --android --iconBackgroundColor #F0F5FF --splashBackgroundColor #F0F5FF"
+    "icons": "python3 scripts/make-icon-sources.py && npx capacitor-assets generate --android --iconBackgroundColor '#0059FF' --splashBackgroundColor '#F0F5FF' && python3 scripts/make-icon-sources.py --legacy"
   },
   "repository": {
     "type": "git",
