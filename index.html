@@ -1914,6 +1914,96 @@
     line-height: 1.7;
   }
   footer.tally { border-top: none; text-transform: uppercase; letter-spacing: 1.4px; font-size: 9.5px; }
+
+  /* ----- Card anatomy: cats + date on top, status chip, caption as the headline ----- */
+  .stack-head { justify-content: space-between; align-items: flex-start; }
+  .cat-stack { display: flex; align-items: center; padding-left: 4px; }
+  .cat-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: block;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #FFFFFF 75%, var(--card-bg, #FFFFFF)), 0 4px 10px -4px rgba(0,0,0,0.35);
+    background: #FFFFFF;
+  }
+  .cat-stack .cat-avatar + .cat-avatar { margin-left: -12px; }
+  .cat-avatar svg { width: 100%; height: 100%; display: block; border-radius: 50%; }
+  .cat-avatar-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    box-shadow: none;
+    border: 2px dashed color-mix(in srgb, var(--card-ink) 35%, transparent);
+    color: color-mix(in srgb, var(--card-ink) 45%, transparent);
+  }
+  .cat-avatar-empty svg { width: 18px; height: 18px; }
+
+  .status-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 14px;
+    padding: 5px 12px 5px 9px;
+    border-radius: 999px;
+    background: color-mix(in srgb, #FFFFFF 55%, transparent);
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .c4 .status-chip { background: rgba(255,255,255,0.12); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #9AA3B5; flex-shrink: 0; }
+  .status-chip.filmed .status-dot { background: #2F6BFF; }
+  .status-chip.captioned .status-dot { background: #FFA801; }
+  .status-chip.scheduled .status-dot { background: #FF651E; }
+  .status-chip.posted .status-dot { background: #1E9E5A; }
+  .status-chip-edit { cursor: pointer; }
+  .status-caret { font-size: 9px; opacity: 0.6; margin-left: 2px; }
+  .status-chip-edit select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+
+  .stack-body { margin-top: 12px; }
+  .stack-body-text { font-size: 16px; font-weight: 700; line-height: 1.45; }
+
+  /* ----- Cat profile picker ----- */
+  .cat-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .cat-pick, .cat-pick:hover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 12px 4px 10px;
+    border-radius: 16px;
+    border: 2px solid transparent;
+    background: color-mix(in srgb, #FFFFFF 30%, transparent);
+    color: var(--card-ink, var(--ink));
+    filter: none;
+    transform: none;
+  }
+  .cat-pick .cat-avatar { width: 46px; height: 46px; margin-bottom: 4px; opacity: 0.55; filter: grayscale(0.5); transition: opacity 0.15s ease, filter 0.15s ease, transform 0.15s ease; }
+  .cat-pick.on { border-color: var(--card-ink, var(--ink)); background: color-mix(in srgb, #FFFFFF 60%, transparent); }
+  .cat-pick.on .cat-avatar { opacity: 1; filter: none; transform: scale(1.06); }
+  .cat-pick-name { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
+  .cat-pick-sub { font-size: 9px; font-weight: 400; letter-spacing: 0.4px; opacity: 0.6; }
+
+  .card-meta-row .brand-select { flex: 1 1 140px; min-width: 0; border-radius: 999px; }
+  .unsynced-warn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 9px 12px;
+    border: 1.5px solid #E2551A;
+    border-radius: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    color: #B83E0B;
+  }
+  .unsynced-warn button { padding: 5px 12px; font-size: 10px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -1972,27 +2062,14 @@ alter table ttt_clips add column if not exists archived boolean default false;</
     </div>
     <textarea id="descInput" rows="2" placeholder="e.g. Diego knocked a mug off the counter, then stared directly at the camera for four seconds"></textarea>
 
-    <div class="card-header-row" style="margin-top:10px;">
-      <div class="status-platform-group new-clip-badge-group">
-        <button type="button" class="platform-badge-btn" id="newClipPlatformBadge" title="Platform"></button>
-        <div class="status-platform-divider"></div>
-        <button type="button" class="platform-badge-btn" id="newClipBrandBadge" title="Brand"></button>
-        <div class="status-platform-divider"></div>
-        <button type="button" class="platform-badge-btn" id="newClipLinkBadge" title="Video link"></button>
-      </div>
-      <div class="date-pill-row" id="newClipDateRow"></div>
-    </div>
-
-    <div id="newClipBrandWrap" style="display:none; margin-top:8px;">
-      <select id="newClipBrandSelect" class="filter-select"><option value="">🏷 No brand</option></select>
-    </div>
-    <div id="newClipLinkWrap" style="display:none; margin-top:8px;">
-      <input type="url" id="newClipLinkInput" class="app-input" placeholder="🔗 Google Photos link (optional)">
-    </div>
-
     <div class="field-group">
-      <div class="field-label">Starring (optional)</div>
-      <div class="tone-row" id="newClipCatRow"></div>
+      <div class="field-label">Starring</div>
+      <div id="newClipCatRow"></div>
+    </div>
+
+    <div class="card-meta-row">
+      <select id="newClipBrandSelect" class="filter-select brand-select"><option value="">No brand</option></select>
+      <div class="date-pill-row" id="newClipDateRow"></div>
     </div>
 
     <div class="field-group">
@@ -2707,28 +2784,6 @@ function toggleNewClipTone(tone) {
 const PLATFORM_ICONS = { Instagram: NAV_ICONS.instagram, TikTok: NAV_ICONS.tiktok, Both: NAV_ICONS.both };
 const PLATFORM_ORDER = ['Instagram', 'TikTok', 'Both'];
 
-function renderNewClipPlatform() {
-  const btn = document.getElementById('newClipPlatformBadge');
-  btn.innerHTML = PLATFORM_ICONS[newClipPlatform] || PLATFORM_ICONS['Both'];
-  btn.title = 'Platform: ' + newClipPlatform + ' (tap to change)';
-}
-document.getElementById('newClipPlatformBadge').addEventListener('click', () => {
-  newClipPlatform = PLATFORM_ORDER[(PLATFORM_ORDER.indexOf(newClipPlatform) + 1) % PLATFORM_ORDER.length];
-  renderNewClipPlatform();
-});
-
-let newClipBrandOpen = false;
-let newClipLinkOpen = false;
-document.getElementById('newClipBrandBadge').innerHTML = NAV_ICONS.outreach;
-document.getElementById('newClipLinkBadge').innerHTML = NAV_ICONS.link;
-document.getElementById('newClipBrandBadge').addEventListener('click', () => {
-  newClipBrandOpen = !newClipBrandOpen;
-  document.getElementById('newClipBrandWrap').style.display = newClipBrandOpen ? 'block' : 'none';
-});
-document.getElementById('newClipLinkBadge').addEventListener('click', () => {
-  newClipLinkOpen = !newClipLinkOpen;
-  document.getElementById('newClipLinkWrap').style.display = newClipLinkOpen ? 'block' : 'none';
-});
 
 function renderNewClipTones() {
   const row = document.getElementById('newClipToneRow');
@@ -3165,7 +3220,6 @@ function addClip() {
   const desc = document.getElementById('descInput').value.trim();
   if (!desc) return;
   const dateVal = newClipDate;
-  const linkVal = document.getElementById('newClipLinkInput').value.trim();
   const brandVal = document.getElementById('newClipBrandSelect').value;
   const newId = uid();
   clips.unshift({
@@ -3175,22 +3229,15 @@ function addClip() {
     created: new Date().toISOString(),
     captions: null,
     selectedTones: newClipTones.length ? [...newClipTones] : ['Deadpan nature-doc'],
-    platform: newClipPlatform,
+    platform: 'Both',
     scheduledDate: dateVal || '',
-    videoLink: linkVal || '',
+    videoLink: '',
     brandId: brandVal || '',
     catTags: newClipCats.length ? [...newClipCats] : [],
     archived: false
   });
   document.getElementById('descInput').value = '';
-  document.getElementById('newClipLinkInput').value = '';
   document.getElementById('newClipBrandSelect').value = '';
-  newClipBrandOpen = false;
-  newClipLinkOpen = false;
-  document.getElementById('newClipBrandWrap').style.display = 'none';
-  document.getElementById('newClipLinkWrap').style.display = 'none';
-  newClipPlatform = 'Both';
-  renderNewClipPlatform();
   newClipDate = '';
   newClipDateEditing = false;
   renderNewClipDateRow();
@@ -3211,14 +3258,7 @@ function toggleNewClipCat(cat) {
 function renderNewClipCats() {
   const row = document.getElementById('newClipCatRow');
   if (!row) return;
-  row.innerHTML = '';
-  CATS.forEach(cat => {
-    const chip = document.createElement('div');
-    chip.className = 'tone-chip' + (newClipCats.includes(cat) ? ' selected' : '');
-    chip.textContent = cat;
-    chip.onclick = () => toggleNewClipCat(cat);
-    row.appendChild(chip);
-  });
+  fillCatPicker(row, newClipCats, toggleNewClipCat);
 }
 
 function toggleClipCat(clipId, cat) {
@@ -3302,7 +3342,7 @@ async function generateCaptions(id) {
   };
   const toneInstructions = tones.map(t => '- ' + t + ': ' + (toneGuide[t] || '')).join('\n');
 
-  const platform = clip.platform || 'Both';
+  const platform = 'Both'; // posts go out the same on Instagram and TikTok
   const platformGuide = {
     'Instagram': 'Optimize for Instagram (Reels/carousel). Caption can be slightly longer (1-3 sentences).',
     'TikTok': 'Optimize for TikTok. Captions should be punchier and shorter, built to be read in under 2 seconds.',
@@ -3797,151 +3837,148 @@ function saveBrandForm() {
   renderOutreach();
 }
 
-function buildFullCard(clip, forceExpanded) {
+// ===== Cat profiles =====
+// Illustrated avatars (no photos): coat colors/patterns follow each cat's breed.
+const CAT_PROFILES = {
+  Cali:   { breed: 'Shorthair', home: 'Downstairs', bg: '#F0B8D8', fur: '#FFF4E6', inner: '#F4A3B4', eye: '#6FA34A', pattern: 'calico' },
+  Neo:    { breed: 'Shorthair', home: 'Downstairs', bg: '#A8D8BE', fur: '#2B2B30', inner: '#E592A8', eye: '#F2C230', pattern: 'tuxedo' },
+  Ramses: { breed: 'Savannah',  home: 'Upstairs',   bg: '#F7EB8A', fur: '#E4BC6A', inner: '#F0A3A8', eye: '#B58A1E', pattern: 'spots', bigEars: true },
+  Diego:  { breed: 'Bengal',    home: 'Upstairs',   bg: '#9CCBEE', fur: '#DA8B3F', inner: '#F0A3A8', eye: '#4F9A5A', pattern: 'rosettes' }
+};
+
+let catSvgSeq = 0;
+function catAvatarSvg(name) {
+  const p = CAT_PROFILES[name];
+  if (!p) return '';
+  const clipId = 'catclip' + (++catSvgSeq);
+  const ink = '#2A2320';
+  const earL = p.bigEars ? '11,31 13,1 31,19' : '13,31 17,8 30,20';
+  const earR = p.bigEars ? '53,31 51,1 33,19' : '51,31 47,8 34,20';
+  const innerL = p.bigEars ? '15,27 16,8 27,20' : '16,27 18,13 27,21';
+  const innerR = p.bigEars ? '49,27 48,8 37,20' : '48,27 46,13 37,21';
+  let earFillL = p.fur, earFillR = p.fur, pattern = '';
+  if (p.pattern === 'calico') {
+    earFillL = '#E8913A'; earFillR = '#2B2B2B';
+    pattern = '<circle cx="19" cy="27" r="10" fill="#E8913A"/><circle cx="46" cy="25" r="9" fill="#2B2B2B"/><circle cx="47" cy="47" r="5" fill="#E8913A"/>';
+  } else if (p.pattern === 'tuxedo') {
+    pattern = '<ellipse cx="32" cy="47" rx="11" ry="9" fill="#FFFFFF"/><path d="M32 22 L28 34 L36 34 Z" fill="#FFFFFF" opacity="0.9"/>';
+  } else if (p.pattern === 'spots') {
+    pattern = [[20,26,2.2],[26,22,1.8],[38,22,1.8],[44,26,2.2],[17,36,2],[47,36,2],[23,31,1.4],[41,31,1.4]]
+      .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#5A3B1A"/>`).join('');
+  } else if (p.pattern === 'rosettes') {
+    pattern = [[19,27],[45,27],[16,38],[48,38],[27,22],[37,22]]
+      .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.6" fill="#9A5A22" stroke="#4A2A10" stroke-width="1.2"/>`).join('');
+  }
+  const whisker = p.pattern === 'tuxedo' ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.35)';
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <circle cx="32" cy="32" r="32" fill="${p.bg}"/>
+    <polygon points="${earL}" fill="${earFillL}"/><polygon points="${earR}" fill="${earFillR}"/>
+    <polygon points="${innerL}" fill="${p.inner}"/><polygon points="${innerR}" fill="${p.inner}"/>
+    <clipPath id="${clipId}"><ellipse cx="32" cy="37" rx="21" ry="18"/></clipPath>
+    <ellipse cx="32" cy="37" rx="21" ry="18" fill="${p.fur}"/>
+    <g clip-path="url(#${clipId})">${pattern}</g>
+    <ellipse cx="24" cy="36" rx="3.6" ry="4.3" fill="${p.eye}"/><ellipse cx="40" cy="36" rx="3.6" ry="4.3" fill="${p.eye}"/>
+    <ellipse cx="24" cy="36.4" rx="1.3" ry="3.1" fill="#111"/><ellipse cx="40" cy="36.4" rx="1.3" ry="3.1" fill="#111"/>
+    <circle cx="25.2" cy="34.3" r="1" fill="#FFF"/><circle cx="41.2" cy="34.3" r="1" fill="#FFF"/>
+    <circle cx="18" cy="43" r="3" fill="#FF8FA3" opacity="0.5"/><circle cx="46" cy="43" r="3" fill="#FF8FA3" opacity="0.5"/>
+    <path d="M29.6 41.6 h4.8 l-2.4 2.6 z" fill="#F08A9C"/>
+    <path d="M32 44.2 q-1.8 2.6 -4.2 1.4 M32 44.2 q1.8 2.6 4.2 1.4" stroke="${p.pattern === 'tuxedo' ? '#444' : ink}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    <path d="M14 41 l8 1 M14 45 l8 -0.5 M50 41 l-8 1 M50 45 l-8 -0.5" stroke="${whisker}" stroke-width="0.9" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// Overlapping avatars for the cats in a clip (top-left of every card)
+function catStackHtml(cats) {
+  const list = (cats || []).filter(c => CAT_PROFILES[c]);
+  if (!list.length) {
+    return '<div class="cat-stack"><span class="cat-avatar cat-avatar-empty" title="No cats tagged">' + NAV_ICONS.paw + '</span></div>';
+  }
+  return '<div class="cat-stack" title="' + escapeHtml(list.join(', ')) + '">' +
+    list.map(c => '<span class="cat-avatar">' + catAvatarSvg(c) + '</span>').join('') + '</div>';
+}
+
+// Tap-to-toggle cat profiles (new-caption sheet and the open card)
+function fillCatPicker(container, selected, onToggle) {
+  container.innerHTML = '';
+  container.classList.add('cat-picker');
+  CATS.forEach(cat => {
+    const p = CAT_PROFILES[cat] || {};
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cat-pick' + (selected.includes(cat) ? ' on' : '');
+    btn.setAttribute('aria-pressed', selected.includes(cat) ? 'true' : 'false');
+    btn.innerHTML = '<span class="cat-avatar">' + catAvatarSvg(cat) + '</span>' +
+      '<span class="cat-pick-name">' + escapeHtml(cat) + '</span>' +
+      '<span class="cat-pick-sub">' + escapeHtml(p.breed || '') + '</span>';
+    btn.onclick = () => onToggle(cat);
+    container.appendChild(btn);
+  });
+}
+
+// Editor shown inside a picked-out card. The card's own header (cats, date, status) sits above it.
+function buildFullCard(clip) {
   const card = document.createElement('div');
   card.className = 'card';
   card.setAttribute('data-highlight-id', clip.id);
-
-  const isCompact = !forceExpanded && compactCardIds.has(clip.id);
-
-  // Status + platform form one unified badge (left), date on the right
-  const headerRow = document.createElement('div');
-  headerRow.className = 'card-header-row';
-
-  const statusPlatformGroup = document.createElement('div');
-  statusPlatformGroup.className = 'status-platform-group ' + clip.status;
-
-  const statusSelect = document.createElement('select');
-  statusSelect.className = 'stamp-select';
-  STATUSES.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s;
-    opt.textContent = STATUS_LABELS[s];
-    if (s === clip.status) opt.selected = true;
-    statusSelect.appendChild(opt);
-  });
-  statusSelect.onchange = () => {
-    statusPlatformGroup.className = 'status-platform-group ' + statusSelect.value;
-    updateStatus(clip.id, statusSelect.value);
-    refreshOpenModal();
-  };
-  statusPlatformGroup.appendChild(statusSelect);
-
-  const statusPlatformDivider = document.createElement('div');
-  statusPlatformDivider.className = 'status-platform-divider';
-  statusPlatformGroup.appendChild(statusPlatformDivider);
-
-  if (!clip.platform) clip.platform = 'Both';
-  const PLATFORM_ORDER = ['Instagram', 'TikTok', 'Both'];
-  const platformBadgeBtn = document.createElement('button');
-  platformBadgeBtn.className = 'platform-badge-btn';
-  platformBadgeBtn.title = 'Shared on: ' + clip.platform + ' (tap to change)';
-  platformBadgeBtn.innerHTML = PLATFORM_ICONS[clip.platform] || PLATFORM_ICONS['Both'];
-  platformBadgeBtn.onclick = () => {
-    const next = PLATFORM_ORDER[(PLATFORM_ORDER.indexOf(clip.platform) + 1) % PLATFORM_ORDER.length];
-    setPlatform(clip.id, next);
-    refreshOpenModal();
-  };
-  statusPlatformGroup.appendChild(platformBadgeBtn);
-
-  const brandDivider = document.createElement('div');
-  brandDivider.className = 'status-platform-divider';
-  statusPlatformGroup.appendChild(brandDivider);
-
-  const brandToggleBtn = document.createElement('button');
-  brandToggleBtn.className = 'platform-badge-btn' + (clip.brandId ? ' has-value' : '');
-  brandToggleBtn.title = 'Brand';
-  brandToggleBtn.innerHTML = NAV_ICONS.outreach;
-  brandToggleBtn.onclick = () => {
-    if (brandPickerOpenIds.has(clip.id)) brandPickerOpenIds.delete(clip.id); else brandPickerOpenIds.add(clip.id);
-    refreshOpenModal();
-    render();
-  };
-  statusPlatformGroup.appendChild(brandToggleBtn);
-
-  const linkDivider = document.createElement('div');
-  linkDivider.className = 'status-platform-divider';
-  statusPlatformGroup.appendChild(linkDivider);
-
-  const linkToggleBtn = document.createElement('button');
-  linkToggleBtn.className = 'platform-badge-btn' + (clip.videoLink ? ' has-value' : '');
-  linkToggleBtn.title = 'Video link';
-  linkToggleBtn.innerHTML = NAV_ICONS.link;
-  linkToggleBtn.onclick = () => {
-    if (linkPickerOpenIds.has(clip.id)) linkPickerOpenIds.delete(clip.id); else linkPickerOpenIds.add(clip.id);
-    refreshOpenModal();
-    render();
-  };
-  statusPlatformGroup.appendChild(linkToggleBtn);
-
-  const catDivider = document.createElement('div');
-  catDivider.className = 'status-platform-divider';
-  statusPlatformGroup.appendChild(catDivider);
-
-  const catToggleBtn = document.createElement('button');
-  catToggleBtn.className = 'platform-badge-btn' + (clip.catTags && clip.catTags.length ? ' has-value' : '');
-  catToggleBtn.title = clip.catTags && clip.catTags.length ? 'Starring: ' + clip.catTags.join(', ') : 'Starring (tap to set)';
-  catToggleBtn.innerHTML = NAV_ICONS.paw;
-  catToggleBtn.onclick = () => {
-    if (catPickerOpenIds.has(clip.id)) catPickerOpenIds.delete(clip.id); else catPickerOpenIds.add(clip.id);
-    refreshOpenModal();
-    render();
-  };
-  statusPlatformGroup.appendChild(catToggleBtn);
-
-  headerRow.appendChild(statusPlatformGroup);
-  headerRow.appendChild(buildDatePillForClip(clip));
-  card.appendChild(headerRow);
-
   if (!clip.selectedTones) clip.selectedTones = ['Deadpan nature-doc'];
 
+  // The caption itself
   const top = document.createElement('div');
   top.className = 'card-top';
+  const descWrap = document.createElement('div');
+  descWrap.className = 'card-desc-wrap';
   const desc = document.createElement('div');
   desc.className = 'card-desc';
   desc.textContent = clip.desc;
-  const descWrap = document.createElement('div');
-  descWrap.className = 'card-desc-wrap';
   descWrap.appendChild(desc);
   const descCopyBtn = document.createElement('button');
   descCopyBtn.className = 'desc-copy-btn';
   descCopyBtn.title = 'Copy caption';
   descCopyBtn.innerHTML = NAV_ICONS.copy;
-  descCopyBtn.onclick = (e) => {
-    e.stopPropagation();
-    copyWithIconFeedback(clip.desc, descCopyBtn);
-  };
+  descCopyBtn.onclick = (e) => { e.stopPropagation(); copyWithIconFeedback(clip.desc, descCopyBtn); };
   descWrap.appendChild(descCopyBtn);
-  const topRight = document.createElement('div');
-  topRight.className = 'card-top-right';
-
-  if (!forceExpanded) {
-    const expandBtn = document.createElement('button');
-    expandBtn.className = 'expand-toggle-btn';
-    expandBtn.innerHTML = isCompact ? '▾' : '▴';
-    expandBtn.title = isCompact ? 'Expand' : 'Compact';
-    expandBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (isCompact) compactCardIds.delete(clip.id); else compactCardIds.add(clip.id);
-      render();
-    };
-    topRight.appendChild(expandBtn);
-  }
-
   top.appendChild(descWrap);
-  top.appendChild(topRight);
   card.appendChild(top);
 
-  if (isCompact) {
-    card.classList.add('card-compact');
-    return card;
-  }
+  // Who's in it
+  const starLabel = document.createElement('div');
+  starLabel.className = 'field-label';
+  starLabel.style.marginTop = '16px';
+  starLabel.textContent = 'Starring';
+  card.appendChild(starLabel);
+  const catRow = document.createElement('div');
+  fillCatPicker(catRow, clip.catTags || [], cat => toggleClipCat(clip.id, cat));
+  card.appendChild(catRow);
 
-  // Generated caption options (if any) render below the main caption
+  // Brand + post date on one row
+  const metaRow = document.createElement('div');
+  metaRow.className = 'card-meta-row';
+  const brandSelect = document.createElement('select');
+  brandSelect.className = 'filter-select brand-select';
+  const noneOpt = document.createElement('option');
+  noneOpt.value = '';
+  noneOpt.textContent = '🏷 No brand';
+  brandSelect.appendChild(noneOpt);
+  brands.filter(b => b.category !== 'Pinned').forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.id;
+    opt.textContent = b.name;
+    if (clip.brandId === b.id) opt.selected = true;
+    brandSelect.appendChild(opt);
+  });
+  brandSelect.onchange = () => {
+    clip.brandId = brandSelect.value;
+    saveClips(clip.id);
+    render();
+  };
+  metaRow.appendChild(brandSelect);
+  metaRow.appendChild(buildDatePillForClip(clip));
+  card.appendChild(metaRow);
+
+  // Generated caption options (if any)
   if (clip.captions) {
     const box = document.createElement('div');
     box.className = 'captions-box';
-
     const usedTones = clip.captionTones || [];
     const igHashtags = clip.captions.hashtagsInstagram || clip.captions.hashtags || '';
     const ttHashtags = clip.captions.hashtagsTiktok || clip.captions.hashtags || '';
@@ -3952,22 +3989,19 @@ function buildFullCard(clip, forceExpanded) {
       topRow.className = 'caption-opt-top';
       const tag = document.createElement('span');
       tag.className = 'copy-tag';
-      tag.textContent = 'Option ' + (i+1) + (usedTones[i] ? ' | ' + usedTones[i] : '');
+      tag.textContent = 'Option ' + (i + 1) + (usedTones[i] ? ' | ' + usedTones[i] : '');
       const copyBtnGroup = document.createElement('div');
       copyBtnGroup.className = 'platform-copy-group';
-
       const igCopyBtn = document.createElement('button');
       igCopyBtn.className = 'platform-copy-btn';
-      igCopyBtn.title = 'Copy for Instagram (with IG tags)';
+      igCopyBtn.title = 'Copy with Instagram hashtags';
       igCopyBtn.innerHTML = NAV_ICONS.instagram;
       igCopyBtn.onclick = () => copyWithIconFeedback(igHashtags ? (cap + '\n\n' + igHashtags) : cap, igCopyBtn);
-
       const ttCopyBtn = document.createElement('button');
       ttCopyBtn.className = 'platform-copy-btn';
-      ttCopyBtn.title = 'Copy for TikTok (with TikTok tags)';
+      ttCopyBtn.title = 'Copy with TikTok hashtags';
       ttCopyBtn.innerHTML = NAV_ICONS.tiktok;
       ttCopyBtn.onclick = () => copyWithIconFeedback(ttHashtags ? (cap + '\n\n' + ttHashtags) : cap, ttCopyBtn);
-
       copyBtnGroup.appendChild(igCopyBtn);
       copyBtnGroup.appendChild(ttCopyBtn);
       topRow.appendChild(tag);
@@ -3978,87 +4012,13 @@ function buildFullCard(clip, forceExpanded) {
       optDiv.appendChild(capText);
       box.appendChild(optDiv);
     });
-
     card.appendChild(box);
-  }
-
-  const meta = document.createElement('div');
-  meta.className = 'card-meta';
-  meta.textContent = 'Logged ' + timeAgo(clip.created);
-  card.appendChild(meta);
-
-  if (brandPickerOpenIds.has(clip.id)) {
-    const brandSelect = document.createElement('select');
-    brandSelect.className = 'filter-select';
-    const noneOpt = document.createElement('option');
-    noneOpt.value = '';
-    noneOpt.textContent = '🏷 No brand';
-    brandSelect.appendChild(noneOpt);
-    brands.filter(b => b.category !== 'Pinned').forEach(b => {
-      const opt = document.createElement('option');
-      opt.value = b.id;
-      opt.textContent = b.name;
-      if (clip.brandId === b.id) opt.selected = true;
-      brandSelect.appendChild(opt);
-    });
-    brandSelect.onchange = () => {
-      clip.brandId = brandSelect.value;
-      saveClips(clip.id);
-      refreshOpenModal();
-    };
-    brandSelect.style.marginTop = '8px';
-    card.appendChild(brandSelect);
-  }
-
-  if (linkPickerOpenIds.has(clip.id)) {
-    const linkRow = document.createElement('div');
-    linkRow.className = 'link-row';
-    linkRow.style.marginTop = '8px';
-    const linkInput = document.createElement('input');
-    linkInput.type = 'url';
-    linkInput.className = 'app-input';
-    linkInput.placeholder = '🔗 Google Photos link (optional)';
-    linkInput.value = clip.videoLink || '';
-    linkInput.onchange = () => {
-      clip.videoLink = linkInput.value.trim();
-      saveClips(clip.id);
-      refreshOpenModal();
-    };
-    linkRow.appendChild(linkInput);
-    if (clip.videoLink) {
-      const openLink = document.createElement('a');
-      openLink.className = 'link-open-btn';
-      openLink.href = clip.videoLink;
-      openLink.target = '_blank';
-      openLink.rel = 'noopener noreferrer';
-      openLink.textContent = 'Open ↗';
-      linkRow.appendChild(openLink);
-    }
-    card.appendChild(linkRow);
-  }
-
-  if (catPickerOpenIds.has(clip.id)) {
-    if (!clip.catTags) clip.catTags = [];
-    const catRow = document.createElement('div');
-    catRow.className = 'tone-row';
-    catRow.style.marginTop = '8px';
-    CATS.forEach(cat => {
-      const chip = document.createElement('div');
-      chip.className = 'tone-chip' + (clip.catTags.includes(cat) ? ' selected' : '');
-      chip.textContent = cat;
-      chip.onclick = () => toggleClipCat(clip.id, cat);
-      catRow.appendChild(chip);
-    });
-    card.appendChild(catRow);
-  }
-
-  if (!clip.captions) {
+  } else {
     const toneLabel = document.createElement('div');
     toneLabel.className = 'field-label';
-    toneLabel.style.marginTop = '4px';
-    toneLabel.textContent = 'Tone / vibe (pick one or more)';
+    toneLabel.style.marginTop = '16px';
+    toneLabel.textContent = 'Tone (pick one or more)';
     card.appendChild(toneLabel);
-
     const toneRow = document.createElement('div');
     toneRow.className = 'tone-row';
     TONES.forEach(tone => {
@@ -4073,43 +4033,37 @@ function buildFullCard(clip, forceExpanded) {
 
   const bottomRow = document.createElement('div');
   bottomRow.className = 'card-bottom-row';
-
   const genBtn = document.createElement('button');
   genBtn.className = 'gen-caption-btn';
-  genBtn.innerHTML = loadingCaptions[clip.id] ? '' : (clip.captions ? 'Regenerate captions' : 'Generate captions');
   if (loadingCaptions[clip.id]) {
     genBtn.disabled = true;
     genBtn.innerHTML = 'Writing <span class="spinner"></span>';
+  } else {
+    genBtn.textContent = clip.captions ? 'Regenerate captions' : 'Generate captions';
   }
   genBtn.onclick = () => generateCaptions(clip.id);
   bottomRow.appendChild(genBtn);
-
-  // Same look/size as the date pill, just placed opposite the generate button on this row
   const archiveBtn = document.createElement('button');
   archiveBtn.className = 'date-pill-btn trash-footer-btn';
   archiveBtn.innerHTML = NAV_ICONS.archive;
   archiveBtn.title = clip.archived ? 'Unarchive' : 'Archive (hides it from the main views)';
   archiveBtn.onclick = () => toggleClipArchived(clip.id);
   bottomRow.appendChild(archiveBtn);
-
   const trashBtn = document.createElement('button');
   trashBtn.className = 'date-pill-btn trash-footer-btn';
   trashBtn.innerHTML = NAV_ICONS.trash;
-  trashBtn.title = 'Remove';
+  trashBtn.title = 'Delete';
   trashBtn.onclick = () => { removeClip(clip.id); closeCardModal(true); };
   bottomRow.appendChild(trashBtn);
-
   card.appendChild(bottomRow);
 
   if (clip.unsynced) {
     const warn = document.createElement('div');
-    warn.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding:8px 12px; border:1px solid var(--rust); border-radius:10px; background:color-mix(in srgb, var(--rust) 10%, transparent);';
+    warn.className = 'unsynced-warn';
     const warnText = document.createElement('span');
-    warnText.style.cssText = 'font-family:\'Space Mono\',monospace; font-size:10.5px; color:var(--rust);';
-    warnText.textContent = '⚠ Not saved: ' + (clip.saveError || 'unknown error');
+    warnText.textContent = '⚠ Not saved to the cloud — ' + (clip.saveError || 'unknown error');
     const retryBtn = document.createElement('button');
     retryBtn.className = 'ghost';
-    retryBtn.style.cssText = 'padding:5px 10px; font-size:10px; flex-shrink:0;';
     retryBtn.textContent = 'Retry';
     retryBtn.onclick = async () => { await saveClips(clip.id); refreshOpenModal(); render(); };
     warn.appendChild(warnText);
@@ -4201,7 +4155,6 @@ function buildGridTile(clip, mode) {
   } else {
     footerText = timeAgo(clip.created);
   }
-  if (clip.videoLink) footerText = '🔗 ' + footerText;
   footer.textContent = footerText;
   tile.appendChild(footer);
 
@@ -4260,8 +4213,6 @@ function buildStackCard(clip, index, colorIdx) {
   if (caps.length && clip.scheduledDate) tags.push(caps.length + ' captions');
   if (!caps.length) tags.push('No captions yet');
   if (brand) tags.push('🏷 ' + brand.name);
-  if (clip.catTags && clip.catTags.length) tags.push('🐾 ' + clip.catTags.join(', '));
-  if (clip.videoLink) tags.push('🔗 Video');
   if (clip.archived) tags.push('Archived');
   if (clip.unsynced) tags.push('⚠ Not saved');
   if (!tags.length) tags.push('Logged ' + timeAgo(clip.created));
@@ -4281,9 +4232,8 @@ function buildStackCard(clip, index, colorIdx) {
     e.stopPropagation();
     let text = clip.desc;
     if (caps.length) {
-      const tagsText = clip.platform === 'TikTok'
-        ? (clip.captions.hashtagsTiktok || clip.captions.hashtags || '')
-        : (clip.captions.hashtagsInstagram || clip.captions.hashtags || '');
+      // Same post everywhere now, so quick copy uses the Instagram hashtag set
+      const tagsText = clip.captions.hashtagsInstagram || clip.captions.hashtags || '';
       text = caps[0] + (tagsText ? '\n\n' + tagsText : '');
     }
     copyWithIconFeedback(text, copyBtn);
@@ -4320,7 +4270,7 @@ function buildStackCard(clip, index, colorIdx) {
 }
 
 // Icon + status/platform kicker + title + date/count — shared by deck cards and the focused card.
-function buildStackHead(clip) {
+function buildStackHead(clip, editable) {
   const caps = (clip.captions && clip.captions.captions) || [];
   let sideLabel, sideValue;
   if (clip.scheduledDate) {
@@ -4336,20 +4286,43 @@ function buildStackHead(clip) {
     sideValue = days <= 0 ? 'Today' : days + 'd';
   }
 
-  // Reads like the reference cards: "STATUS / CAPTIONED  ……  POSTS / SEP 27"
+  // Cats on the left, date / caption count on the right, status chip underneath.
+  // In the open card (editable) the status chip is the one place to change status.
+  const wrap = document.createElement('div');
+  wrap.className = 'stack-headwrap';
   const head = document.createElement('div');
   head.className = 'stack-head';
-  head.innerHTML =
-    '<div class="stack-icon" title="' + escapeHtml(clip.platform || 'Both') + '">' + (PLATFORM_ICONS[clip.platform] || PLATFORM_ICONS['Both']) + '</div>' +
-    '<div class="stack-title-block">' +
-      '<div class="stack-kicker">Status</div>' +
-      '<div class="stack-title">' + escapeHtml(STATUS_LABELS[clip.status] || clip.status) + '</div>' +
-    '</div>' +
+  head.innerHTML = catStackHtml(clip.catTags) +
     '<div class="stack-side">' +
       '<div class="stack-side-label">' + sideLabel + '</div>' +
       '<div class="stack-side-value">' + escapeHtml(sideValue) + '</div>' +
     '</div>';
-  return head;
+  wrap.appendChild(head);
+
+  let chip;
+  if (editable) {
+    chip = document.createElement('label');
+    chip.className = 'status-chip status-chip-edit ' + clip.status;
+    chip.title = 'Change status';
+    const sel = document.createElement('select');
+    STATUSES.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = STATUS_LABELS[s];
+      if (s === clip.status) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => { updateStatus(clip.id, sel.value); refreshOpenModal(); };
+    // Looks like the plain chip; an invisible native select on top opens the phone's picker
+    chip.innerHTML = '<span class="status-dot"></span>' + escapeHtml(STATUS_LABELS[clip.status] || clip.status) + '<span class="status-caret">▾</span>';
+    chip.appendChild(sel);
+  } else {
+    chip = document.createElement('span');
+    chip.className = 'status-chip ' + clip.status;
+    chip.innerHTML = '<span class="status-dot"></span>' + escapeHtml(STATUS_LABELS[clip.status] || clip.status);
+  }
+  wrap.appendChild(chip);
+  return wrap;
 }
 
 // ===== Focused card: tapping a deck card "picks it out" =====
@@ -4388,11 +4361,8 @@ function fillFocusCard(box, clip) {
   closeBtn.title = 'Put it back';
   closeBtn.onclick = () => closeCardModal();
   box.appendChild(closeBtn);
-  box.appendChild(buildStackHead(clip));
-  const divider = document.createElement('div');
-  divider.className = 'focus-divider';
-  box.appendChild(divider);
-  box.appendChild(buildFullCard(clip, true));
+  box.appendChild(buildStackHead(clip, true));
+  box.appendChild(buildFullCard(clip));
 }
 
 // sourceEl: the element that was tapped. A deck card flies out; anything else just fades in.
@@ -4968,7 +4938,6 @@ function loadTheme() {
 }
 
 renderNewClipTones();
-renderNewClipPlatform();
 renderNewClipDateRow();
 renderNewClipCats();
 loadTheme();
