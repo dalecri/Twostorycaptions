@@ -1078,8 +1078,8 @@
   .stack-title {
     font-family: 'Space Mono', monospace;
     font-weight: 700;
-    font-size: 15px;
-    letter-spacing: 1px;
+    font-size: 17px;
+    letter-spacing: 1.4px;
     text-transform: uppercase;
     white-space: nowrap;
     overflow: hidden;
@@ -1095,18 +1095,10 @@
     line-height: 1.1;
     text-transform: uppercase;
   }
-  .stack-body { margin-top: 20px; padding-left: 38px; min-height: 0; }
-  .stack-body-label {
-    font-family: 'Space Mono', monospace;
-    font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
+  .stack-body { margin-top: 18px; min-height: 0; }
   .stack-body-text {
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.55;
     display: -webkit-box;
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
@@ -1119,13 +1111,23 @@
     gap: 10px;
     margin-top: auto;
     padding-top: 10px;
-    padding-left: 38px;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.4px;
-    opacity: 0.75;
   }
-  .stack-foot-tags { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stack-foot-tags { display: flex; gap: 6px; min-width: 0; overflow: hidden; }
+  .stack-tag {
+    flex-shrink: 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--card-ink) 10%, transparent);
+    white-space: nowrap;
+  }
+  .stack-tag.warn { background: #FF651E; color: #FFFFFF; }
+  /* Long-press selects, so don't let the OS pop up text selection or callouts */
+  .stack-card { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   .stack-copy-btn {
     width: 32px;
     height: 32px;
@@ -1144,7 +1146,6 @@
   @media (max-width: 600px) {
     .stack-card { padding: 18px 18px 42px; }
     .stack-side-value { font-size: 20px; }
-    .stack-body, .stack-foot { padding-left: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
     .stack-card { transition: none; }
@@ -1758,6 +1759,12 @@
     color: var(--ink-soft);
   }
 
+  /* Title left, the few tool icons right — one compact row on phones too */
+  @media (max-width: 600px) {
+    .masthead-inner { flex-direction: row; align-items: center; padding-bottom: 14px; }
+  }
+  #selectModeToggleBtn { padding: 9px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+
   /* ----- Bottom nav: the black card ----- */
   .floating-nav {
     background: #1C1C1C;
@@ -1918,13 +1925,9 @@
     </div>
     <div class="header-icons">
       <span class="header-filter-icons" id="headerFilterIcons">
+        <button class="icon-btn" id="searchToggleBtn" title="Search &amp; filter"></button>
         <button class="icon-btn" id="calendarToggleBtn" title="Calendar view"></button>
-        <button class="icon-btn" id="searchToggleBtn" title="Search"></button>
-        <button class="icon-btn" id="filterToggleBtn" title="Filter"></button>
-        <button class="icon-btn" id="layoutToggleBtn" title="Switch to list view"></button>
-        <button class="icon-btn" id="selectModeToggleBtn" title="Select captions"></button>
       </span>
-      <span class="header-icons-divider" id="headerIconsDivider"></span>
       <button class="icon-btn" id="settingsBtn" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg></button>
     </div>
   </div>
@@ -1941,6 +1944,9 @@
 
       <div class="field-label" style="margin-top:0;">Theme</div>
       <div class="settings-theme-grid" id="settingsThemeGrid"></div>
+
+      <div class="field-label" style="margin-top:18px;">Home layout</div>
+      <div class="settings-data-row" id="settingsLayoutRow"></div>
 
       <div class="field-label" style="margin-top:18px;">Data</div>
       <div class="settings-data-row">
@@ -2022,6 +2028,7 @@ alter table ttt_clips add column if not exists archived boolean default false;</
     <div id="quickFilterSelects" style="display:none;">
       <div class="filter-row" id="filterRow"></div>
       <select id="brandFilterSelect" class="filter-select"><option value="">All brands</option></select>
+      <button type="button" class="ghost" id="selectModeToggleBtn" title="Select several cards to change or delete them">Select cards</button>
     </div>
   </div>
 
@@ -4216,6 +4223,8 @@ function clipColorIndex(clip) {
   return h % 7;
 }
 
+let suppressCardClick = false;
+
 // Wallet-style card for the stacked Home view. `index` drives how far down it sticks.
 function buildStackCard(clip, index, colorIdx) {
   const card = document.createElement('div');
@@ -4233,35 +4242,36 @@ function buildStackCard(clip, index, colorIdx) {
 
   card.appendChild(buildStackHead(clip));
 
+  // The caption itself, once, readable in full
   const body = document.createElement('div');
   body.className = 'stack-body';
-  const bodyLabel = document.createElement('div');
-  bodyLabel.className = 'stack-body-label';
   const bodyText = document.createElement('div');
   bodyText.className = 'stack-body-text';
-  if (caps.length) {
-    bodyLabel.textContent = 'Option 1 of ' + caps.length + (clip.captionTones && clip.captionTones[0] ? ' · ' + clip.captionTones[0] : '');
-    bodyText.textContent = caps[0];
-  } else {
-    bodyLabel.textContent = 'The clip';
-    bodyText.textContent = clip.desc;
-  }
-  body.appendChild(bodyLabel);
+  bodyText.textContent = clip.desc || 'Untitled';
   body.appendChild(bodyText);
   card.appendChild(body);
 
+  // Small tags for everything else; the header's right side already shows date or caption count
   const foot = document.createElement('div');
   foot.className = 'stack-foot';
+  const tagWrap = document.createElement('div');
+  tagWrap.className = 'stack-foot-tags';
   const tags = [];
+  if (caps.length && clip.scheduledDate) tags.push(caps.length + ' captions');
+  if (!caps.length) tags.push('No captions yet');
   if (brand) tags.push('🏷 ' + brand.name);
   if (clip.catTags && clip.catTags.length) tags.push('🐾 ' + clip.catTags.join(', '));
-  if (clip.videoLink) tags.push('🔗 video');
-  if (clip.archived) tags.push('📦 archived');
-  if (clip.unsynced) tags.push('⚠ not saved');
-  const tagSpan = document.createElement('span');
-  tagSpan.className = 'stack-foot-tags';
-  tagSpan.textContent = tags.join('   ') || (caps.length ? 'Logged ' + timeAgo(clip.created) : 'Tap to generate captions');
-  foot.appendChild(tagSpan);
+  if (clip.videoLink) tags.push('🔗 Video');
+  if (clip.archived) tags.push('Archived');
+  if (clip.unsynced) tags.push('⚠ Not saved');
+  if (!tags.length) tags.push('Logged ' + timeAgo(clip.created));
+  tags.forEach(t => {
+    const chip = document.createElement('span');
+    chip.className = 'stack-tag' + (t.startsWith('⚠') ? ' warn' : '');
+    chip.textContent = t;
+    tagWrap.appendChild(chip);
+  });
+  foot.appendChild(tagWrap);
 
   const copyBtn = document.createElement('button');
   copyBtn.className = 'stack-copy-btn';
@@ -4282,9 +4292,30 @@ function buildStackCard(clip, index, colorIdx) {
   card.appendChild(foot);
 
   card.onclick = () => {
+    if (suppressCardClick) { suppressCardClick = false; return; }
     if (selectMode) toggleClipSelection(clip.id);
     else openCardModal(clip.id, card);
   };
+  // Long-press a card to start selecting (replaces the old header button)
+  let pressTimer = null;
+  const cancelPress = () => { clearTimeout(pressTimer); pressTimer = null; };
+  card.addEventListener('pointerdown', (e) => {
+    if (selectMode || e.button > 0) return;
+    pressTimer = setTimeout(() => {
+      // The deck re-renders below, so the release's click may land on the new card element
+      suppressCardClick = true;
+      document.addEventListener('pointerup', () => setTimeout(() => { suppressCardClick = false; }, 60), { once: true });
+      if (navigator.vibrate) navigator.vibrate(15);
+      toggleQuickFilter(null);
+      toggleSelectMode();
+      toggleClipSelection(clip.id);
+    }, 550);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel', 'pointermove'].forEach(ev => card.addEventListener(ev, (e) => {
+    if (ev === 'pointermove' && Math.abs(e.movementY) + Math.abs(e.movementX) < 3) return;
+    cancelPress();
+  }));
+  card.addEventListener('contextmenu', (e) => e.preventDefault());
   return card;
 }
 
@@ -4305,13 +4336,14 @@ function buildStackHead(clip) {
     sideValue = days <= 0 ? 'Today' : days + 'd';
   }
 
+  // Reads like the reference cards: "STATUS / CAPTIONED  ……  POSTS / SEP 27"
   const head = document.createElement('div');
   head.className = 'stack-head';
   head.innerHTML =
-    '<div class="stack-icon">' + (PLATFORM_ICONS[clip.platform] || PLATFORM_ICONS['Both']) + '</div>' +
+    '<div class="stack-icon" title="' + escapeHtml(clip.platform || 'Both') + '">' + (PLATFORM_ICONS[clip.platform] || PLATFORM_ICONS['Both']) + '</div>' +
     '<div class="stack-title-block">' +
-      '<div class="stack-kicker">' + escapeHtml(STATUS_LABELS[clip.status] || clip.status) + ' · ' + escapeHtml(clip.platform || 'Both') + '</div>' +
-      '<div class="stack-title">' + escapeHtml(clip.desc || 'Untitled') + '</div>' +
+      '<div class="stack-kicker">Status</div>' +
+      '<div class="stack-title">' + escapeHtml(STATUS_LABELS[clip.status] || clip.status) + '</div>' +
     '</div>' +
     '<div class="stack-side">' +
       '<div class="stack-side-label">' + sideLabel + '</div>' +
@@ -4478,12 +4510,11 @@ function render() {
   const showList = currentView === 'grid';
   const showClipFilters = showList || currentView === 'calendar';
   document.getElementById('headerFilterIcons').style.display = showClipFilters ? 'flex' : 'none';
-  document.getElementById('headerIconsDivider').style.display = showClipFilters ? 'block' : 'none';
-  // Layout (grid/list) and multi-select only apply to the caption grid itself, not the calendar.
-  document.getElementById('layoutToggleBtn').style.display = showList ? 'flex' : 'none';
-  document.getElementById('selectModeToggleBtn').style.display = showList ? 'flex' : 'none';
+  // Multi-select only applies to the cards themselves, not the calendar.
+  document.getElementById('selectModeToggleBtn').style.display = showList ? '' : 'none';
   const calBtn = document.getElementById('calendarToggleBtn');
-  calBtn.innerHTML = currentView === 'calendar' ? NAV_ICONS.gridView : NAV_ICONS.calendar;
+  const homeIcon = gridLayoutMode === 'stack' ? NAV_ICONS.stack : gridLayoutMode === 'list' ? NAV_ICONS.list : NAV_ICONS.gridView;
+  calBtn.innerHTML = currentView === 'calendar' ? homeIcon : NAV_ICONS.calendar;
   calBtn.title = currentView === 'calendar' ? 'Back to captions' : 'Calendar view';
   if (!showClipFilters) {
     activeQuickFilter = null;
@@ -4583,11 +4614,11 @@ function renderQuickFilterPanel() {
   const panel = document.getElementById('quickFilterPanel');
   const searchBox = document.getElementById('quickFilterSearch');
   const selectsBox = document.getElementById('quickFilterSelects');
+  // One panel for finding cards: search box on top, filters + "Select cards" below
   panel.style.display = activeQuickFilter ? 'block' : 'none';
-  searchBox.style.display = activeQuickFilter === 'search' ? 'block' : 'none';
-  selectsBox.style.display = activeQuickFilter === 'select' ? 'flex' : 'none';
-  document.getElementById('searchToggleBtn').classList.toggle('filter-icon-active', activeQuickFilter === 'search');
-  document.getElementById('filterToggleBtn').classList.toggle('filter-icon-active', activeQuickFilter === 'select');
+  searchBox.style.display = activeQuickFilter ? 'block' : 'none';
+  selectsBox.style.display = activeQuickFilter ? 'flex' : 'none';
+  document.getElementById('searchToggleBtn').classList.toggle('filter-icon-active', !!activeQuickFilter);
 }
 
 function getFilteredClips() {
@@ -4951,31 +4982,34 @@ document.getElementById('calendarToggleBtn').addEventListener('click', () => {
   render();
 });
 document.getElementById('searchToggleBtn').innerHTML = NAV_ICONS.search;
-document.getElementById('filterToggleBtn').innerHTML = NAV_ICONS.filter;
 document.getElementById('searchToggleBtn').addEventListener('click', () => toggleQuickFilter('search'));
-document.getElementById('filterToggleBtn').addEventListener('click', () => toggleQuickFilter('select'));
-renderLayoutToggle();
-document.getElementById('layoutToggleBtn').addEventListener('click', () => {
-  const i = LAYOUT_MODES.indexOf(gridLayoutMode);
-  gridLayoutMode = LAYOUT_MODES[(i + 1) % LAYOUT_MODES.length];
-  try { localStorage.setItem('ttt-layout-mode-v2', gridLayoutMode); } catch (e) {}
-  renderLayoutToggle();
-  renderCardListOnly();
-  playViewAnim(document.getElementById('cardList'));
-});
 
-// The button shows the layout you'll switch *to*: stack → grid → list → stack
+// Home layout lives in Settings: Deck (stacked cards) / Grid / List
 function renderLayoutToggle() {
-  const btn = document.getElementById('layoutToggleBtn');
-  const i = LAYOUT_MODES.indexOf(gridLayoutMode);
-  const next = LAYOUT_MODES[(i + 1) % LAYOUT_MODES.length];
-  const icons = { stack: NAV_ICONS.stack, grid: NAV_ICONS.gridView, list: NAV_ICONS.list };
-  btn.innerHTML = icons[next];
-  btn.title = 'Switch to ' + next + ' view';
+  const row = document.getElementById('settingsLayoutRow');
+  if (!row) return;
+  const labels = { stack: 'Deck', grid: 'Grid', list: 'List' };
+  row.innerHTML = '';
+  LAYOUT_MODES.forEach(mode => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = mode === gridLayoutMode ? '' : 'ghost';
+    btn.textContent = labels[mode];
+    btn.onclick = () => {
+      gridLayoutMode = mode;
+      try { localStorage.setItem('ttt-layout-mode-v2', gridLayoutMode); } catch (e) {}
+      renderLayoutToggle();
+      render();
+    };
+    row.appendChild(btn);
+  });
 }
+renderLayoutToggle();
 
-document.getElementById('selectModeToggleBtn').innerHTML = NAV_ICONS.checkSquare;
-document.getElementById('selectModeToggleBtn').addEventListener('click', toggleSelectMode);
+document.getElementById('selectModeToggleBtn').addEventListener('click', () => {
+  toggleQuickFilter(null); // close the search panel so the selection bar takes its place
+  toggleSelectMode();
+});
 document.getElementById('selectAllBtn').addEventListener('click', selectAllVisible);
 document.getElementById('cancelSelectBtn').addEventListener('click', toggleSelectMode);
 document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedClips);
