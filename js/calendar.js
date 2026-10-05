@@ -78,11 +78,11 @@ function renderCalendar() {
 
   let html = '<div class="cal-header">' +
     '<h2>' + escapeHtml(title) + '</h2>' +
-    '<div class="nav-btns"><button id="calPrev" aria-label="Previous">‹</button><button id="calToday">Today</button><button id="calNext" aria-label="Next">›</button></div>' +
+    '<div class="chip-row cal-view-toggle" role="group" aria-label="Calendar view">' +
+      ['week', 'month'].map(v => '<button type="button" class="chip' + (calView === v ? ' selected' : '') + '" aria-pressed="' + (calView === v) + '" data-cal-view="' + v + '">' + (v === 'week' ? 'Week' : 'Month') + '</button>').join('') +
+    '</div>' +
   '</div>' +
-  '<div class="chip-row cal-view-toggle" role="group" aria-label="Calendar view">' +
-    ['week', 'month'].map(v => '<button type="button" class="chip' + (calView === v ? ' selected' : '') + '" aria-pressed="' + (calView === v) + '" data-cal-view="' + v + '">' + (v === 'week' ? 'Week' : 'Month') + '</button>').join('') +
-  '</div>';
+  '<div class="nav-btns cal-nav"><button id="calPrev" aria-label="Previous">‹</button><button id="calToday">Today</button><button id="calNext" aria-label="Next">›</button></div>';
   if (unscheduled.length) {
     html += '<div class="cal-tray"><div class="cal-tray-label">Unscheduled · drag onto a day</div>' +
       '<div class="cal-tray-items">' + unscheduled.map(c => calItemHtml(c)).join('') + '</div></div>';

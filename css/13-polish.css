@@ -45,7 +45,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline: non
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(96px + env(safe-area-inset-bottom));
+  bottom: calc(96px + var(--safe-bottom));
   transform: translate(-50%, 16px);
   display: flex;
   align-items: center;

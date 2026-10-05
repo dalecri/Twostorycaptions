@@ -1,9 +1,21 @@
 // Settings sheet: theme, goal, hashtags, backups (export / import).
 
+// Android status bar icons: dark on light themes, light on dark ones (Capacitor SystemBars)
+function syncStatusBarStyle(background) {
+  const cap = window.Capacitor;
+  const bars = cap && cap.isNativePlatform && cap.isNativePlatform() && cap.Plugins && cap.Plugins.SystemBars;
+  if (!bars) return;
+  const hex = background.replace('#', '');
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const light = (0.299 * r + 0.587 * g + 0.114 * b) > 140;
+  try { bars.setStyle({ style: light ? 'LIGHT' : 'DARK' }); } catch (e) {}
+}
+
 function applyTheme(name, skipSave) {
   if (!THEMES[name]) name = 'marina';
   currentTheme = name;
   const theme = THEMES[name];
+  syncStatusBarStyle(theme.vars['--paper']);
   const root = document.documentElement.style;
   Object.entries(theme.vars).forEach(([k, v]) => root.setProperty(k, v));
   const metaThemeColor = document.querySelector('meta[name="theme-color"]');

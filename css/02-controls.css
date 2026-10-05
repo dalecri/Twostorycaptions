@@ -4,7 +4,7 @@
 .floating-nav {
   position: fixed;
   left: 50%;
-  bottom: calc(18px + env(safe-area-inset-bottom));
+  bottom: calc(18px + var(--safe-bottom));
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -64,7 +64,7 @@
   border: 1px solid var(--line);
   border-bottom: none;
   border-radius: 20px 20px 0 0;
-  padding: 14px 20px calc(20px + env(safe-area-inset-bottom));
+  padding: 14px 20px calc(20px + var(--safe-bottom));
   background: var(--paper-light);
   box-shadow: 0 -20px 50px -24px rgba(0,0,0,0.6);
   transform: translate(-50%, 110%);

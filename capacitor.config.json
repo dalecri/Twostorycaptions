@@ -9,6 +9,9 @@
     "LocalNotifications": {
       "smallIcon": "ic_stat_notify",
       "iconColor": "#0059FF"
+    },
+    "SystemBars": {
+      "style": "LIGHT"
     }
   }
 }
