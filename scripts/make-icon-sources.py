@@ -3,6 +3,7 @@
 The "t." glyph is redrawn from rectangles measured off the original 1242px artwork, so it stays
 pixel-crisp at any size. Run `npm run icons` afterwards to generate the Android resources.
 """
+import os
 import sys
 from PIL import Image, ImageDraw
 
@@ -40,7 +41,7 @@ def icon(size):
     return img
 
 
-# Legacy launcher icons (Android 7 and older). capacitor-assets pads these on white, so after it
+# Legacy launcher icons (Android 7 and older) and the notification icon. capacitor-assets pads these on white, so after it
 # runs, `--legacy` redraws them full-bleed: square and round versions for every density.
 if '--legacy' in sys.argv:
     RES = 'android/app/src/main/res/'
@@ -52,7 +53,13 @@ if '--legacy' in sys.argv:
         rounded = Image.new('RGBA', (size, size), (0, 0, 0, 0))
         rounded.paste(art, (0, 0), round_mask.resize((size, size), Image.LANCZOS))
         rounded.save(f'{RES}mipmap-{density}/ic_launcher_round.png')
-    print('Wrote legacy launcher icons')
+    # Status-bar notification icon: Android draws it as a white silhouette, so just the glyph
+    for density, size in {'mdpi': 24, 'hdpi': 36, 'xhdpi': 48, 'xxhdpi': 72, 'xxxhdpi': 96}.items():
+        big = Image.new('RGBA', (size * 8, size * 8), (0, 0, 0, 0))
+        draw_glyph(big, WHITE, scale=1.15)
+        os.makedirs(f'{RES}drawable-{density}', exist_ok=True)
+        big.resize((size, size), Image.LANCZOS).save(f'{RES}drawable-{density}/ic_stat_notify.png')
+    print('Wrote legacy launcher icons and notification icon')
     sys.exit()
 
 # Full-bleed icon: legacy launcher icons, web favicon / home-screen icon

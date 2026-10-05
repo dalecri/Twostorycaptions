@@ -1961,6 +1961,101 @@
   .filter-chips::-webkit-scrollbar { display: none; }
   .filter-chips .chip { flex-shrink: 0; }
 
+  /* ----- Calendar: week view, view toggle, tray, dragging ----- */
+  .cal-view-toggle { margin: -4px 0 12px; }
+  .cal-header .nav-btns button { min-width: 40px; min-height: 36px; }
+  .cal-tray { margin-bottom: 12px; }
+  .cal-tray-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
+  .cal-tray-items { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .cal-tray-items::-webkit-scrollbar { display: none; }
+  .cal-tray-items .cal-item { flex: 0 0 auto; max-width: 240px; }
+  .cal-item {
+    display: flex; align-items: center; gap: 8px;
+    min-height: 44px; padding: 6px 12px 6px 4px; border-radius: 12px;
+    background: var(--card-bg); color: var(--card-ink);
+    font-family: 'Space Mono', monospace; font-size: 12.5px; cursor: pointer;
+    box-shadow: 0 4px 10px -8px rgba(0,0,0,0.5);
+  }
+  .cal-item.posted { padding-left: 12px; opacity: 0.65; }
+  .cal-item-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+  .cal-item-status { flex-shrink: 0; font-size: 9.5px; letter-spacing: 0.8px; text-transform: uppercase; opacity: 0.6; }
+  .drag-handle {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 32px; height: 36px; border-radius: 8px; cursor: grab;
+    touch-action: none; opacity: 0.55;
+  }
+  .drag-handle:hover { opacity: 1; background: color-mix(in srgb, var(--card-ink) 10%, transparent); }
+  .drag-handle svg { width: 16px; height: 16px; }
+  .cal-item.dragging { opacity: 0.3; }
+  body.cal-dragging .floating-nav { opacity: 0; visibility: hidden; transition: opacity 0.15s ease; }
+  .drag-ghost { position: fixed; z-index: 150; pointer-events: none; transform: rotate(-2deg) scale(1.03); box-shadow: 0 18px 40px -12px rgba(0,0,0,0.6); }
+  .drop-target { box-shadow: inset 0 0 0 3px #2F6BFF !important; background: color-mix(in srgb, #2F6BFF 10%, var(--paper-light)) !important; }
+
+  .cal-week { display: flex; flex-direction: column; gap: 8px; }
+  .cal-day {
+    display: flex; gap: 12px; align-items: flex-start;
+    min-height: 64px; padding: 10px 12px; border-radius: 16px;
+    background: var(--paper-light); border: 1px solid var(--line); cursor: pointer;
+  }
+  .cal-day.past { opacity: 0.6; }
+  .cal-day.today { box-shadow: inset 0 0 0 2px var(--ink); }
+  .cal-day-head { display: flex; flex-direction: column; align-items: center; width: 40px; flex-shrink: 0; position: relative; }
+  .cal-day-name { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 3px; }
+  .cal-posting-day { width: 5px; height: 5px; border-radius: 50%; background: #FF651E; }
+  .cal-day-num { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; line-height: 1.2; }
+  .cal-day-add { font-size: 16px; color: var(--ink-soft); opacity: 0; }
+  .cal-day:hover .cal-day-add { opacity: 1; }
+  .cal-day-posts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .cal-day-posts:empty::before { content: 'Nothing planned'; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink-soft); opacity: 0.6; padding-top: 10px; }
+  @media (max-width: 600px) {
+    #calendarView.cal-mode-week { padding: 0 12px calc(90px + env(safe-area-inset-bottom)); }
+    .cal-view-toggle { padding: 0 14px; }
+    .cal-tray { padding: 0 14px; }
+    #calendarView.cal-mode-week .cal-view-toggle, #calendarView.cal-mode-week .cal-tray { padding: 0; }
+    #calendarView.cal-mode-week .cal-header { padding: 10px 0 0; }
+  }
+
+  /* ----- Home stats ----- */
+  .home-stats { padding: 18px 20px 16px; margin-bottom: 18px; }
+  .home-stats[hidden] { display: none; }
+  .hs-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .hs-count { font-family: 'Space Mono', monospace; font-size: 15px; margin-top: 4px; }
+  .hs-count strong { font-size: 30px; letter-spacing: 1px; }
+  .hs-sub { font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 0.6px; text-transform: uppercase; opacity: 0.65; margin-top: 2px; }
+  .hs-streak { text-align: right; }
+  .hs-streak-num { font-family: 'Space Mono', monospace; font-size: 30px; font-weight: 700; line-height: 1.1; opacity: 0.4; }
+  .hs-streak.on .hs-streak-num { opacity: 1; color: #F7EB8A; }
+  .hs-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 14px; }
+  .hs-day { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .hs-dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--card-ink) 35%, transparent); }
+  .hs-dot.planned { border-color: #F7EB8A; }
+  .hs-dot.posted { background: #A8D8BE; border-color: #A8D8BE; }
+  .hs-letter { font-family: 'Space Mono', monospace; font-size: 10px; opacity: 0.6; }
+  .hs-day.today .hs-letter { opacity: 1; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+  .hs-cats { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .hs-cat { display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase; }
+  .hs-cat strong { font-size: 12px; }
+  .hs-nudge, .hs-nudge:hover {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%;
+    margin-top: 12px; min-height: 44px; padding: 10px 14px; border-radius: 12px;
+    background: rgba(255,255,255,0.08); color: var(--card-ink); text-align: left;
+    font-size: 12px; font-weight: 400; letter-spacing: 0.2px; filter: none;
+  }
+  .hs-nudge-cta { flex-shrink: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 10.5px; color: #F7EB8A; }
+
+  /* ----- Settings extras ----- */
+  .reminder-time {
+    min-height: 36px; padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--paper-light); color: var(--ink);
+    font-family: 'Space Mono', monospace; font-size: 13px;
+  }
+  .settings-sub { display: block; font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 0.6px; margin: 8px 0 4px; opacity: 0.75; }
+  .settings-textarea {
+    width: 100%; resize: vertical; min-height: 54px; padding: 10px 12px;
+    border-radius: 12px; border: 1px solid var(--line); background: var(--paper-light); color: var(--ink);
+    font-family: 'Space Mono', monospace; font-size: 13px; line-height: 1.5;
+  }
+
   /* ----- Onboarding ----- */
   .onboarding {
     position: fixed;
@@ -2157,6 +2252,22 @@
       <div class="field-label" style="margin-top:18px;">Home layout</div>
       <div class="settings-data-row" id="settingsLayoutRow"></div>
 
+      <div class="field-label" style="margin-top:18px;">Weekly posting goal</div>
+      <div class="chip-row" id="settingsGoalRow" role="group" aria-label="Posts per week"></div>
+
+      <div class="field-label" style="margin-top:18px;">Hashtags</div>
+      <label class="settings-sub" for="settingsTagsIg">Instagram</label>
+      <textarea class="settings-textarea" id="settingsTagsIg" rows="2" spellcheck="false"></textarea>
+      <label class="settings-sub" for="settingsTagsTt">TikTok</label>
+      <textarea class="settings-textarea" id="settingsTagsTt" rows="2" spellcheck="false"></textarea>
+      <p class="settings-hint" style="margin-top:6px;">Added after the caption when you copy it. Changes apply to every card.</p>
+
+      <div id="settingsRemindersBlock">
+        <div class="field-label" style="margin-top:18px;">Reminders</div>
+        <div class="settings-data-row" id="settingsReminderRow"></div>
+        <p class="settings-hint" id="settingsReminderHint" style="margin-top:6px;"></p>
+      </div>
+
       <div class="field-label" style="margin-top:18px;">Help</div>
       <div class="settings-data-row">
         <button class="ghost" id="replayIntroBtn">Show intro again</button>
@@ -2227,6 +2338,7 @@
     <div class="chip-row filter-chips" id="filterRow" role="group" aria-label="Filter by status"></div>
   </div>
 
+  <section class="home-stats surface c4" id="homeStats" aria-label="This week" hidden></section>
   <div id="cardList"></div>
   <div id="calendarView" style="display:none;"></div>
 
@@ -2829,7 +2941,30 @@ function renderThemePicker() {
 function openSettingsModal() {
   document.getElementById('settingsModalOverlay').classList.add('open');
   renderThemePicker();
+  renderSettingsPrefs();
 }
+
+function renderSettingsPrefs() {
+  const goalRow = document.getElementById('settingsGoalRow');
+  goalRow.innerHTML = '';
+  for (let n = 1; n <= 7; n++) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip' + (settings.weeklyGoal === n ? ' selected' : '');
+    chip.setAttribute('aria-pressed', settings.weeklyGoal === n ? 'true' : 'false');
+    chip.textContent = n;
+    chip.onclick = () => { settings.weeklyGoal = n; persist(); renderSettingsPrefs(); render(); };
+    goalRow.appendChild(chip);
+  }
+  const ig = document.getElementById('settingsTagsIg');
+  const tt = document.getElementById('settingsTagsTt');
+  if (document.activeElement !== ig) ig.value = settings.hashtagsInstagram;
+  if (document.activeElement !== tt) tt.value = settings.hashtagsTiktok;
+  if (typeof renderReminderSettings === 'function') renderReminderSettings();
+}
+
+document.getElementById('settingsTagsIg').addEventListener('input', (e) => { settings.hashtagsInstagram = e.target.value; persist(); });
+document.getElementById('settingsTagsTt').addEventListener('input', (e) => { settings.hashtagsTiktok = e.target.value; persist(); });
 function closeSettingsModal() {
   document.getElementById('settingsModalOverlay').classList.remove('open');
 }
@@ -2872,15 +3007,15 @@ function openDatePicker(anchor, value, onPick) {
   }
 }
 
-// Post date: one-tap Tomorrow and the day after (short weekday name), plus a chip for any other date.
+// Post date: one-tap Today, Tomorrow and the day after (short weekday name), plus a chip for any other date.
 // Tapping a selected quick pick clears it again.
 function buildDateChip(value, onChange) {
   const wrap = document.createElement('div');
   wrap.className = 'chip-row';
-  const quick = [localDay(1), localDay(2)];
+  const quick = [localDay(0), localDay(1), localDay(2)];
   quick.forEach((day, i) => {
     const [y, m, d] = day.split('-').map(Number);
-    const label = i === 0 ? 'Tomorrow' : new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short' });
+    const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short' });
     const chip = document.createElement('button');
     chip.type = 'button';
     chip.className = 'chip date-quick' + (value === day ? ' selected' : '');
@@ -3137,7 +3272,7 @@ let persistTimer = null;
 async function writeStore() {
   clearTimeout(persistTimer);
   persistTimer = null;
-  const json = JSON.stringify({ version: 1, savedAt: new Date().toISOString(), clips, brands, tasks });
+  const json = JSON.stringify({ version: 1, savedAt: new Date().toISOString(), clips, brands, tasks, settings });
   let ok = false;
   try { localStorage.setItem(STORE_KEY, json); ok = true; } catch (e) { console.error('localStorage save failed', e); }
   const fs = nativeFs();
@@ -3151,6 +3286,7 @@ async function writeStore() {
   }
   setSyncStatus(ok ? 'Saved on this device' : 'Save failed, export a backup', !ok);
   if (!ok) showToast("Couldn't save. Export a backup from Settings.", { error: true, duration: 6000 });
+  if (typeof scheduleReminderSync === 'function') scheduleReminderSync();
   return ok;
 }
 
@@ -3164,6 +3300,40 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden' && persistTimer) writeStore();
 });
 window.addEventListener('pagehide', () => { if (persistTimer) writeStore(); });
+
+// ===== Preferences saved with the data (so they're in backups too) =====
+const DEFAULT_SETTINGS = {
+  weeklyGoal: 3,
+  hashtagsInstagram: '#catsofig #catsofinstagram #catlife',
+  hashtagsTiktok: '#catsoftiktok #bengalsoftiktok #savannahcat #catlife',
+  remindersOn: false,
+  reminderTime: '09:00',
+  remindedFollowUps: {}   // brandId -> { due, at }: overdue follow-ups already reminded once
+};
+let settings = { ...DEFAULT_SETTINGS };
+
+function normalizeSettings(x) {
+  const o = x && typeof x === 'object' ? x : {};
+  const goal = Number(o.weeklyGoal);
+  const reminded = {};
+  if (o.remindedFollowUps && typeof o.remindedFollowUps === 'object') {
+    Object.entries(o.remindedFollowUps).forEach(([id, v]) => {
+      if (SAFE_ID.test(id) && v && ISO_DAY.test(v.due) && !isNaN(Date.parse(v.at))) reminded[id] = { due: v.due, at: v.at };
+    });
+  }
+  return {
+    weeklyGoal: Number.isInteger(goal) && goal >= 1 && goal <= 7 ? goal : DEFAULT_SETTINGS.weeklyGoal,
+    hashtagsInstagram: typeof o.hashtagsInstagram === 'string' ? o.hashtagsInstagram.slice(0, 500) : DEFAULT_SETTINGS.hashtagsInstagram,
+    hashtagsTiktok: typeof o.hashtagsTiktok === 'string' ? o.hashtagsTiktok.slice(0, 500) : DEFAULT_SETTINGS.hashtagsTiktok,
+    remindersOn: o.remindersOn === true,
+    reminderTime: typeof o.reminderTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(o.reminderTime) ? o.reminderTime : DEFAULT_SETTINGS.reminderTime,
+    remindedFollowUps: reminded
+  };
+}
+
+function hashtagsFor(platform) {
+  return (platform === 'TikTok' ? settings.hashtagsTiktok : settings.hashtagsInstagram).trim();
+}
 
 // Kept as separate names so call sites read naturally; all three land in the same store.
 function saveClips() { persist(); }
@@ -3262,6 +3432,7 @@ async function loadAll() {
     clips = normalizeList(stored.clips, normalizeClip);
     brands = normalizeList(stored.brands, normalizeBrand);
     tasks = normalizeList(stored.tasks, normalizeTask);
+    settings = normalizeSettings(stored.settings);
     setSyncStatus('Saved on this device');
   } else {
     seedData();
@@ -3272,6 +3443,7 @@ async function loadAll() {
   refreshAllBrandDropdowns();
   render();
   maybeShowOnboarding();
+  scheduleReminderSync();
 }
 
 // ===== Outreach checklist (Google-Tasks-style todo, stored in our own table) =====
@@ -3487,9 +3659,6 @@ function removeClip(id) {
   removeWithUndo(clips, [id], 'Card deleted', saveClips, render);
 }
 
-// Fixed hashtag sets — always used as-is, never generated, so they stay exactly on-brand.
-const FIXED_HASHTAGS_IG = '#catsofig #catsofinstagram #catlife';
-const FIXED_HASHTAGS_TT = '#catsoftiktok #bengalsoftiktok #catlife';
 
 // Offline caption drafts: a few lines per tone, with the tagged cat dropped in.
 // Shuffling picks different lines each time so "Shuffle" actually gives you something new.
@@ -3554,8 +3723,8 @@ function generateCaptions(id) {
 
   clip.captions = {
     captions: picked.map(line => line.replace(/\[CAT\]/g, cat)),
-    hashtagsInstagram: FIXED_HASHTAGS_IG,
-    hashtagsTiktok: FIXED_HASHTAGS_TT
+    hashtagsInstagram: hashtagsFor('Instagram'),
+    hashtagsTiktok: hashtagsFor('TikTok')
   };
   clip.captionTones = tones.length > 1 ? toneSlots : [];
   if (clip.status === 'filmed' || clip.status === 'idea') clip.status = 'captioned';
@@ -4238,8 +4407,9 @@ function buildFullCard(clip) {
     const box = document.createElement('div');
     box.className = 'captions-box';
     const usedTones = clip.captionTones || [];
-    const igHashtags = clip.captions.hashtagsInstagram || clip.captions.hashtags || '';
-    const ttHashtags = clip.captions.hashtagsTiktok || clip.captions.hashtags || '';
+    // Always the current sets from Settings, so editing them applies to every card
+    const igHashtags = hashtagsFor('Instagram');
+    const ttHashtags = hashtagsFor('TikTok');
     (clip.captions.captions || []).forEach((cap, i) => {
       const optDiv = document.createElement('div');
       optDiv.className = 'caption-opt';
@@ -4322,8 +4492,8 @@ function buildListTile(clip) {
     let textToCopy = clip.desc;
     if (clip.captions && clip.captions.captions && clip.captions.captions[0]) {
       const tags = clip.platform === 'TikTok'
-        ? (clip.captions.hashtagsTiktok || clip.captions.hashtags || '')
-        : (clip.captions.hashtagsInstagram || clip.captions.hashtags || '');
+        ? hashtagsFor('TikTok')
+        : hashtagsFor('Instagram');
       textToCopy = clip.captions.captions[0] + (tags ? '\n\n' + tags : '');
     }
     copyWithIconFeedback(textToCopy, copyBtn);
@@ -4449,7 +4619,7 @@ function buildStackCard(clip, index, colorIdx) {
     let text = clip.desc;
     if (caps.length) {
       // Same post everywhere now, so quick copy uses the Instagram hashtag set
-      const tagsText = clip.captions.hashtagsInstagram || clip.captions.hashtags || '';
+      const tagsText = hashtagsFor('Instagram');
       text = caps[0] + (tagsText ? '\n\n' + tagsText : '');
     }
     copyWithIconFeedback(text, copyBtn);
@@ -4715,6 +4885,7 @@ function render() {
   const viewChanged = currentView !== lastAnimatedView;
   lastAnimatedView = currentView;
 
+  if (currentView !== 'grid') document.getElementById('homeStats').hidden = true;
   if (isOutreachFamily) {
     document.getElementById('cardList').style.display = 'none';
     document.getElementById('calendarView').style.display = 'none';
@@ -4735,6 +4906,7 @@ function render() {
     return;
   }
 
+  renderHomeStats();
   renderCardListOnly();
   renderTally();
   refreshOpenModal();
@@ -4845,6 +5017,269 @@ function sortUpNext(list) {
     .map(x => x.clip);
 }
 
+// ===== Phone reminders (Android app only) =====
+// "Post due today" on each planned post's date, and "Follow up with <brand>" two weeks after
+// contacting a brand that's still waiting. Everything is rescheduled from the data after saves,
+// so editing, deleting or posting a card updates its reminder.
+const FOLLOW_UP_AFTER_DAYS = 14;
+const MAX_REMINDERS = 50;
+
+function notifPlugin() {
+  const cap = window.Capacitor;
+  if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return null;
+  return (cap.Plugins && cap.Plugins.LocalNotifications) || null;
+}
+
+// Stable positive 31-bit id per reminder, so rescheduling replaces instead of duplicating
+function notifId(key) {
+  let h = 7;
+  for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) | 0;
+  return (Math.abs(h) % 2147483646) + 1;
+}
+
+function reminderAt(day, time) {
+  const [hh, mm] = time.split(':').map(Number);
+  const d = parseDay(day);
+  d.setHours(hh, mm, 0, 0);
+  return d;
+}
+
+// Next reminder-time slot from now: later today if it hasn't passed, else tomorrow
+function nextReminderSlot(now) {
+  const today = reminderAt(localToday(), settings.reminderTime);
+  return today > now ? today : reminderAt(localDay(1), settings.reminderTime);
+}
+
+function plannedReminders(now) {
+  const out = [];
+  clips.forEach(c => {
+    if (c.archived || c.status === 'posted' || !c.scheduledDate) return;
+    const at = reminderAt(c.scheduledDate, settings.reminderTime);
+    if (at <= now) return;
+    out.push({
+      id: notifId('post:' + c.id), title: 'Post due today',
+      body: c.desc ? c.desc.slice(0, 140) : 'A planned post is due today.',
+      at, extra: { clipId: c.id }
+    });
+  });
+  brands.forEach(b => {
+    if (isPinnedBrand(b) || b.status !== 'waiting') return;
+    const contacted = b.date || (b.updatedAt ? dayKey(new Date(b.updatedAt)) : '');
+    if (!contacted) return;
+    const due = addDays(contacted, FOLLOW_UP_AFTER_DAYS);
+    let at = reminderAt(due, settings.reminderTime);
+    if (at <= now) {
+      // Already overdue: remind once at the next slot, and keep that slot on later reschedules
+      const prev = settings.remindedFollowUps[b.id];
+      if (prev && prev.due === due) {
+        at = new Date(prev.at);
+        if (at <= now) return;
+      } else {
+        at = nextReminderSlot(now);
+        settings.remindedFollowUps[b.id] = { due, at: at.toISOString() };
+      }
+    }
+    out.push({
+      id: notifId('brand:' + b.id), title: 'Follow up with ' + b.name,
+      body: "It's been two weeks since you reached out. The follow-up template is ready in Templates.",
+      at, extra: { brandId: b.id }
+    });
+  });
+  return out.sort((a, b) => a.at - b.at).slice(0, MAX_REMINDERS);
+}
+
+let reminderSyncTimer = null;
+function scheduleReminderSync() {
+  clearTimeout(reminderSyncTimer);
+  reminderSyncTimer = setTimeout(syncReminders, 600);
+}
+
+async function syncReminders() {
+  const plugin = notifPlugin();
+  if (!plugin) return;
+  try {
+    const before = JSON.stringify(settings.remindedFollowUps);
+    const wanted = settings.remindersOn ? plannedReminders(new Date()) : [];
+    const pending = ((await plugin.getPending()) || {}).notifications || [];
+    const keep = new Set(wanted.map(n => n.id));
+    const stale = pending.filter(n => !keep.has(n.id)).map(n => ({ id: n.id }));
+    if (stale.length) await plugin.cancel({ notifications: stale });
+    if (wanted.length) {
+      await plugin.schedule({
+        notifications: wanted.map(n => ({
+          id: n.id, title: n.title, body: n.body, extra: n.extra,
+          schedule: { at: n.at, allowWhileIdle: true },
+          smallIcon: 'ic_stat_notify', iconColor: '#0059FF'
+        }))
+      });
+    }
+    if (JSON.stringify(settings.remindedFollowUps) !== before) persist();
+  } catch (e) {
+    console.error('Reminder sync failed', e);
+  }
+}
+
+async function setRemindersOn(on) {
+  const plugin = notifPlugin();
+  if (on && plugin) {
+    let perm = await plugin.checkPermissions();
+    if (perm.display !== 'granted') perm = await plugin.requestPermissions();
+    if (perm.display !== 'granted') {
+      showToast('Notifications are off for this app. Turn them on in Android settings.', { error: true, duration: 6000 });
+      on = false;
+    }
+  }
+  settings.remindersOn = on;
+  persist();
+  renderReminderSettings();
+  scheduleReminderSync();
+  if (on) showToast('Reminders on at ' + formatReminderTime(settings.reminderTime));
+}
+
+function formatReminderTime(t) {
+  const [h, m] = t.split(':').map(Number);
+  return new Date(2000, 0, 1, h, m).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+function renderReminderSettings() {
+  const row = document.getElementById('settingsReminderRow');
+  const hint = document.getElementById('settingsReminderHint');
+  if (!row) return;
+  row.innerHTML = '';
+  if (!notifPlugin()) {
+    hint.textContent = 'Reminders for posts due today and brand follow-ups work in the Android app.';
+    return;
+  }
+  [['On', true], ['Off', false]].forEach(([label, val]) => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip' + (settings.remindersOn === val ? ' selected' : '');
+    chip.setAttribute('aria-pressed', settings.remindersOn === val ? 'true' : 'false');
+    chip.textContent = label;
+    chip.onclick = () => setRemindersOn(val);
+    row.appendChild(chip);
+  });
+  if (settings.remindersOn) {
+    const time = document.createElement('input');
+    time.type = 'time';
+    time.className = 'reminder-time';
+    time.value = settings.reminderTime;
+    time.setAttribute('aria-label', 'Reminder time');
+    time.onchange = () => {
+      if (!/^\d{2}:\d{2}$/.test(time.value)) return;
+      settings.reminderTime = time.value;
+      settings.remindedFollowUps = {};
+      persist();
+      scheduleReminderSync();
+    };
+    row.appendChild(time);
+  }
+  hint.textContent = settings.remindersOn
+    ? 'A nudge on the morning a post is due, and when a brand has waited two weeks for a follow-up.'
+    : 'Get a nudge when a post is due and when a brand needs a follow-up.';
+}
+
+// Tapping a reminder opens the card, or the follow-up pitch for that brand
+(function listenForReminderTaps() {
+  const plugin = notifPlugin();
+  if (!plugin) return;
+  plugin.addListener('localNotificationActionPerformed', (ev) => {
+    const extra = (ev && ev.notification && ev.notification.extra) || {};
+    if (extra.clipId && clips.some(c => c.id === extra.clipId)) {
+      currentView = 'grid';
+      render();
+      openCardModal(extra.clipId);
+    } else if (extra.brandId && brands.some(b => b.id === extra.brandId)) {
+      goToFollowUpPitch(extra.brandId);
+    }
+  });
+})();
+
+// ===== Home stats: weekly goal, streak, and which cat is overdue for a starring role =====
+function parseDay(str) { const [y, m, d] = str.split('-').map(Number); return new Date(y, m - 1, d); }
+function dayKey(date) { return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-'); }
+function addDays(str, n) { const d = parseDay(str); d.setDate(d.getDate() + n); return dayKey(d); }
+function mondayOf(str) { const d = parseDay(str); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return dayKey(d); }
+function daysBetween(a, b) { return Math.round((parseDay(b) - parseDay(a)) / 86400000); }
+
+function computeStats() {
+  const today = localToday();
+  const goal = settings.weeklyGoal;
+  const posted = clips.filter(c => c.status === 'posted' && c.scheduledDate && c.scheduledDate <= today);
+  const perWeek = {};
+  posted.forEach(c => { const w = mondayOf(c.scheduledDate); perWeek[w] = (perWeek[w] || 0) + 1; });
+
+  const monday = mondayOf(today);
+  const week = [];
+  for (let i = 0; i < 7; i++) {
+    const day = addDays(monday, i);
+    week.push({
+      day,
+      letter: 'MTWTFSS'[i],
+      posted: posted.some(c => c.scheduledDate === day),
+      planned: clips.some(c => !c.archived && c.status !== 'posted' && c.scheduledDate === day),
+      today: day === today
+    });
+  }
+  const thisWeek = perWeek[monday] || 0;
+
+  // Weeks in a row that hit the goal. This week only counts once it's hit, so the streak
+  // isn't "broken" on a Monday morning.
+  let streak = thisWeek >= goal ? 1 : 0;
+  for (let w = addDays(monday, -7); (perWeek[w] || 0) >= goal; w = addDays(w, -7)) streak++;
+
+  const cats = CATS.map(cat => {
+    const theirs = posted.filter(c => (c.catTags || []).includes(cat));
+    const last = theirs.reduce((max, c) => (c.scheduledDate > max ? c.scheduledDate : max), '');
+    return { cat, count: theirs.length, since: last ? daysBetween(last, today) : Infinity };
+  });
+  const neglected = cats.reduce((a, b) => (b.since > a.since ? b : a));
+  return { goal, thisWeek, week, streak, cats, neglected };
+}
+
+function renderHomeStats() {
+  const el = document.getElementById('homeStats');
+  const show = currentView === 'grid' && !searchQuery && activeFilter === 'all' && !selectMode && clips.length > 0;
+  el.hidden = !show;
+  if (!show) return;
+  const st = computeStats();
+  const left = Math.max(0, st.goal - st.thisWeek);
+  const goalLine = left === 0 ? 'Goal hit. Nice work!' : left + ' more to hit your goal';
+  const streakLine = st.streak > 0 ? st.streak + '-week streak' : 'No streak yet';
+  const n = st.neglected;
+  let nudge = '';
+  if (n.since === Infinity) nudge = n.cat + " hasn't starred in a post yet";
+  else if (n.since >= 7) nudge = n.cat + ' has been neglected for ' + n.since + ' days';
+
+  el.innerHTML = `
+    <div class="hs-top">
+      <div>
+        <div class="card-kicker">This week</div>
+        <div class="hs-count"><strong>${st.thisWeek}</strong> / ${st.goal} posts</div>
+        <div class="hs-sub">${escapeHtml(goalLine)}</div>
+      </div>
+      <div class="hs-streak${st.streak ? ' on' : ''}">
+        <div class="hs-streak-num">${st.streak}</div>
+        <div class="hs-sub">${escapeHtml(streakLine)}</div>
+      </div>
+    </div>
+    <div class="hs-week" aria-label="Posts by day">
+      ${st.week.map(d => `<div class="hs-day${d.today ? ' today' : ''}" title="${escapeHtml(formatDateLong(d.day))}${d.posted ? ': posted' : d.planned ? ': planned' : ''}">
+        <span class="hs-dot${d.posted ? ' posted' : d.planned ? ' planned' : ''}"></span><span class="hs-letter">${d.letter}</span></div>`).join('')}
+    </div>
+    <div class="hs-cats">
+      ${st.cats.map(c => `<span class="hs-cat" title="${escapeHtml(c.cat)} starred in ${c.count} post${c.count === 1 ? '' : 's'}"><span class="cat-dot" style="--cat-color:${CAT_PROFILES[c.cat].bg}"></span>${escapeHtml(c.cat)} <strong>${c.count}</strong></span>`).join('')}
+    </div>
+    ${nudge ? `<button type="button" class="hs-nudge" data-cat="${escapeHtml(n.cat)}"><span>${escapeHtml(nudge)}</span><span class="hs-nudge-cta">Plan one ›</span></button>` : ''}
+  `;
+  const btn = el.querySelector('.hs-nudge');
+  if (btn) btn.onclick = () => {
+    newClipCats = [btn.dataset.cat];
+    renderNewClipCats();
+    openEntrySheet();
+  };
+}
+
 function renderCardListOnly() {
   const list = document.getElementById('cardList');
   if (!list) return;
@@ -4880,6 +5315,7 @@ function toggleSelectMode() {
   if (!selectMode) selectedClipIds.clear();
   document.getElementById('selectionBar').style.display = selectMode ? 'flex' : 'none';
   renderSelectionBar();
+  renderHomeStats();
   renderCardListOnly();
 }
 
@@ -4978,69 +5414,199 @@ function renderTally() {
     '<span>' + pending + ' pending in the field</span><span>' + posted + ' catalogued (posted)</span>';
 }
 
+// ===== Calendar: week view (default on phones) or month grid, both Monday-first like the
+// weekly goal. Unscheduled cards sit in a tray and can be dragged onto a day; in week view,
+// planned cards can be dragged to another day.
+let calView = 'month';
+try { calView = localStorage.getItem('tsc-cal-view') || (window.matchMedia('(max-width: 600px)').matches ? 'week' : 'month'); } catch (e) {}
+let calWeekOffset = 0;
+const POSTING_DAYS = [0, 2, 4]; // Mon, Wed, Fri: marked in week view
+
+function calItemHtml(c, showDate) {
+  return '<div class="cal-item c' + clipColorIndex(c) + (c.status === 'posted' ? ' posted' : '') + '" data-clip-id="' + escapeHtml(c.id) + '">' +
+    (c.status === 'posted' ? '' : '<span class="drag-handle" title="Drag onto a day" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>') +
+    '<span class="cal-item-text">' + escapeHtml(c.desc || 'Untitled') + '</span>' +
+    '<span class="cal-item-status">' + escapeHtml(STATUS_LABELS[c.status] || c.status) + '</span>' +
+    '</div>';
+}
+
 function renderCalendar() {
   const container = document.getElementById('calendarView');
-  const now = new Date();
-  const viewDate = new Date(now.getFullYear(), now.getMonth() + calMonthOffset, 1);
-  const year = viewDate.getFullYear();
-  const month = viewDate.getMonth();
-  const monthLabel = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const today = localToday();
+  const visible = getFilteredClips();
+  const byDate = {};
+  visible.forEach(c => { if (c.scheduledDate) (byDate[c.scheduledDate] = byDate[c.scheduledDate] || []).push(c); });
+  const unscheduled = visible.filter(c => !c.scheduledDate && c.status !== 'posted');
 
-  const firstDow = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const todayStr = [now.getFullYear(), String(now.getMonth()+1).padStart(2,'0'), String(now.getDate()).padStart(2,'0')].join('-');
-
-  const clipsByDate = {};
-  getFilteredClips().forEach(c => {
-    if (c.scheduledDate) {
-      if (!clipsByDate[c.scheduledDate]) clipsByDate[c.scheduledDate] = [];
-      clipsByDate[c.scheduledDate].push(c);
+  let title, body;
+  if (calView === 'week') {
+    const monday = addDays(mondayOf(today), calWeekOffset * 7);
+    const sunday = addDays(monday, 6);
+    const fmt = (d, opts) => parseDay(d).toLocaleDateString('en-US', opts);
+    title = fmt(monday, { month: 'short', day: 'numeric' }) + ' – ' +
+      (monday.slice(5, 7) === sunday.slice(5, 7) ? fmt(sunday, { day: 'numeric' }) : fmt(sunday, { month: 'short', day: 'numeric' }));
+    body = '<div class="cal-week">';
+    for (let i = 0; i < 7; i++) {
+      const day = addDays(monday, i);
+      const posts = byDate[day] || [];
+      body += '<div class="cal-day' + (day === today ? ' today' : '') + (day < today ? ' past' : '') + '" data-date="' + day + '">' +
+        '<div class="cal-day-head">' +
+          '<span class="cal-day-name">' + fmt(day, { weekday: 'short' }) + (POSTING_DAYS.includes(i) ? '<span class="cal-posting-day" title="Posting day"></span>' : '') + '</span>' +
+          '<span class="cal-day-num">' + parseDay(day).getDate() + '</span>' +
+          '<span class="cal-day-add" aria-hidden="true">+</span>' +
+        '</div>' +
+        '<div class="cal-day-posts">' + (posts.length ? posts.map(c => calItemHtml(c)).join('') : '') + '</div>' +
+      '</div>';
     }
-  });
-
-  let html = '<div class="cal-header">';
-  html += '<h2>' + monthLabel + '</h2>';
-  html += '<div class="nav-btns"><button id="calPrev">‹ Prev</button><button id="calToday">Today</button><button id="calNext">Next ›</button></div>';
-  html += '</div>';
-  html += '<div class="cal-grid">';
-  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => { html += '<div class="cal-dow">' + d + '</div>'; });
-
-  for (let i = 0; i < firstDow; i++) html += '<div class="cal-cell empty"></div>';
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dateStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
-    const isToday = dateStr === todayStr;
-    html += '<div class="cal-cell' + (isToday ? ' today' : '') + '" data-date="' + dateStr + '">';
-    html += '<div class="cal-daynum">' + day + '</div>';
-    (clipsByDate[dateStr] || []).forEach(c => {
-      html += '<div class="cal-post ' + c.status + ' c' + clipColorIndex(c) + '" data-clip-id="' + escapeHtml(c.id) + '" title="' + escapeHtml(c.desc) + '">' + escapeHtml(c.desc) + '</div>';
-    });
-    html += '</div>';
+    body += '</div>';
+  } else {
+    const now = new Date();
+    const viewDate = new Date(now.getFullYear(), now.getMonth() + calMonthOffset, 1);
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    title = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const firstDow = (new Date(year, month, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    body = '<div class="cal-grid">';
+    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(d => { body += '<div class="cal-dow">' + d + '</div>'; });
+    for (let i = 0; i < firstDow; i++) body += '<div class="cal-cell empty"></div>';
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      body += '<div class="cal-cell' + (dateStr === today ? ' today' : '') + '" data-date="' + dateStr + '">';
+      body += '<div class="cal-daynum">' + day + '</div>';
+      (byDate[dateStr] || []).forEach(c => {
+        body += '<div class="cal-post ' + c.status + ' c' + clipColorIndex(c) + '" data-clip-id="' + escapeHtml(c.id) + '" title="' + escapeHtml(c.desc) + '">' + escapeHtml(c.desc) + '</div>';
+      });
+      body += '</div>';
+    }
+    const trailing = (7 - ((firstDow + daysInMonth) % 7)) % 7;
+    for (let i = 0; i < trailing; i++) body += '<div class="cal-cell empty"></div>';
+    body += '</div>';
+    container.style.setProperty('--cal-weeks', Math.ceil((firstDow + daysInMonth) / 7));
   }
 
-  const totalCells = firstDow + daysInMonth;
-  const trailing = (7 - (totalCells % 7)) % 7;
-  for (let i = 0; i < trailing; i++) html += '<div class="cal-cell empty"></div>';
-  html += '</div>';
+  let html = '<div class="cal-header">' +
+    '<h2>' + escapeHtml(title) + '</h2>' +
+    '<div class="nav-btns"><button id="calPrev" aria-label="Previous">‹</button><button id="calToday">Today</button><button id="calNext" aria-label="Next">›</button></div>' +
+  '</div>' +
+  '<div class="chip-row cal-view-toggle" role="group" aria-label="Calendar view">' +
+    ['week', 'month'].map(v => '<button type="button" class="chip' + (calView === v ? ' selected' : '') + '" aria-pressed="' + (calView === v) + '" data-cal-view="' + v + '">' + (v === 'week' ? 'Week' : 'Month') + '</button>').join('') +
+  '</div>';
+  if (unscheduled.length) {
+    html += '<div class="cal-tray"><div class="cal-tray-label">Unscheduled · drag onto a day</div>' +
+      '<div class="cal-tray-items">' + unscheduled.map(c => calItemHtml(c)).join('') + '</div></div>';
+  }
+  container.innerHTML = html + body;
+  container.classList.toggle('cal-mode-week', calView === 'week');
 
-  const numWeeks = Math.ceil((firstDow + daysInMonth) / 7);
-  container.innerHTML = html;
-  container.style.setProperty('--cal-weeks', numWeeks);
-
-  document.getElementById('calPrev').onclick = () => { calMonthOffset--; renderCalendar(); };
-  document.getElementById('calNext').onclick = () => { calMonthOffset++; renderCalendar(); };
-  document.getElementById('calToday').onclick = () => { calMonthOffset = 0; renderCalendar(); };
-
-  container.querySelectorAll('.cal-post').forEach(el => {
-    makePressable(el, el.textContent);
-    el.onclick = (e) => { e.stopPropagation(); openCardModal(el.dataset.clipId); };
+  const step = (dir) => { if (calView === 'week') calWeekOffset += dir; else calMonthOffset += dir; renderCalendar(); };
+  document.getElementById('calPrev').onclick = () => step(-1);
+  document.getElementById('calNext').onclick = () => step(1);
+  document.getElementById('calToday').onclick = () => { calWeekOffset = 0; calMonthOffset = 0; renderCalendar(); };
+  container.querySelectorAll('[data-cal-view]').forEach(b => b.onclick = () => {
+    calView = b.dataset.calView;
+    try { localStorage.setItem('tsc-cal-view', calView); } catch (e) {}
+    renderCalendar();
   });
-  container.querySelectorAll('.cal-cell[data-date]').forEach(cell => {
+
+  container.querySelectorAll('.cal-post, .cal-item').forEach(el => {
+    makePressable(el, el.querySelector('.cal-item-text') ? el.querySelector('.cal-item-text').textContent : el.textContent);
+    el.onclick = (e) => { e.stopPropagation(); if (!calDragJustEnded) openCardModal(el.dataset.clipId); };
+  });
+  container.querySelectorAll('[data-date]').forEach(cell => {
     cell.title = 'Log a clip for ' + formatDateLong(cell.dataset.date);
     cell.onclick = () => {
+      if (calDragJustEnded) return;
       newClipDate = cell.dataset.date;
       renderNewClipDateRow();
       openEntrySheet();
     };
+  });
+  container.querySelectorAll('.drag-handle').forEach(h => h.addEventListener('pointerdown', startCalendarDrag));
+}
+
+// ----- Dragging a card onto a day -----
+// Starts from the grip handle (which has touch-action: none) so the rest of the calendar still
+// scrolls normally on a phone. The card follows the finger and the day under it lights up.
+let calDrag = null;
+let calDragJustEnded = false;
+
+function startCalendarDrag(e) {
+  if (e.button > 0) return;
+  const item = e.currentTarget.closest('[data-clip-id]');
+  if (!item) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const r = item.getBoundingClientRect();
+  const ghost = item.cloneNode(true);
+  ghost.classList.add('drag-ghost');
+  Object.assign(ghost.style, { width: r.width + 'px', left: r.left + 'px', top: r.top + 'px' });
+  document.body.appendChild(ghost);
+  item.classList.add('dragging');
+  // The floating nav would cover the bottom days, so it steps aside while dragging
+  document.body.classList.add('cal-dragging');
+  const handle = e.currentTarget;
+  calDrag = { id: item.dataset.clipId, item, ghost, handle, dx: e.clientX - r.left, dy: e.clientY - r.top, target: null };
+  try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+  handle.addEventListener('pointermove', moveCalendarDrag);
+  handle.addEventListener('pointerup', endCalendarDrag);
+  handle.addEventListener('pointercancel', cancelCalendarDrag);
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
+function moveCalendarDrag(e) {
+  if (!calDrag) return;
+  calDrag.ghost.style.left = (e.clientX - calDrag.dx) + 'px';
+  calDrag.ghost.style.top = (e.clientY - calDrag.dy) + 'px';
+  const under = document.elementFromPoint(e.clientX, e.clientY);
+  const target = under && under.closest('#calendarView [data-date]');
+  if (target !== calDrag.target) {
+    if (calDrag.target) calDrag.target.classList.remove('drop-target');
+    if (target) target.classList.add('drop-target');
+    calDrag.target = target;
+  }
+  // Scroll when dragging near the top or bottom edge
+  const edge = 70;
+  const dy = e.clientY < edge ? -14 : e.clientY > window.innerHeight - edge ? 14 : 0;
+  if (dy) {
+    const cal = document.getElementById('calendarView');
+    if (cal.scrollHeight > cal.clientHeight) cal.scrollBy(0, dy); else window.scrollBy(0, dy);
+  }
+}
+
+function finishCalendarDrag() {
+  const d = calDrag;
+  calDrag = null;
+  d.handle.removeEventListener('pointermove', moveCalendarDrag);
+  d.handle.removeEventListener('pointerup', endCalendarDrag);
+  d.handle.removeEventListener('pointercancel', cancelCalendarDrag);
+  d.ghost.remove();
+  d.item.classList.remove('dragging');
+  document.body.classList.remove('cal-dragging');
+  if (d.target) d.target.classList.remove('drop-target');
+  // The pointerup can also fire a click on whatever is underneath; ignore it
+  calDragJustEnded = true;
+  setTimeout(() => { calDragJustEnded = false; }, 80);
+  return d;
+}
+
+function endCalendarDrag() {
+  if (!calDrag) return;
+  const d = finishCalendarDrag();
+  if (d.target) scheduleClipOn(d.id, d.target.dataset.date);
+}
+
+function cancelCalendarDrag() {
+  if (calDrag) finishCalendarDrag();
+}
+
+function scheduleClipOn(id, day) {
+  const c = clips.find(x => x.id === id);
+  if (!c || c.scheduledDate === day) return;
+  const prev = { date: c.scheduledDate, status: c.status };
+  setScheduledDate(id, day);
+  showToast('Scheduled for ' + formatDateLong(day), {
+    onUndo: () => { c.scheduledDate = prev.date; c.status = prev.status; saveClips(id); render(); }
   });
 }
 
@@ -5077,7 +5643,8 @@ async function exportAllData() {
     exportedAt: new Date().toISOString(),
     clips,
     brands,
-    tasks
+    tasks,
+    settings
   };
   const json = JSON.stringify(payload, null, 2);
   const filename = 'twostorycaptions-backup-' + new Date().toISOString().slice(0, 10) + '.json';
@@ -5150,6 +5717,12 @@ async function handleImportFile(e) {
     const brandIds = mergeInto(brands, inBrands, b => b.name.trim().toLowerCase());
     clips.concat(tasks).forEach(x => { if (brandIds[x.brandId]) x.brandId = brandIds[x.brandId]; });
     mergeInto(tasks, inTasks, t => t.text.trim().toLowerCase());
+    // Goal and hashtags come along; reminder state stays with this device
+    if (data.settings && typeof data.settings === 'object') {
+      const imported = normalizeSettings(data.settings);
+      settings = { ...settings, weeklyGoal: imported.weeklyGoal, hashtagsInstagram: imported.hashtagsInstagram, hashtagsTiktok: imported.hashtagsTiktok };
+      renderSettingsPrefs();
+    }
     await writeStore();
 
     refreshAllBrandDropdowns();
@@ -5221,6 +5794,7 @@ document.getElementById('bulkArchiveBtn').addEventListener('click', bulkArchiveS
 
 document.getElementById('searchInput').addEventListener('input', (e) => {
   searchQuery = e.target.value.trim();
+  renderHomeStats();
   renderCardListOnly();
 });
 
