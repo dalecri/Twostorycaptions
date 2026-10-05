@@ -34,6 +34,7 @@ function render() {
   lastAnimatedView = currentView;
 
   if (currentView !== 'grid') document.getElementById('homeStats').hidden = true;
+  if (currentView !== 'grid') document.getElementById('cardOverflow').hidden = true;
   if (isOutreachFamily) {
     document.getElementById('cardList').style.display = 'none';
     document.getElementById('calendarView').style.display = 'none';
@@ -143,10 +144,19 @@ function sortUpNext(list) {
     .map(x => x.clip);
 }
 
+// The deck only holds the most relevant cards. Every card in it is sticky, and once there are
+// too many piled on the same spot phones can't layer them and the deck glitches. The rest
+// show as a plain list underneath.
+const DECK_MAX = 10;
+
 function renderCardListOnly() {
   const list = document.getElementById('cardList');
   if (!list) return;
   list.innerHTML = '';
+  const overflow = document.getElementById('cardOverflow');
+  const overflowList = document.getElementById('cardOverflowList');
+  overflowList.innerHTML = '';
+  overflow.hidden = true;
   list.className = 'cardlist-' + gridLayoutMode;
   if (list.style.display !== 'none') list.style.display = gridLayoutMode === 'stack' ? 'block' : 'grid';
   const filtered = sortUpNext(getFilteredClips());
@@ -161,12 +171,17 @@ function renderCardListOnly() {
     let prevColor = -1;
     filtered.forEach((clip, i) => {
       if (gridLayoutMode === 'list') { list.appendChild(buildListTile(clip)); return; }
+      if (i >= DECK_MAX) { overflowList.appendChild(buildListTile(clip)); return; }
       // Stable color per clip, nudged when it would match the card right above it
       let color = clipColorIndex(clip);
       if (color === prevColor) color = (color + 1) % 7;
       prevColor = color;
       list.appendChild(buildStackCard(clip, i, color));
     });
+    if (overflowList.children.length) {
+      overflow.hidden = false;
+      document.getElementById('cardOverflowLabel').textContent = 'More cards · ' + overflowList.children.length;
+    }
     syncStackTop();
   }
 }
