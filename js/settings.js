@@ -136,9 +136,12 @@ async function exportAllData() {
 // Returns { oldId: newId } for replaced items whose id changed, so links can follow them.
 function mergeInto(list, incoming, keyOf) {
   const renamed = {};
+  // Only items already in the app are matched by content; two different posts in the same file
+  // can share a caption and both should be kept.
+  const existing = new Set(list);
   incoming.forEach(item => {
     const key = keyOf(item);
-    const idx = list.findIndex(x => x.id === item.id || (key && keyOf(x) === key));
+    const idx = list.findIndex(x => x.id === item.id || (existing.has(x) && key && keyOf(x) === key));
     if (idx > -1) {
       if (list[idx].id !== item.id) renamed[list[idx].id] = item.id;
       list[idx] = item;
