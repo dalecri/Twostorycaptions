@@ -1,0 +1,20 @@
+/* Brands pinned notes and phone tabs. */
+
+/* ----- Brands: pinned notes + status tabs on phones ----- */
+.ot-pinned { padding: 16px 18px; margin-bottom: 16px; }
+.ot-pinned .ot-card-name { margin-top: 2px; }
+.ot-pinned .ot-card-notes { margin-top: 8px; font-size: 12.5px; line-height: 1.55; }
+.ot-tabs { display: none; }
+@media (max-width: 600px) {
+  .ot-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -12px 12px; padding: 2px 12px; }
+  .ot-tabs::-webkit-scrollbar { display: none; }
+  .ot-tab {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 14px;
+    background: var(--paper-light); color: var(--ink); border: 1px solid var(--line);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .ot-tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .ot-tab-count { font-size: 10px; opacity: 0.7; }
+  .ot-col:not(.tab-active) { display: none; }
+  .ot-col .ot-col-head { display: none; }
+}

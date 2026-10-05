@@ -1,0 +1,80 @@
+/* Settings extras and the intro cards. */
+
+/* ----- Settings extras ----- */
+.reminder-time {
+  min-height: 36px; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--paper-light); color: var(--ink);
+  font-family: 'Space Mono', monospace; font-size: 13px;
+}
+.settings-sub { display: block; font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 0.6px; margin: 8px 0 4px; opacity: 0.75; }
+.settings-textarea {
+  width: 100%; resize: vertical; min-height: 54px; padding: 10px 12px;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--paper-light); color: var(--ink);
+  font-family: 'Space Mono', monospace; font-size: 13px; line-height: 1.5;
+}
+
+/* ----- Onboarding ----- */
+.onboarding {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(12, 12, 16, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.onboarding[hidden] { display: none; }
+.ob-card {
+  position: relative;
+  width: min(420px, 100%);
+  min-height: min(520px, calc(100dvh - 40px));
+  display: flex;
+  flex-direction: column;
+  padding: 26px 24px 22px;
+  border-radius: 22px;
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,0.75);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ob-skip, .ob-skip:hover {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  min-height: 40px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  filter: none;
+}
+.ob-art { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 180px; color: var(--card-ink); }
+.ob-icon { width: 96px; height: 96px; stroke-width: 1.6; }
+.ob-cats { display: flex; }
+.ob-cats .cat-avatar { width: 72px; height: 72px; }
+.ob-cats .cat-avatar + .cat-avatar { margin-left: -14px; }
+.ob-plus {
+  display: flex; align-items: center; justify-content: center;
+  width: 104px; height: 78px; border-radius: 22px;
+  background: #F7EB8A; color: #141414; font-size: 48px; font-weight: 400;
+  box-shadow: 0 0 0 6px #1C1C1C;
+}
+.ob-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 6px 0 10px;
+}
+.ob-text { font-size: 14px; line-height: 1.6; margin: 0 0 22px; }
+.ob-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ob-foot button { min-height: 48px; padding: 12px 26px; text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
+.ob-dots { display: flex; gap: 6px; }
+.ob-dot { width: 8px; height: 8px; border-radius: 50%; background: color-mix(in srgb, var(--card-ink) 25%, transparent); transition: width 0.2s ease; }
+.ob-dot.on { width: 22px; border-radius: 4px; background: var(--card-ink); }
