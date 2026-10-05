@@ -26,12 +26,17 @@ function computeStats() {
   let streak = thisWeek >= goal ? 1 : 0;
   for (let w = addDays(monday, -7); (perWeek[w] || 0) >= goal; w = addDays(w, -7)) streak++;
 
+  // Counts include posts logged without a date (e.g. imported history); "days since" needs dates
+  const allPosted = clips.filter(c => c.status === 'posted');
   const cats = CATS.map(cat => {
-    const theirs = posted.filter(c => (c.catTags || []).includes(cat));
-    const last = theirs.reduce((max, c) => (c.scheduledDate > max ? c.scheduledDate : max), '');
-    return { cat, count: theirs.length, since: last ? daysBetween(last, today) : Infinity };
+    const count = allPosted.filter(c => (c.catTags || []).includes(cat)).length;
+    const last = posted.filter(c => (c.catTags || []).includes(cat))
+      .reduce((max, c) => (c.scheduledDate > max ? c.scheduledDate : max), '');
+    return { cat, count, since: last ? daysBetween(last, today) : count ? null : Infinity };
   });
-  const neglected = cats.reduce((a, b) => (b.since > a.since ? b : a));
+  // A cat whose posts are all undated has an unknown gap, so it isn't nudged
+  const known = cats.filter(c => c.since !== null);
+  const neglected = known.length ? known.reduce((a, b) => (b.since > a.since ? b : a)) : { since: 0 };
   return { goal, thisWeek, week, streak, cats, neglected };
 }
 
