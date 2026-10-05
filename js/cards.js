@@ -309,10 +309,10 @@ function buildStackCard(clip, index, colorIdx) {
   const tags = [];
   if (isOverdue(clip)) tags.push('⚠ Overdue');
   if (caps.length && clip.scheduledDate) tags.push(caps.length + ' captions');
-  if (!caps.length) tags.push('No captions yet');
+  if (!caps.length && clip.status !== 'posted') tags.push('No captions yet');
   if (brand) tags.push('🏷 ' + brand.name);
   if (clip.archived) tags.push('Archived');
-  if (!tags.length) tags.push('Logged ' + timeAgo(clip.created));
+  if (!tags.length && clip.status !== 'posted') tags.push('Logged ' + timeAgo(clip.created));
   tags.forEach(t => {
     const chip = document.createElement('span');
     chip.className = 'stack-tag' + (t.startsWith('⚠') ? ' warn' : '');
@@ -375,6 +375,10 @@ function buildStackHead(clip, editable) {
     const [y, m, d] = clip.scheduledDate.split('-').map(Number);
     sideLabel = 'Posts';
     sideValue = new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } else if (clip.status === 'posted') {
+    // e.g. imported history: no date, so say where it went up rather than when it was logged
+    sideLabel = 'Posted on';
+    sideValue = clip.platform === 'Both' ? 'IG + TikTok' : clip.platform;
   } else if (caps.length) {
     sideLabel = 'Captions';
     sideValue = String(caps.length);
@@ -516,7 +520,7 @@ function closeCardModal(skipFlyBack) {
   overlay.classList.add('closing');
 
   // The deck may have re-rendered while the card was open, so look up its slot now.
-  const target = id && document.querySelector('#cardList .stack-card[data-highlight-id="' + CSS.escape(id) + '"]');
+  const target = id && document.querySelector('#cardList .stack-card[data-highlight-id="' + CSS.escape(id) + '"], #cardOverflowList .stack-card[data-highlight-id="' + CSS.escape(id) + '"]');
   const from = target ? target.getBoundingClientRect() : null;
   const slotVisible = from && from.height > 0 && from.bottom > 0 && from.top < window.innerHeight;
   if (!skipFlyBack && slotVisible && !prefersReducedMotion()) {

@@ -81,7 +81,7 @@ header.masthead { padding-top: var(--safe-top); }
 #calendarView .cal-header,
 #calendarView.cal-mode-week .cal-header { padding-top: 0; }
 
-/* Cards beyond the deck: a plain list under it */
+/* Cards beyond the deck: the same cards, flat instead of sticky */
 .card-overflow { margin-top: 22px; }
 .card-overflow[hidden] { display: none; }
 .card-overflow-label {
@@ -93,4 +93,15 @@ header.masthead { padding-top: var(--safe-top); }
   margin: 0 4px 10px;
 }
 .list-tile .stamp { align-self: flex-start; }
+#cardOverflowList { display: flex; flex-direction: column; gap: 12px; }
+.stack-card.flat {
+  position: relative;
+  top: auto;
+  height: auto;
+  min-height: 0;
+  margin-top: 0;
+  padding-bottom: 20px;
+  box-shadow: 0 10px 24px -16px rgba(0,0,0,0.5);
+}
+.stack-card.flat .stack-foot { margin-top: 16px; }
 .list-tile-footer:empty { display: none; }

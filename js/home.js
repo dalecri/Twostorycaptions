@@ -146,7 +146,7 @@ function sortUpNext(list) {
 
 // The deck only holds the most relevant cards. Every card in it is sticky, and once there are
 // too many piled on the same spot phones can't layer them and the deck glitches. The rest
-// show as a plain list underneath.
+// show underneath as the same cards, laid out one after another.
 const DECK_MAX = 10;
 
 function renderCardListOnly() {
@@ -171,12 +171,14 @@ function renderCardListOnly() {
     let prevColor = -1;
     filtered.forEach((clip, i) => {
       if (gridLayoutMode === 'list') { list.appendChild(buildListTile(clip)); return; }
-      if (i >= DECK_MAX) { overflowList.appendChild(buildListTile(clip)); return; }
       // Stable color per clip, nudged when it would match the card right above it
       let color = clipColorIndex(clip);
       if (color === prevColor) color = (color + 1) % 7;
       prevColor = color;
-      list.appendChild(buildStackCard(clip, i, color));
+      const card = buildStackCard(clip, i, color);
+      // Past the deck: same card, laid out flat instead of piling up
+      if (i >= DECK_MAX) { card.classList.add('flat'); overflowList.appendChild(card); return; }
+      list.appendChild(card);
     });
     if (overflowList.children.length) {
       overflow.hidden = false;
