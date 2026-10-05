@@ -2872,15 +2872,15 @@ function openDatePicker(anchor, value, onPick) {
   }
 }
 
-// Post date: one-tap Tomorrow and the day after (short weekday name), plus a chip for any other date.
+// Post date: one-tap Today, Tomorrow and the day after (short weekday name), plus a chip for any other date.
 // Tapping a selected quick pick clears it again.
 function buildDateChip(value, onChange) {
   const wrap = document.createElement('div');
   wrap.className = 'chip-row';
-  const quick = [localDay(1), localDay(2)];
+  const quick = [localDay(0), localDay(1), localDay(2)];
   quick.forEach((day, i) => {
     const [y, m, d] = day.split('-').map(Number);
-    const label = i === 0 ? 'Tomorrow' : new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short' });
+    const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short' });
     const chip = document.createElement('button');
     chip.type = 'button';
     chip.className = 'chip date-quick' + (value === day ? ' selected' : '');
