@@ -1902,8 +1902,28 @@
   .chip-clear { padding: 6px 12px; color: var(--ink-soft); }
   .chip-count { font-weight: 400; opacity: 0.65; }
   /* Tone chips share the look */
-  .tone-chip, .tone-chip:hover { min-height: 36px; padding: 6px 14px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; color: var(--ink); }
+  /* Tones: squarer, with an icon each, so they don't read like the cat and date pills */
+  .tone-chip, .tone-chip:hover {
+    display: inline-flex; align-items: center; gap: 6px;
+    min-height: 36px; padding: 6px 12px 6px 10px; border-radius: 10px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; color: var(--ink);
+  }
+  .tone-chip svg { width: 15px; height: 15px; flex-shrink: 0; }
   .tone-chip.selected { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+  /* Starring: each cat's own colour as a dot, filling the chip when picked */
+  .cat-chip { padding-left: 10px; }
+  .cat-dot {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+    background: var(--cat-color);
+    box-shadow: inset 0 0 0 1.5px rgba(0,0,0,0.25);
+  }
+  .cat-chip.selected, .cat-chip.selected:hover { background: var(--cat-color); border-color: #141414; color: #141414; box-shadow: inset 0 0 0 1px #141414; }
+  .cat-chip.selected .cat-dot { background: #141414; box-shadow: none; }
+
+  /* Post date: quick picks are a touch lighter than the picker chip */
+  .date-quick { font-weight: 400; }
+  .date-quick.selected { font-weight: 700; }
 
   /* The reused native date input sits invisibly over the tapped chip */
   #datePickerProxy { position: fixed; opacity: 0; pointer-events: none; border: 0; padding: 0; z-index: 130; }
@@ -2852,16 +2872,32 @@ function openDatePicker(anchor, value, onPick) {
   }
 }
 
+// Post date: one-tap Tomorrow and the day after (short weekday name), plus a chip for any other date.
+// Tapping a selected quick pick clears it again.
 function buildDateChip(value, onChange) {
   const wrap = document.createElement('div');
   wrap.className = 'chip-row';
+  const quick = [localDay(1), localDay(2)];
+  quick.forEach((day, i) => {
+    const [y, m, d] = day.split('-').map(Number);
+    const label = i === 0 ? 'Tomorrow' : new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'short' });
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip date-quick' + (value === day ? ' selected' : '');
+    chip.setAttribute('aria-pressed', value === day ? 'true' : 'false');
+    chip.title = formatDateLong(day);
+    chip.textContent = label;
+    chip.onclick = () => onChange(value === day ? '' : day);
+    wrap.appendChild(chip);
+  });
+  const custom = value && !quick.includes(value);
   const chip = document.createElement('button');
   chip.type = 'button';
-  chip.className = 'chip date-chip' + (value ? ' selected' : '');
-  chip.innerHTML = NAV_ICONS.calendar + '<span>' + (value ? escapeHtml(formatDateLong(value)) : 'Add a date') + '</span>';
+  chip.className = 'chip date-chip' + (custom ? ' selected' : '');
+  chip.innerHTML = NAV_ICONS.calendar + '<span>' + (custom ? escapeHtml(formatDateLong(value)) : 'Pick date') + '</span>';
   chip.onclick = () => openDatePicker(chip, value, onChange);
   wrap.appendChild(chip);
-  if (value) {
+  if (custom) {
     const clear = document.createElement('button');
     clear.type = 'button';
     clear.className = 'chip chip-clear';
@@ -3004,12 +3040,26 @@ const PLATFORM_ICONS = { Instagram: NAV_ICONS.instagram, TikTok: NAV_ICONS.tikto
 const PLATFORM_ORDER = ['Instagram', 'TikTok', 'Both'];
 
 
+// Same line-icon style as the nav; each tone gets its own so the row reads at a glance
+const TONE_ICON_PATHS = {
+  'Deadpan nature-doc': '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>',
+  'Funny': '<circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line>',
+  'Educational': '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path>',
+  'Meme-style': '<rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"></path>',
+  'Relatable': '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>',
+  'Multi-cat tie-in': '<circle cx="8" cy="12" r="5"></circle><circle cx="16" cy="12" r="5"></circle>',
+  'Wholesome': '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>'
+};
+
 function buildToneChip(tone, selected, onToggle) {
   const chip = document.createElement('button');
   chip.type = 'button';
   chip.className = 'tone-chip' + (selected ? ' selected' : '');
   chip.setAttribute('aria-pressed', selected ? 'true' : 'false');
-  chip.textContent = tone;
+  const icon = TONE_ICON_PATHS[tone]
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + TONE_ICON_PATHS[tone] + '</svg>'
+    : '';
+  chip.innerHTML = icon + '<span>' + escapeHtml(tone) + '</span>';
   chip.onclick = onToggle;
   return chip;
 }
@@ -4113,9 +4163,10 @@ function fillCatPicker(container, selected, onToggle) {
   CATS.forEach(cat => {
     const chip = document.createElement('button');
     chip.type = 'button';
-    chip.className = 'chip' + (selected.includes(cat) ? ' selected' : '');
+    chip.className = 'chip cat-chip' + (selected.includes(cat) ? ' selected' : '');
     chip.setAttribute('aria-pressed', selected.includes(cat) ? 'true' : 'false');
-    chip.textContent = cat;
+    chip.style.setProperty('--cat-color', (CAT_PROFILES[cat] || {}).bg || '#CCCCCC');
+    chip.innerHTML = '<span class="cat-dot" aria-hidden="true"></span>' + escapeHtml(cat);
     chip.onclick = () => onToggle(cat);
     container.appendChild(chip);
   });
@@ -4760,9 +4811,15 @@ function makePressable(el, label) {
   });
 }
 
-function localToday() {
+// YYYY-MM-DD in local time, `offset` days from today
+function localDay(offset) {
   const n = new Date();
+  n.setDate(n.getDate() + (offset || 0));
   return [n.getFullYear(), String(n.getMonth() + 1).padStart(2, '0'), String(n.getDate()).padStart(2, '0')].join('-');
+}
+
+function localToday() {
+  return localDay(0);
 }
 
 function isOverdue(clip) {
