@@ -1,0 +1,82 @@
+/* App shell: phone safe areas, header (with search inside it), page spacing, calendar header.
+   Loads last so it settles spacing set by the older files. */
+
+/* Capacitor on Android reports the status/nav bar sizes as --safe-area-inset-*; browsers use env() */
+:root {
+  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+}
+
+/* The fixed header reserves the space at the top (JS sizes .wrap's top padding to match),
+   so the page itself adds none. */
+body { padding-top: 0; }
+body.view-calendar-full { padding-top: 0 !important; }
+
+header.masthead { padding-top: var(--safe-top); }
+.masthead-inner { padding-top: 12px; }
+
+/* Keeps the status bar area solid when the header slides away on scroll */
+.status-bar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--safe-top);
+  background: var(--paper);
+  z-index: 49;
+  pointer-events: none;
+}
+
+/* Search: part of the header, not a floating card */
+.quick-filter-panel {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 20px 12px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  animation: none;
+}
+.quick-filter-panel[hidden] { display: none; }
+.quick-filter-panel .search-wrap { margin-bottom: 10px; }
+.quick-filter-panel .filters-bar-search {
+  width: 100%;
+  min-height: 44px;
+  padding-left: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper-light);
+  color: var(--ink);
+}
+.quick-filter-panel .search-icon { left: 16px; }
+.quick-filter-panel .filter-chips { margin: 0 -20px; padding: 0 20px 2px; }
+@media (max-width: 600px) {
+  .quick-filter-panel { margin: 0; }
+}
+
+/* No big empty run-out under the deck: the last card ends just above the nav */
+.cardlist-stack::after { height: 12px; }
+
+/* Calendar: range and Week/Month on one row, arrows centred underneath */
+.cal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.cal-header h2 { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-header .cal-view-toggle { margin: 0; flex-shrink: 0; flex-wrap: nowrap; padding: 0; }
+.cal-nav { display: flex; justify-content: center; gap: 8px; margin: 0 0 12px; }
+.cal-nav button, .cal-nav button:hover {
+  min-width: 44px;
+  min-height: 36px;
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  filter: none;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .cal-header h2 { font-size: 15px; }
+  #calendarView:not(.cal-mode-week) .cal-header,
+  #calendarView:not(.cal-mode-week) .cal-nav { padding-left: 14px; padding-right: 14px; }
+}
+#calendarView .cal-header,
+#calendarView.cal-mode-week .cal-header { padding-top: 0; }

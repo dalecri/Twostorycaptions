@@ -6,8 +6,8 @@ function render() {
   if (typeof syncHeaderSpacing === 'function') requestAnimationFrame(syncHeaderSpacing);
 
   renderHeaderNav();
-  const pageTitles = { grid: 'Home', calendar: 'Calendar', outreach: 'Brands', templates: 'Templates', tasks: 'Tasks' };
-  document.getElementById('pageTitle').textContent = pageTitles[currentView] || 'Home';
+  const pageTitles = { grid: 'TwoStoryTails', calendar: 'Calendar', outreach: 'Brands', templates: 'Templates', tasks: 'Tasks' };
+  document.getElementById('pageTitle').textContent = pageTitles[currentView] || 'TwoStoryTails';
 
   const isOutreachFamily = currentView === 'outreach' || currentView === 'templates' || currentView === 'tasks';
   document.getElementById('outreachView').style.display = isOutreachFamily ? 'block' : 'none';
@@ -48,15 +48,13 @@ function render() {
 
   if (currentView === 'calendar') {
     renderCalendar();
-    renderTally();
-    refreshOpenModal();
+      refreshOpenModal();
     if (viewChanged) playViewAnim(document.getElementById('calendarView'));
     return;
   }
 
   renderHomeStats();
   renderCardListOnly();
-  renderTally();
   refreshOpenModal();
   if (viewChanged) playViewAnim(document.getElementById('cardList'));
 }
@@ -92,7 +90,7 @@ function toggleQuickFilter(type) {
 
 function renderQuickFilterPanel() {
   const panel = document.getElementById('quickFilterPanel');
-  panel.style.display = activeQuickFilter ? 'block' : 'none';
+  panel.hidden = !activeQuickFilter;
   document.getElementById('searchToggleBtn').classList.toggle('filter-icon-active', !!activeQuickFilter);
 }
 
@@ -272,13 +270,6 @@ function renderHeaderNav() {
   });
 }
 
-function renderTally() {
-  const posted = clips.filter(c => c.status === 'posted').length;
-  const pending = clips.length - posted;
-  document.getElementById('tally').innerHTML =
-    '<span>' + pending + ' pending in the field</span><span>' + posted + ' catalogued (posted)</span>';
-}
-
 document.getElementById('searchIcon').innerHTML = NAV_ICONS.search;
 
 document.getElementById('calendarToggleBtn').addEventListener('click', () => {
@@ -342,8 +333,21 @@ function syncHeaderSpacing() {
   const header = document.getElementById('mainHeader');
   const wrap = document.querySelector('.wrap');
   if (!header || !wrap) return;
-  wrap.style.setProperty('padding-top', (header.offsetHeight + 16) + 'px', 'important');
+  wrap.style.setProperty('padding-top', (header.offsetHeight + 14) + 'px', 'important');
   syncStackTop();
+}
+
+// Height of the phone's status bar area (0 in a normal browser). Capacitor provides it as a CSS
+// variable, which JS can't read through env(), so measure an element sized with it.
+function safeTopPx() {
+  let probe = document.getElementById('safeTopProbe');
+  if (!probe) {
+    probe = document.createElement('div');
+    probe.id = 'safeTopProbe';
+    probe.style.cssText = 'position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:var(--safe-top);';
+    document.body.appendChild(probe);
+  }
+  return probe.offsetHeight;
 }
 
 // Stacked cards pile up just under the header, or at the very top while the header is scrolled away.
@@ -352,10 +356,13 @@ function syncStackTop() {
   const list = document.getElementById('cardList');
   if (!header || !list) return;
   const hidden = header.classList.contains('header-hidden');
-  list.style.setProperty('--stack-top', (hidden ? 12 : header.offsetHeight + 12) + 'px');
+  // When the header slides away, cards pile up just under the status bar instead
+  list.style.setProperty('--stack-top', (hidden ? safeTopPx() + 8 : header.offsetHeight + 10) + 'px');
 }
 
 window.addEventListener('load', syncHeaderSpacing);
+// The header changes height when search opens or Capacitor reports the status bar size
+if (window.ResizeObserver) new ResizeObserver(() => syncHeaderSpacing()).observe(document.getElementById('mainHeader'), { box: 'border-box' });
 
 let lastScrollY = window.scrollY;
 
@@ -365,7 +372,7 @@ window.addEventListener('scroll', () => {
   const y = window.scrollY;
   if (y <= 0) {
     header.classList.remove('header-hidden');
-  } else if (y > lastScrollY && y > header.offsetHeight) {
+  } else if (y > lastScrollY && y > header.offsetHeight && !activeQuickFilter) {
     header.classList.add('header-hidden');
   } else if (y < lastScrollY) {
     header.classList.remove('header-hidden');

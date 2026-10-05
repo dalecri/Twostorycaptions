@@ -47,7 +47,7 @@ body.cal-dragging .floating-nav { opacity: 0; visibility: hidden; transition: op
 .cal-day-posts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .cal-day-posts:empty::before { content: 'Nothing planned'; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--ink-soft); opacity: 0.6; padding-top: 10px; }
 @media (max-width: 600px) {
-  #calendarView.cal-mode-week { padding: 0 12px calc(90px + env(safe-area-inset-bottom)); }
+  #calendarView.cal-mode-week { padding: 0 12px calc(90px + var(--safe-bottom)); }
   .cal-view-toggle { padding: 0 14px; }
   .cal-tray { padding: 0 14px; }
   #calendarView.cal-mode-week .cal-view-toggle, #calendarView.cal-mode-week .cal-tray { padding: 0; }
