@@ -246,6 +246,8 @@ function buildListTile(clip) {
     footerText = '📅 ' + formatDateLong(clip.scheduledDate);
   } else if (clip.captions) {
     footerText = '💬 tap to see all captions';
+  } else if (clip.status === 'posted') {
+    footerText = ''; // e.g. imported history: when it was logged says nothing about when it went up
   } else {
     footerText = timeAgo(clip.created);
   }
@@ -279,8 +281,8 @@ function buildStackCard(clip, index, colorIdx) {
   card.className = 'stack-card c' + colorIdx;
   card.dataset.color = colorIdx;
   card.setAttribute('data-highlight-id', clip.id);
-  // Each card sticks 12px lower than the last; capped so a long list doesn't eat the screen.
-  card.style.setProperty('--stack-off', (Math.min(index, 8) * 12) + 'px');
+  // Each card sticks 10px lower than the last, so no two deck cards rest on the same spot.
+  card.style.setProperty('--stack-off', (Math.min(index, DECK_MAX - 1) * 10) + 'px');
   if (selectMode && selectedClipIds.has(clip.id)) card.classList.add('selected');
   // Keep its slot empty if this card is currently picked out (the deck re-renders on edits)
   if (document.getElementById('cardModalOverlay').dataset.clipId === clip.id) card.classList.add('picked');

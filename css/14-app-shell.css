@@ -80,3 +80,17 @@ header.masthead { padding-top: var(--safe-top); }
 }
 #calendarView .cal-header,
 #calendarView.cal-mode-week .cal-header { padding-top: 0; }
+
+/* Cards beyond the deck: a plain list under it */
+.card-overflow { margin-top: 22px; }
+.card-overflow[hidden] { display: none; }
+.card-overflow-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 4px 10px;
+}
+.list-tile .stamp { align-self: flex-start; }
+.list-tile-footer:empty { display: none; }
