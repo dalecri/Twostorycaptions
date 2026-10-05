@@ -1,0 +1,86 @@
+/* Chips, date picker, brand line, search panel. */
+
+/* ----- Chips: one style for every pick-one/pick-many control (tones, cats, dates, filters) ----- */
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip, .chip:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper-light);
+  color: var(--ink);
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  filter: none;
+  transform: none;
+}
+.chip:hover { border-color: var(--ink-soft); }
+.chip.selected, .chip.selected:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.chip svg { width: 14px; height: 14px; flex-shrink: 0; }
+.chip-clear { padding: 6px 12px; color: var(--ink-soft); }
+.chip-count { font-weight: 400; opacity: 0.65; }
+/* Tone chips share the look */
+/* Tones: squarer, with an icon each, so they don't read like the cat and date pills */
+.tone-chip, .tone-chip:hover {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 6px 12px 6px 10px; border-radius: 10px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; color: var(--ink);
+}
+.tone-chip svg { width: 15px; height: 15px; flex-shrink: 0; }
+.tone-chip.selected { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+/* Starring: each cat's own colour as a dot, filling the chip when picked */
+.cat-chip { padding-left: 10px; }
+.cat-dot {
+  width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+  background: var(--cat-color);
+  box-shadow: inset 0 0 0 1.5px rgba(0,0,0,0.25);
+}
+.cat-chip.selected, .cat-chip.selected:hover { background: var(--cat-color); border-color: #141414; color: #141414; box-shadow: inset 0 0 0 1px #141414; }
+.cat-chip.selected .cat-dot { background: #141414; box-shadow: none; }
+
+/* Post date: quick picks are a touch lighter than the picker chip */
+.date-quick { font-weight: 400; }
+.date-quick.selected { font-weight: 700; }
+
+/* The reused native date input sits invisibly over the tapped chip */
+#datePickerProxy { position: fixed; opacity: 0; pointer-events: none; border: 0; padding: 0; z-index: 130; }
+#datePickerProxy.fallback { opacity: 1; pointer-events: auto; border-radius: 999px; font-size: 16px; padding: 0 10px; background: #FFFFFF; color: #141414; }
+
+/* Quiet "Brand: None ▾" line */
+.inline-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.inline-select-label::after { content: ':'; }
+.inline-select-value { color: var(--ink); font-weight: 700; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inline-select:not(.has-value) .inline-select-value { color: var(--ink-soft); font-weight: 400; }
+.inline-select select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.card-brand-row { margin-top: 14px; }
+.sheet-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+@media (max-width: 600px) {
+  .sheet-footer #addBtn { flex: 1 1 100%; }
+}
+
+/* Search panel: one field and a single scrolling row of status chips */
+.quick-filter-panel { padding: 12px; }
+.quick-filter-panel .search-wrap { margin-bottom: 10px; }
+.quick-filter-panel .filters-bar-search { width: 100%; min-height: 44px; border-radius: 999px; padding-left: 38px; }
+.filter-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -12px; padding: 0 12px 2px; }
+.filter-chips::-webkit-scrollbar { display: none; }
+.filter-chips .chip { flex-shrink: 0; }

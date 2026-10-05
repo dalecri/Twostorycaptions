@@ -1,0 +1,277 @@
+/* Card language: restyles everything above to match the deck (must load after 01-06). */
+
+/* =====================================================================
+   CARD LANGUAGE — everything below restyles the app to match the deck.
+   Kept last so it wins over the older rules (including their media queries).
+   ===================================================================== */
+
+/* A .surface is a colored card. It re-scopes the theme variables, so every existing
+   component placed inside (buttons, chips, selects, inputs, pills) adapts automatically. */
+/* Needs a palette class too (.c0–.c6); don't set --card-bg here or it would override the palette. */
+.surface {
+  --ink: var(--card-ink);
+  --ink-soft: color-mix(in srgb, var(--card-ink) 62%, transparent);
+  --line: color-mix(in srgb, var(--card-ink) 16%, transparent);
+  --paper: color-mix(in srgb, var(--card-bg) 25%, #FFFFFF);
+  --paper-light: color-mix(in srgb, #FFFFFF 42%, transparent);
+  --moss: var(--card-ink);
+  --moss-dark: var(--card-ink);
+  --spark: var(--card-ink);
+  --spark-dark: var(--card-ink);
+  --stamp-idea: var(--card-ink); --stamp-filmed: var(--card-ink); --stamp-captioned: var(--card-ink);
+  --stamp-scheduled: var(--card-ink); --stamp-posted: var(--card-ink);
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0.14), transparent 40%, rgba(0,0,0,0.06)),
+    var(--card-bg);
+  color: var(--card-ink);
+  border: none !important;
+  border-radius: 18px;
+}
+.surface.c4 { --paper: #141414; --paper-light: rgba(255,255,255,0.08); }
+.surface input, .surface textarea, .surface select { color: var(--card-ink); }
+.surface input::placeholder, .surface textarea::placeholder { color: color-mix(in srgb, var(--card-ink) 45%, transparent); }
+.surface select option { color: #141414; background: #FFFFFF; }
+
+/* Primary buttons are ink pills, like the buttons on the cards (adapts to light/dark themes) */
+button { background: var(--ink); color: var(--paper); }
+button:hover { background: var(--ink); filter: brightness(1.15); }
+.ot-toolbar button, .gen-caption-btn { text-transform: uppercase; letter-spacing: 1px; font-size: 11.5px; }
+.status-platform-group { border-radius: 12px; overflow: hidden; }
+
+/* Shared card typography: tiny spaced kicker over a bold uppercase title */
+.card-kicker {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.card-title {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 2px 0 0;
+}
+
+/* ----- Header ----- */
+header.masthead .title-block h1 {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+header.masthead .title-block p {
+  font-family: 'Space Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Title left, the few tool icons right — one compact row on phones too */
+@media (max-width: 600px) {
+  .masthead-inner { flex-direction: row; align-items: center; padding-bottom: 14px; }
+}
+
+/* ----- Bottom nav: the black card ----- */
+.floating-nav {
+  background: #1C1C1C;
+  border: none;
+  border-radius: 22px;
+  padding: 8px;
+  gap: 4px;
+  box-shadow: 0 18px 40px -16px rgba(0,0,0,0.7);
+}
+.floating-nav button { color: rgba(255,255,255,0.62); border-radius: 16px; }
+.floating-nav button .nav-label { letter-spacing: 1px; text-transform: uppercase; font-size: 7.5px; }
+.floating-nav button:hover { background: rgba(255,255,255,0.08); color: #FFFFFF; }
+.floating-nav button.active { color: #141414; background: #A8D8BE; }
+.floating-nav .nav-add-btn { background: #F7EB8A; color: #141414; border-radius: 16px; min-width: 56px; }
+.floating-nav .nav-add-btn:hover { background: #F7EB8A; color: #141414; filter: brightness(1.05); }
+
+/* ----- Small panels: filters, selection ----- */
+.quick-filter-panel, .selection-bar { border: none; border-radius: 18px; padding: 14px 16px; }
+.selection-bar { position: sticky; top: calc(var(--stack-top, 80px) - 4px); z-index: 40; }
+
+/* ----- New-caption sheet: a yellow card rising from the bottom ----- */
+.entry-form { border-radius: 22px 22px 0 0; box-shadow: 0 -24px 60px -20px rgba(0,0,0,0.55); }
+.entry-form .sheet-header { border-bottom: none; padding-bottom: 4px; align-items: flex-start; }
+.entry-form textarea { background: var(--paper-light); border: 1px solid var(--line); font-family: 'Space Mono', monospace; }
+#addBtn { padding: 12px 22px; letter-spacing: 1px; text-transform: uppercase; font-size: 12px; }
+
+/* ----- Settings: blue card ----- */
+#settingsModalBox { box-shadow: 0 30px 70px -24px rgba(0,0,0,0.7); }
+.settings-theme-card { border-radius: 14px; }
+
+/* ----- Focused card: picked out of the deck ----- */
+/* Only the backdrop fades; the card itself is animated from JS so it's never see-through mid-flight */
+#cardModalOverlay {
+  opacity: 1;
+  visibility: hidden;
+  background: transparent;
+  transition: none;
+  align-items: center;
+  padding: 16px;
+  z-index: 100;
+}
+#cardModalOverlay.open {
+  visibility: visible;
+  background: rgba(12, 12, 16, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease;
+}
+#cardModalOverlay.open.closing {
+  background: transparent;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  pointer-events: none;
+}
+/* Lock page scroll while a card is out (on <html> only — locking <body> would break the sticky deck) */
+html.focus-open { overflow: hidden; }
+#cardModalBox.focus-card {
+  max-width: 560px;
+  max-height: calc(100dvh - 48px);
+  padding: 20px 22px 26px;
+  border-radius: 18px;
+  transform: none;
+  transition: none;
+  overscroll-behavior: contain;
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,0.75);
+  transform-origin: top left;
+}
+#cardModalBox.focus-card .stack-head { padding-right: 40px; }
+.focus-card .card-header-row { flex-wrap: wrap; row-gap: 10px; }
+#cardModalBox.focus-card .modal-close {
+  top: 16px; right: 14px;
+  width: 32px; height: 32px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  color: var(--card-ink);
+  font-size: 13px;
+}
+#cardModalBox.focus-card .modal-close:hover { background: color-mix(in srgb, var(--card-ink) 12%, transparent); }
+.focus-divider { height: 1px; background: var(--line); margin: 18px 0 14px; }
+/* The editor inside the focused card */
+.focus-card .card { background: transparent; }
+.focus-card .card-top { padding: 0; margin-top: 14px; }
+.focus-card .card-meta { padding: 0; }
+.focus-card .status-platform-group { border-radius: 12px; overflow: hidden; background: color-mix(in srgb, var(--card-ink) 8%, transparent); }
+.focus-card .captions-box { border-top: 1px solid var(--line); }
+.focus-card .caption-opt { background: var(--paper-light); border: none; border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+.focus-card .caption-opt .copy-tag { font-weight: 700; }
+.focus-card .gen-caption-btn { letter-spacing: 1px; text-transform: uppercase; }
+.stack-card.picked { visibility: hidden; }
+@media (max-width: 600px) {
+  #cardModalOverlay { align-items: center; padding: 12px; }
+  #cardModalBox.focus-card { border-radius: 18px; max-height: calc(100dvh - 24px); padding: 18px 18px 22px; }
+}
+
+/* ----- Calendar ----- */
+.cal-grid { border: none; border-radius: 18px; overflow: hidden; gap: 2px; background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.cal-dow { letter-spacing: 1.6px; font-weight: 700; }
+.cal-cell.today { box-shadow: inset 0 0 0 2px var(--ink); }
+.cal-header h2 { text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+.cal-post {
+  border-left: none;
+  border-radius: 6px;
+  background: var(--card-bg, #A8D8BE);
+  color: var(--card-ink, #141414);
+  font-family: 'Space Mono', monospace;
+  padding: 3px 6px;
+}
+.cal-post.posted { opacity: 0.6; }
+@media (max-width: 600px) {
+  .cal-grid { margin: 0 12px; }
+}
+
+/* ----- Brands: stats as the black card, columns as colored cards ----- */
+.ot-stats { padding: 18px 20px; gap: 14px 26px; box-shadow: none; }
+.ot-stat-item { flex-direction: column; align-items: flex-start; gap: 2px; font-size: 9.5px; letter-spacing: 1.6px; text-transform: uppercase; }
+.ot-stat-item strong { font-size: 26px; letter-spacing: 1px; order: -1; color: var(--ink); }
+.ot-col { padding: 16px 14px; }
+.ot-col-title { font-weight: 700; letter-spacing: 1.6px; color: var(--card-ink) !important; }
+.ot-col-count { background: color-mix(in srgb, var(--card-ink) 12%, transparent); color: var(--card-ink); font-weight: 700; }
+.ot-card {
+  background: color-mix(in srgb, #FFFFFF 55%, transparent);
+  border: none !important;
+  border-radius: 14px;
+  box-shadow: 0 6px 14px -10px rgba(0,0,0,0.4);
+}
+.surface.c4 .ot-card { background: rgba(255,255,255,0.08); }
+.ot-card-name { font-family: 'Space Mono', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; font-size: 12.5px; }
+.ot-col.passed .ot-card { opacity: 0.75; }
+.ot-mini-btn, .ot-mini-select { border-radius: 999px; padding: 5px 10px; }
+.ot-panel { box-shadow: 0 10px 30px -20px rgba(0,0,0,0.5); padding: 22px; }
+.ot-panel::before { display: none; }
+.ot-panel h3 { text-transform: uppercase; letter-spacing: 1.4px; font-weight: 700; }
+.ot-chip { border-radius: 999px; }
+
+/* ----- Tasks ----- */
+.task-group-title { font-weight: 700; letter-spacing: 1.6px; }
+.task-row { border-bottom-color: var(--line); }
+.task-checkbox { accent-color: #141414; }
+.task-progress-bar { background: color-mix(in srgb, var(--card-ink, #141414) 12%, transparent); }
+
+/* ----- Empty state + tally ----- */
+.empty-state {
+  border: 2px dashed color-mix(in srgb, var(--ink) 20%, transparent);
+  border-radius: 18px;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  line-height: 1.7;
+}
+footer.tally { border-top: none; text-transform: uppercase; letter-spacing: 1.4px; font-size: 9.5px; }
+
+/* ----- Card anatomy: cats + date on top, status chip, caption as the headline ----- */
+.stack-head { justify-content: space-between; align-items: flex-start; }
+.cat-stack { display: flex; align-items: center; padding-left: 4px; }
+.cat-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: block;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #FFFFFF 75%, var(--card-bg, #FFFFFF)), 0 4px 10px -4px rgba(0,0,0,0.35);
+  background: #FFFFFF;
+}
+.cat-stack .cat-avatar + .cat-avatar { margin-left: -12px; }
+.cat-avatar svg { width: 100%; height: 100%; display: block; border-radius: 50%; }
+.cat-avatar-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  box-shadow: none;
+  border: 2px dashed color-mix(in srgb, var(--card-ink) 35%, transparent);
+  color: color-mix(in srgb, var(--card-ink) 45%, transparent);
+}
+.cat-avatar-empty svg { width: 18px; height: 18px; }
+
+.status-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  padding: 5px 12px 5px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #FFFFFF 55%, transparent);
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.c4 .status-chip { background: rgba(255,255,255,0.12); }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #9AA3B5; flex-shrink: 0; }
+.status-chip.filmed .status-dot { background: #2F6BFF; }
+.status-chip.captioned .status-dot { background: #FFA801; }
+.status-chip.scheduled .status-dot { background: #FF651E; }
+.status-chip.posted .status-dot { background: #1E9E5A; }
+.status-chip-edit { cursor: pointer; }
+.status-caret { font-size: 9px; opacity: 0.6; margin-left: 2px; }
+.status-chip-edit select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+
+.stack-body { margin-top: 12px; }
+.stack-body-text { font-size: 16px; font-weight: 700; line-height: 1.45; }

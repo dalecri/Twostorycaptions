@@ -46,5 +46,6 @@ for (const font of FONTS) {
 fs.writeFileSync(path.join(out, 'vendor', 'fonts', 'fonts.css'), css);
 
 fs.copyFileSync(path.join(root, 'tst.png'), path.join(out, 'tst.png'));
+for (const dir of ['css', 'js']) fs.cpSync(path.join(root, dir), path.join(out, dir), { recursive: true });
 
 console.log('Built www/');

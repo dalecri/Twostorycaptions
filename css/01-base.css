@@ -1,0 +1,83 @@
+/* Theme variables, page, header, form basics. */
+
+:root {
+  /* Marina (default): crisp sky-blue ground, white cards, vivid blue as the primary accent, sunset orange as the energetic complementary — fresh and vibrant */
+  --paper: #F0F5FF;
+  --paper-light: #FFFFFF;
+  --ink: #0A1A3D;
+  --ink-soft: #6B7A99;
+  --moss: #0059FF;
+  --moss-dark: #0043C3;
+  --rust: #FF651E;
+  --line: #D6E6FF;
+  --stamp-idea: #D6E6FF;
+  --stamp-filmed: #0059FF;
+  --stamp-captioned: #FFA801;
+  --stamp-scheduled: #FF651E;
+  --stamp-posted: #0043C3;
+  --spark: #FF651E;
+  --spark-dark: #C94A0E;
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+* { box-sizing: border-box; }
+html { overflow-x: hidden; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Space Mono', ui-monospace, monospace;
+  min-height: 100vh;
+  padding: 32px 20px 104px;
+  overflow-x: hidden;
+  /* clip (not hidden) so body doesn't become a scroll container — that would break the sticky card stack */
+  overflow-x: clip;
+}
+.wrap { max-width: 780px; margin: 0 auto; }
+
+header.masthead {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  z-index: 50;
+  transition: transform 0.25s ease;
+}
+header.masthead.header-hidden { transform: translateY(-100%); }
+.masthead-inner {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header.masthead .title-block h1 {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 24px;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+header.masthead .title-block p {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7.5px;
+  line-height: 1.6;
+  letter-spacing: 0.5px;
+  color: var(--moss);
+  margin: 3px 0 0;
+}
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.header-icons-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--line);
+  margin: 0 4px;
+  flex-shrink: 0;
+}

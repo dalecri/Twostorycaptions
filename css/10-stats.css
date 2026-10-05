@@ -1,0 +1,29 @@
+/* Home stats card. */
+
+/* ----- Home stats ----- */
+.home-stats { padding: 18px 20px 16px; margin-bottom: 18px; }
+.home-stats[hidden] { display: none; }
+.hs-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.hs-count { font-family: 'Space Mono', monospace; font-size: 15px; margin-top: 4px; }
+.hs-count strong { font-size: 30px; letter-spacing: 1px; }
+.hs-sub { font-family: 'Space Mono', monospace; font-size: 10.5px; letter-spacing: 0.6px; text-transform: uppercase; opacity: 0.65; margin-top: 2px; }
+.hs-streak { text-align: right; }
+.hs-streak-num { font-family: 'Space Mono', monospace; font-size: 30px; font-weight: 700; line-height: 1.1; opacity: 0.4; }
+.hs-streak.on .hs-streak-num { opacity: 1; color: #F7EB8A; }
+.hs-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 14px; }
+.hs-day { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.hs-dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--card-ink) 35%, transparent); }
+.hs-dot.planned { border-color: #F7EB8A; }
+.hs-dot.posted { background: #A8D8BE; border-color: #A8D8BE; }
+.hs-letter { font-family: 'Space Mono', monospace; font-size: 10px; opacity: 0.6; }
+.hs-day.today .hs-letter { opacity: 1; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.hs-cats { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.hs-cat { display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase; }
+.hs-cat strong { font-size: 12px; }
+.hs-nudge, .hs-nudge:hover {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%;
+  margin-top: 12px; min-height: 44px; padding: 10px 14px; border-radius: 12px;
+  background: rgba(255,255,255,0.08); color: var(--card-ink); text-align: left;
+  font-size: 12px; font-weight: 400; letter-spacing: 0.2px; filter: none;
+}
+.hs-nudge-cta { flex-shrink: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 10.5px; color: #F7EB8A; }

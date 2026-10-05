@@ -1,0 +1,166 @@
+/* Stacked deck on Home and the list layout. */
+
+/* ===== Stacked "wallet" cards (Home default) ===== */
+/* Each card is sticky with a slightly larger top offset than the one before, so scrolling
+   slides the next card up over the previous one and they pile into slivers under the header. */
+.cardlist-stack {
+  --stack-top: 80px;
+}
+/* Room for the last card to slide all the way up. Must be content, not padding:
+   sticky children are confined to the container's content box. */
+.cardlist-stack::after { content: ''; display: block; height: 55vh; }
+.stack-card {
+  --card-bg: #A8D8BE;
+  --card-ink: #141414;
+  position: sticky;
+  top: calc(var(--stack-top) + var(--stack-off, 0px));
+  transition: top 0.25s ease;
+  /* Uniform height so a taller card never peeks out below the one piled on top of it */
+  height: 290px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-top: -26px;
+  padding: 20px 22px 44px;
+  border-radius: 18px;
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0.14), transparent 40%, rgba(0,0,0,0.06)),
+    var(--card-bg);
+  color: var(--card-ink);
+  box-shadow: 0 -6px 18px -8px rgba(0,0,0,0.35);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.stack-card:first-child { margin-top: 0; }
+.stack-card:active { filter: brightness(0.97); }
+.stack-card.selected { outline: 3px solid var(--moss); outline-offset: -3px; }
+/* Card palette, shared by every card-styled surface in the app */
+.c0 { --card-bg: #A8D8BE; --card-ink: #141414; }
+.c1 { --card-bg: #F0B8D8; --card-ink: #141414; }
+.c2 { --card-bg: #F2A64B; --card-ink: #141414; }
+.c3 { --card-bg: #9CCBEE; --card-ink: #141414; }
+.c4 { --card-bg: #1C1C1C; --card-ink: #FFFFFF; }
+.c5 { --card-bg: #B4A0D2; --card-ink: #141414; }
+.c6 { --card-bg: #F7EB8A; --card-ink: #141414; }
+.stack-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.stack-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  margin-top: 6px;
+  opacity: 0.75;
+}
+.stack-icon svg { width: 100%; height: 100%; }
+.stack-title-block { flex: 1; min-width: 0; }
+.stack-kicker, .stack-side-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.stack-title {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.stack-side { text-align: right; flex-shrink: 0; }
+.stack-side-value {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: 1.5px;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+.stack-body { margin-top: 18px; min-height: 0; }
+.stack-body-text {
+  font-size: 15px;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.stack-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+.stack-foot-tags { display: flex; gap: 6px; min-width: 0; overflow: hidden; }
+.stack-tag {
+  flex-shrink: 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card-ink) 10%, transparent);
+  white-space: nowrap;
+}
+.stack-tag.warn { background: #FF651E; color: #FFFFFF; }
+/* Long-press selects, so don't let the OS pop up text selection or callouts */
+.stack-card { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.stack-copy-btn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  padding: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stack-copy-btn:hover { background: color-mix(in srgb, currentColor 12%, transparent); color: inherit; transform: none; }
+.stack-copy-btn svg { width: 100%; height: 100%; }
+@media (max-width: 600px) {
+  .stack-card { padding: 18px 18px 42px; }
+  .stack-side-value { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-card { transition: none; }
+}
+
+/* ===== Mobile "notes app" list ===== */
+.note-list { border-top: 1px solid var(--line); }
+.note-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.note-row:hover { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+.note-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.note-dot.idea { background: var(--stamp-idea); }
+.note-dot.filmed { background: var(--stamp-filmed); }
+.note-dot.captioned { background: var(--stamp-captioned); }
+.note-dot.scheduled { background: var(--stamp-scheduled); }
+.note-dot.posted { background: var(--stamp-posted); }
+.note-title {
+  flex: 1;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.note-chevron { color: var(--ink-soft); font-size: 16px; flex-shrink: 0; }
