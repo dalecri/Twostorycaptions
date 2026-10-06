@@ -217,6 +217,22 @@
 
     <div id="otTemplatesSection" style="display:none;">
 
+      <div class="ot-panel open surface c6" id="aiPromptPanel">
+        <h3>AI caption prompt</h3>
+        <label for="aiClipInput">What happens in the clip</label>
+        <textarea id="aiClipInput" rows="2" placeholder="e.g. Diego steals Ramses' spot on the cat tree and Ramses just stares"></textarea>
+        <label>Starring</label>
+        <div id="aiCatRow"></div>
+        <label style="margin-top:12px;">Vibe</label>
+        <div class="chip-row" id="aiVibeRow" role="group" aria-label="Vibe"></div>
+        <div class="ai-actions">
+          <button type="button" id="aiCopyBtn">Copy prompt</button>
+          <button type="button" class="ghost" id="aiPreviewBtn">Show prompt</button>
+        </div>
+        <pre class="ai-prompt-preview" id="aiPromptPreview" hidden></pre>
+        <p class="settings-hint">Paste it into ChatGPT, Claude or Gemini for 10 lines in our voice. Leave the clip blank to describe it there instead.</p>
+      </div>
+
       <div class="ot-panel open surface c4">
         <h3>Fill in for</h3>
         <div class="ot-grid2">

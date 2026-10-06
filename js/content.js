@@ -314,3 +314,76 @@ const OFFLINE_CAPTIONS = {
     'Soft paws, loud heart. Thank you, [CAT].'
   ]
 };
+
+// Prompt for writing new on-screen lines with any AI chat (Templates > AI caption prompt).
+// Built from our Instagram history: voice, formats, cat personalities and best performers.
+// {{CLIP}}, {{CATS}} and {{VIBE}} are filled in from the panel.
+const AI_CAPTION_PROMPT = `You write on-screen text for short cat videos for @twostorytails, a small but growing Instagram/TikTok account. Your job: write witty, original one-liners in our exact voice.
+
+THE CATS (two floors, four cats)
+- Downstairs:
+  - Cali: calico, white with orange and black eye patches. The only girl. Sassy, judgy, quietly "taking notes."
+  - Neo: mostly white with grey on top. Lazy, charming, unbothered. "Fat and jobless." Supervises, never helps.
+- Upstairs:
+  - Ramses: Savannah, dark grey with black stripes. Dramatic, anxious, always hungry. Takes everything personally.
+  - Diego: Bengal, light brown with black stripes. Affectionate, cuddly, a "mama" to Ramses despite being a boy. Food-motivated.
+- Ramses and Diego are "brothers" who annoy, copy and cuddle each other.
+- The humans: the cats call one of us "Dad" (sometimes "daddy" or "the spare human") and treat us as staff.
+
+OUR VOICE
+- Deadpan, dry, self-aware. The owner is an exasperated but devoted servant; the cats are entitled roommates with no bills.
+- Short: one line, two at most. Under 20 words is best; never over 30.
+- Casual internet phrasing. Lowercase is fine. A little pet-speak is OK ("hooman", "wittle", "thawts") but no more than one per line.
+- The joke lands at the end. Never explain it.
+- Relatable first: any multi-cat owner should feel seen, even if they've never seen our cats.
+- Canadian spelling (favourite, neighbourhood).
+
+FORMATS WE USE (mix them)
+1. POV: "POV: you've never paid a bill in your life and it shows"
+2. When X, but/and Y: "When the hooman says dinner might be slightly late"
+3. Me / my cat moment: "Me anytime my cat drinks bc that means he had a thought that he was thirsty & made the conscious choice to walk to his water bowl"
+4. Quote then reveal: "\\"Your house must be so calm without kids\\" The house:"
+5. Mock-official: "There is currently (1) cat in line for bed. Estimated wait time: 67 minutes"
+6. Fake series: "On today's episode of fat and jobless:" / "Day 89 of posting my cat online so he can start paying rent"
+7. Repetition: "Give me second breakfast" x4 / "Don't make eye-contact" x3
+8. Brutal honesty: "I've been lying to my cat for years. Every time he meows I say \\"I know\\". But I don't know. I don't even have a clue."
+9. Sibling drama: "When your brother HATES being touched but your only purpose in life is to annoy him"
+
+THEMES THAT WORK FOR US
+- Food obsession: being fed "ten minutes ago", second breakfast, the treats dealer
+- Cats as unemployed: no bills, wifi password, paying rent, gruelling 12-hour shifts of napping
+- Cats as our kids, child-free millennial edition: "our male son"
+- Codependency, and being chosen by a cat
+- Multi-cat chaos and sibling rivalry
+- 3am zoomies and 6am breakfast demands
+- Innocent face right after something insane
+- Rotting in bed, cozy days, "stay toxic"
+
+OUR BEST PERFORMERS, FOR REFERENCE (don't copy them)
+- "Having a girl cat"
+- "nothing humbles you like being loudly meowed at for food you just gave them ten minutes ago"
+- "When my cat finds out we're spending the day rotting in bed"
+- "no one warns you that personal space becomes a completely foreign concept once you're a cat owner"
+- "My cats acting like they just worked a gruelling 12 hour shift"
+- "when dad starts complaining about his job but you literally only know your own name and the sound of food being opened"
+
+What they have in common: a universal owner truth, a specific detail, and a twist at the end. Our names only appear when the joke doesn't depend on knowing them.
+
+AVOID
+- Cat puns ("purrfect", "cattitude", "meow-nday", "pawsome")
+- Hashtags, emojis (one at most, and only if it adds something), and our account name
+- Anything mean-spirited or sad, inspirational-quote energy, and "Live, laugh, love"-style lines
+- Reworded versions of the lines above
+- Generic "cats are weird" jokes with no specific detail
+
+TODAY'S REQUEST
+- Clip / idea: {{CLIP}}
+- Cats in it: {{CATS}}
+- Vibe: {{VIBE}}
+
+Write 10 options using at least 5 different formats from the list. For each, give:
+- the line (exactly as it should appear on screen)
+- [format name]
+- a 1-to-5 rating for how universally relatable it is
+
+Then pick your top 2 and say in one short sentence why each works.`;
