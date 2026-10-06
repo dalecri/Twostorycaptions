@@ -105,3 +105,21 @@ header.masthead { padding-top: var(--safe-top); }
 }
 .stack-card.flat .stack-foot { margin-top: 16px; }
 .list-tile-footer:empty { display: none; }
+
+/* Templates: AI caption prompt */
+.ai-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.ai-actions button { min-height: 44px; }
+.ai-prompt-preview {
+  margin: 12px 0 0;
+  max-height: 320px;
+  overflow: auto;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--paper-light);
+  color: var(--ink);
+  font-family: 'Space Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.ai-prompt-preview[hidden] { display: none; }

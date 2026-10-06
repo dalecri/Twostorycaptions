@@ -190,7 +190,49 @@ function renderCarouselIdeas() {
   }
 }
 
+// ===== AI caption prompt: our voice guide, filled in with today's clip =====
+let aiCats = [];
+let aiVibe = '';
+const AI_VIBES = ['Funny', 'Relatable', 'Wholesome', 'Deadpan', 'Meme'];
+
+function buildAiPrompt() {
+  const clip = document.getElementById('aiClipInput').value.trim();
+  return AI_CAPTION_PROMPT
+    .replace('{{CLIP}}', clip || '[describe what happens in the video]')
+    .replace('{{CATS}}', aiCats.length ? aiCats.join(', ') : 'any of the four')
+    .replace('{{VIBE}}', aiVibe ? aiVibe.toLowerCase() : 'any');
+}
+
+function renderAiPromptPanel() {
+  fillCatPicker(document.getElementById('aiCatRow'), aiCats, (cat) => {
+    aiCats = aiCats.includes(cat) ? aiCats.filter(c => c !== cat) : aiCats.concat(cat);
+    renderAiPromptPanel();
+  });
+  const vibeRow = document.getElementById('aiVibeRow');
+  vibeRow.innerHTML = '';
+  AI_VIBES.forEach(v => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip' + (aiVibe === v ? ' selected' : '');
+    chip.setAttribute('aria-pressed', aiVibe === v ? 'true' : 'false');
+    chip.textContent = v;
+    chip.onclick = () => { aiVibe = aiVibe === v ? '' : v; renderAiPromptPanel(); };
+    vibeRow.appendChild(chip);
+  });
+  const preview = document.getElementById('aiPromptPreview');
+  if (!preview.hidden) preview.textContent = buildAiPrompt();
+}
+
 function initTemplatesSection() {
+  renderAiPromptPanel();
+  document.getElementById('aiClipInput').addEventListener('input', renderAiPromptPanel);
+  document.getElementById('aiCopyBtn').addEventListener('click', (e) => copyText(buildAiPrompt(), e.currentTarget));
+  document.getElementById('aiPreviewBtn').addEventListener('click', (e) => {
+    const preview = document.getElementById('aiPromptPreview');
+    preview.hidden = !preview.hidden;
+    e.currentTarget.textContent = preview.hidden ? 'Show prompt' : 'Hide prompt';
+    renderAiPromptPanel();
+  });
   document.getElementById('tplGeneratePitchBtn').addEventListener('click', generatePitchOutput);
   const catSelect = document.getElementById('tplCatSelect');
   CATS.forEach(cat => {
