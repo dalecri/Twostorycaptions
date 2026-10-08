@@ -58,6 +58,24 @@ function dayTimelineHtml(posts, day) {
   }).join('') + '</div>' + addBar;
 }
 
+// Swipe the week strip left/right for the next/previous week
+function enableStripSwipe(strip, step) {
+  if (!strip) return;
+  let x0 = null, y0 = 0;
+  strip.addEventListener('pointerdown', (e) => { x0 = e.clientX; y0 = e.clientY; });
+  strip.addEventListener('pointerup', (e) => {
+    if (x0 === null) return;
+    const dx = e.clientX - x0, dy = e.clientY - y0;
+    x0 = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      calDragJustEnded = true; // swallow the tap on the day under the finger
+      setTimeout(() => { calDragJustEnded = false; }, 80);
+      step(dx < 0 ? 1 : -1);
+    }
+  });
+  strip.addEventListener('pointercancel', () => { x0 = null; });
+}
+
 function renderCalendar() {
   const container = document.getElementById('calendarView');
   const today = localToday();
@@ -74,10 +92,11 @@ function renderCalendar() {
     const fmt = (d, opts) => parseDay(d).toLocaleDateString('en-US', opts);
     title = fmt(calDay, { month: 'long', year: 'numeric' });
     const rel = { [today]: 'Today', [addDays(today, 1)]: 'Tomorrow', [addDays(today, -1)]: 'Yesterday' }[calDay];
-    dayTop = '<div class="day-head">' +
+    dayTop = '<div class="day-head"><div>' +
         '<div class="day-head-date">' + escapeHtml(fmt(calDay, { month: 'long', day: 'numeric', year: 'numeric' })) + '</div>' +
-        '<div class="day-head-title">' + escapeHtml(rel || fmt(calDay, { weekday: 'long' })) + '</div>' +
-      '</div><div class="day-strip" role="group" aria-label="Pick a day">';
+        '<div class="day-head-title">' + escapeHtml(rel || fmt(calDay, { weekday: 'long' })) + '</div></div>' +
+        (calDay === today ? '' : '<button type="button" class="link-btn" id="dayTodayBtn">Back to today</button>') +
+      '</div><div class="day-strip" role="group" aria-label="Pick a day (swipe for other weeks)">';
     for (let i = 0; i < 7; i++) {
       const day = addDays(monday, i);
       const n = (byDate[day] || []).length;
@@ -136,12 +155,12 @@ function renderCalendar() {
   }
 
   let html = '<div class="cal-header">' +
-    '<h2>' + escapeHtml(title) + '</h2>' +
+    (calView === 'day' ? '' : '<h2>' + escapeHtml(title) + '</h2>') +
     '<div class="chip-row cal-view-toggle" role="group" aria-label="Calendar view">' +
       CAL_VIEWS.map(([v, label]) => '<button type="button" class="chip' + (calView === v ? ' selected' : '') + '" aria-pressed="' + (calView === v) + '" data-cal-view="' + v + '">' + label + '</button>').join('') +
     '</div>' +
   '</div>' +
-  '<div class="nav-btns cal-nav"><button id="calPrev" aria-label="Previous">‹</button><button id="calToday">Today</button><button id="calNext" aria-label="Next">›</button></div>';
+  (calView === 'day' ? '' : '<div class="nav-btns cal-nav"><button id="calPrev" aria-label="Previous">‹</button><button id="calToday">Today</button><button id="calNext" aria-label="Next">›</button></div>');
   html += dayTop;
   const trayIdeas = calTrayIdeas ? bankIdeas().slice(0, 12) : [];
   const trayItems = unscheduled.concat(trayIdeas);
@@ -153,16 +172,22 @@ function renderCalendar() {
   container.classList.toggle('cal-mode-week', calView === 'week' || calView === 'day');
   container.classList.toggle('cal-mode-day', calView === 'day');
 
-  // Day view: the arrows move a week, keeping the weekday
+  // Day view: swiping the strip moves a week, keeping the weekday
   const step = (dir) => {
     if (calView === 'day') calDay = addDays(calDay, dir * 7);
     else if (calView === 'week') calWeekOffset += dir;
     else calMonthOffset += dir;
     renderCalendar();
   };
-  document.getElementById('calPrev').onclick = () => step(-1);
-  document.getElementById('calNext').onclick = () => step(1);
-  document.getElementById('calToday').onclick = () => { calWeekOffset = 0; calMonthOffset = 0; calDay = today; renderCalendar(); };
+  if (calView === 'day') {
+    const back = document.getElementById('dayTodayBtn');
+    if (back) back.onclick = () => { calDay = today; renderCalendar(); };
+    enableStripSwipe(container.querySelector('.day-strip'), step);
+  } else {
+    document.getElementById('calPrev').onclick = () => step(-1);
+    document.getElementById('calNext').onclick = () => step(1);
+    document.getElementById('calToday').onclick = () => { calWeekOffset = 0; calMonthOffset = 0; calDay = today; renderCalendar(); };
+  }
   document.getElementById('calTrayIdeasBtn').onclick = () => { calTrayIdeas = !calTrayIdeas; renderCalendar(); };
   container.querySelectorAll('[data-cal-view]').forEach(b => b.onclick = () => {
     calView = b.dataset.calView;

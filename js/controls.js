@@ -102,7 +102,7 @@ function fillCatPicker(container, selected, onToggle) {
     btn.type = 'button';
     btn.className = 'cat-pick' + (on ? ' on' : '');
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    btn.innerHTML = '<span class="cat-avatar">' + catAvatarSvg(cat) + '</span>' +
+    btn.innerHTML = '<span class="cat-avatar">' + catAvatarSvg(cat, !on) + '</span>' +
       '<span class="cat-pick-name">' + escapeHtml(cat) + '</span>' +
       '<span class="cat-pick-sub">' + escapeHtml(CAT_PROFILES[cat].breed) + '</span>';
     btn.onclick = () => onToggle(cat);

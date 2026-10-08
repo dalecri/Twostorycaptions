@@ -2,7 +2,20 @@
 
 let catSvgSeq = 0;
 
-function catAvatarSvg(name) {
+// Greyscale copy of a colour, for unpicked cats in the Starring picker
+function greyHex(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const y = Math.round(0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255));
+  const v = Math.round(y * 0.55 + 200 * 0.45); // lighter and flatter, so it reads as "off"
+  return '#' + [v, v, v].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+function catAvatarSvg(name, grey) {
+  const svg = catAvatarSvgColor(name);
+  return grey ? svg.replace(/#[0-9A-Fa-f]{6}\b/g, greyHex).replace(/#([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])\b/g, (m, r, g, b) => greyHex('#' + r + r + g + g + b + b)) : svg;
+}
+
+function catAvatarSvgColor(name) {
   const p = CAT_PROFILES[name];
   if (!p) return '';
   const clipId = 'catclip' + (++catSvgSeq);
@@ -111,30 +124,6 @@ function buildFullCard(clip) {
 
   card.appendChild(fieldLabel(clip.status === 'posted' ? 'Posted on' : 'Post date'));
   card.appendChild(buildDateChip(clip.scheduledDate, (v) => { setScheduledDate(clip.id, v); refreshOpenModal(); }));
-
-  // Lines saved with older versions of the app
-  const caps = (clip.captions && clip.captions.captions) || [];
-  if (caps.length) {
-    card.appendChild(fieldLabel('Saved lines'));
-    const box = document.createElement('div');
-    box.className = 'captions-box';
-    caps.forEach((cap) => {
-      const opt = document.createElement('div');
-      opt.className = 'caption-opt';
-      const text = document.createElement('div');
-      text.className = 'caption-opt-text';
-      text.textContent = cap;
-      const copy = document.createElement('button');
-      copy.className = 'platform-copy-btn';
-      copy.title = 'Copy with hashtags';
-      copy.innerHTML = NAV_ICONS.copy;
-      copy.onclick = () => { const t = hashtagsFor('Instagram'); copyWithIconFeedback(t ? cap + '\n\n' + t : cap, copy); };
-      opt.appendChild(text);
-      opt.appendChild(copy);
-      box.appendChild(opt);
-    });
-    card.appendChild(box);
-  }
 
   // Not happy with the line? Hand it to an AI chat in our voice
   const ai = document.createElement('div');

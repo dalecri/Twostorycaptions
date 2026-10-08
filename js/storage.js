@@ -153,26 +153,18 @@ function safeUrl(v) { return typeof v === 'string' && /^https?:\/\//i.test(v) ? 
 function normalizeClip(c) {
   if (!c || typeof c !== 'object') return null;
   const tones = strList(c.selectedTones, TONES);
-  let captions = null;
-  if (c.captions && typeof c.captions === 'object' && Array.isArray(c.captions.captions)) {
-    captions = {
-      captions: strList(c.captions.captions).map(s => s.slice(0, 2000)),
-      hashtagsInstagram: str(c.captions.hashtagsInstagram || c.captions.hashtags, 500),
-      hashtagsTiktok: str(c.captions.hashtagsTiktok || c.captions.hashtags, 500)
-    };
-  }
   return {
     id: safeId(c.id, uid),
     desc: str(c.desc, 2000),
     status: STATUSES.includes(c.status) ? c.status : LEGACY_STATUS[c.status] || 'idea',
     // Sorted by keywords the first time it's seen; after that it's whatever was picked
-    pillar: PILLAR_KEYS.includes(c.pillar) ? c.pillar : inferPillar(str(c.desc) + ' ' + ((c.captions && Array.isArray(c.captions.captions) && c.captions.captions[0]) || '')),
+    pillar: PILLAR_KEYS.includes(c.pillar) ? c.pillar : inferPillar(str(c.desc)),
     created: safeIso(c.created),
     scheduledDate: safeDay(c.scheduledDate),
     selectedTones: tones.length ? tones : ['Deadpan nature-doc'],
     platform: PLATFORMS.includes(c.platform) ? c.platform : 'Both',
     captionTones: strList(c.captionTones, TONES),
-    captions,
+    captions: null, // one caption per card now: the text itself
     videoLink: safeUrl(c.videoLink),
     brandId: typeof c.brandId === 'string' && SAFE_ID.test(c.brandId) ? c.brandId : '',
     catTags: strList(c.catTags, CATS),

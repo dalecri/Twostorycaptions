@@ -89,8 +89,7 @@ function clipMatches(c, q) {
   if (c.catTags.some(cat => cat.toLowerCase().includes(q))) return true;
   if (pillarOf(c.pillar).label.toLowerCase().includes(q)) return true;
   const brand = c.brandId && brands.find(b => b.id === c.brandId);
-  if (brand && brand.name.toLowerCase().includes(q)) return true;
-  return !!(c.captions && c.captions.captions.some(cap => cap.toLowerCase().includes(q)));
+  return !!(brand && brand.name.toLowerCase().includes(q));
 }
 
 const SEARCH_LIMIT = 50;
