@@ -27,28 +27,25 @@
 <link rel="stylesheet" href="css/12-brands-mobile.css">
 <link rel="stylesheet" href="css/13-polish.css">
 <link rel="stylesheet" href="css/14-app-shell.css">
+<link rel="stylesheet" href="css/15-overhaul.css">
 </head>
 <body>
 <header class="masthead" id="mainHeader">
   <div class="masthead-inner">
     <div class="title-block">
-      <h1 id="pageTitle">Home</h1>
+      <h1 id="pageTitle">TwoStoryTails</h1>
       <p id="syncStatus">Loading…</p>
     </div>
     <div class="header-icons">
-      <span class="header-filter-icons" id="headerFilterIcons">
-        <button class="icon-btn" id="searchToggleBtn" title="Search &amp; filter"></button>
-        <button class="icon-btn" id="calendarToggleBtn" title="Calendar view"></button>
-      </span>
+      <button class="icon-btn" id="searchToggleBtn" title="Search"></button>
       <button class="icon-btn" id="settingsBtn" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg></button>
     </div>
   </div>
     <div class="quick-filter-panel" id="quickFilterPanel" hidden>
       <div class="search-wrap">
         <span class="search-icon" id="searchIcon"></span>
-        <input id="searchInput" class="filters-bar-search" type="search" placeholder="Captions, cats, brands…" aria-label="Search">
+        <input id="searchInput" class="filters-bar-search" type="search" placeholder="Search every caption, cat or brand" aria-label="Search">
       </div>
-      <div class="chip-row filter-chips" id="filterRow" role="group" aria-label="Filter by status"></div>
     </div>
 </header>
 <div class="status-bar-backdrop" aria-hidden="true"></div>
@@ -64,9 +61,6 @@
 
       <div class="field-label" style="margin-top:0;">Theme</div>
       <div class="settings-theme-grid" id="settingsThemeGrid"></div>
-
-      <div class="field-label" style="margin-top:18px;">Home layout</div>
-      <div class="settings-data-row" id="settingsLayoutRow"></div>
 
       <div class="field-label" style="margin-top:18px;">Weekly posting goal</div>
       <div class="chip-row" id="settingsGoalRow" role="group" aria-label="Posts per week"></div>
@@ -102,60 +96,87 @@
 
   <div class="entry-form surface c6" id="entryForm">
     <div class="sheet-header">
-      <div><div class="card-kicker">New card</div><div class="card-title">Log a clip</div></div>
+      <div><div class="card-kicker">New caption</div><div class="card-title">What happened?</div></div>
       <button class="sheet-close" id="sheetCloseBtn">✕</button>
     </div>
     <textarea id="descInput" rows="3" placeholder="e.g. Diego knocked a mug off the counter, then stared directly at the camera for four seconds"></textarea>
+
+    <div class="field-group">
+      <div class="field-label">Pillar</div>
+      <div id="newClipPillarRow"></div>
+      <p class="sheet-hint" id="newClipPillarHint"></p>
+    </div>
 
     <div class="field-group">
       <div class="field-label">Starring</div>
       <div id="newClipCatRow"></div>
     </div>
 
-    <div class="field-group">
-      <div class="field-label">Post date</div>
-      <div id="newClipDateRow"></div>
-    </div>
-
-    <div class="field-group">
-      <div class="field-label">Tone</div>
-      <div class="tone-row" id="newClipToneRow"></div>
+    <div id="sheetMore" hidden>
+      <div class="field-group">
+        <div class="field-label">Post date</div>
+        <div id="newClipDateRow"></div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Stage</div>
+        <div id="newClipStageRow"></div>
+      </div>
+      <div class="field-group">
+        <label class="inline-select" id="newClipBrandRow">
+          <span class="inline-select-label">Brand</span>
+          <span class="inline-select-value" id="newClipBrandValue">None</span>
+          <span class="status-caret">▾</span>
+          <select id="newClipBrandSelect" aria-label="Brand"><option value="">None</option></select>
+        </label>
+      </div>
     </div>
 
     <div class="sheet-footer">
-      <label class="inline-select" id="newClipBrandRow">
-        <span class="inline-select-label">Brand</span>
-        <span class="inline-select-value" id="newClipBrandValue">None</span>
-        <span class="status-caret">▾</span>
-        <select id="newClipBrandSelect" aria-label="Brand"><option value="">None</option></select>
-      </label>
-      <button id="addBtn">Log Entry</button>
+      <button type="button" class="ghost sheet-more-btn" id="sheetMoreBtn" aria-expanded="false" aria-controls="sheetMore"><span>Date, brand, stage</span> ▾</button>
+      <button id="addBtn">Save to bank</button>
     </div>
   </div>
 
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
 
-  <div class="selection-bar surface c4" id="selectionBar" style="display:none;">
-    <span id="selectionCount">0 selected</span>
-    <div class="selection-bar-actions">
-      <select id="bulkStatusSelect" class="filter-select"><option value="">Set status…</option></select>
-      <button class="ghost" id="bulkArchiveBtn">Archive</button>
-      <button class="ghost" id="selectAllBtn">Select all</button>
-      <button class="ghost" id="cancelSelectBtn">Cancel</button>
-      <button id="deleteSelectedBtn">Delete</button>
-    </div>
+  <div id="homeView" class="app-view">
+    <section class="home-stats surface c4" id="homeStats" aria-label="This week"></section>
+    <section class="home-block" aria-labelledby="upNextTitle">
+      <div class="block-head"><h2 class="block-title" id="upNextTitle">Up next</h2><button type="button" class="link-btn" id="upNextAllBtn">See plan ›</button></div>
+      <div id="upNextList"></div>
+    </section>
+    <section class="home-block" aria-labelledby="cotdTitle">
+      <div class="block-head"><h2 class="block-title" id="cotdTitle">From the bank</h2></div>
+      <div id="cotdCard"></div>
+    </section>
+    <button type="button" class="outreach-card surface c3" id="outreachCard"></button>
   </div>
 
+  <div id="bankView" class="app-view" hidden>
+    <div id="bankContent"></div>
+    <details class="ot-panel surface c6 ai-panel" id="aiPromptPanel">
+      <summary class="ai-summary"><span><span class="card-kicker">Stuck?</span><span class="ai-summary-title">Get fresh lines from AI</span></span><span class="status-caret">▾</span></summary>
+      <label for="aiClipInput">What happens in the clip</label>
+      <textarea id="aiClipInput" rows="2" placeholder="e.g. Diego steals Ramses' spot on the cat tree and Ramses just stares"></textarea>
+      <label>Starring</label>
+      <div id="aiCatRow"></div>
+      <label style="margin-top:12px;">Pillar</label>
+      <div class="chip-row" id="aiVibeRow" role="group" aria-label="Pillar"></div>
+      <div class="ai-actions">
+        <button type="button" id="aiCopyBtn">Copy prompt</button>
+        <button type="button" class="ghost" id="aiPreviewBtn">Show prompt</button>
+      </div>
+      <pre class="ai-prompt-preview" id="aiPromptPreview" hidden></pre>
+      <p class="settings-hint">Paste it into ChatGPT, Claude or Gemini for 10 lines in our voice, then save the keepers with +.</p>
+    </details>
+  </div>
 
-  <section class="home-stats surface c4" id="homeStats" aria-label="This week" hidden></section>
-  <div id="cardList"></div>
-  <section class="card-overflow" id="cardOverflow" hidden>
-    <div class="card-overflow-label" id="cardOverflowLabel"></div>
-    <div class="cardlist-list" id="cardOverflowList"></div>
-  </section>
-  <div id="calendarView" style="display:none;"></div>
+  <div id="libraryView" class="app-view" hidden></div>
+  <div id="searchView" class="app-view" hidden></div>
+  <div id="calendarView" class="app-view" hidden></div>
 
-  <div id="outreachView" style="display:none;">
+  <div id="outreachView" class="app-view" hidden>
+    <div class="seg-tabs" id="otSubTabs" role="tablist" aria-label="Outreach"></div>
     <div id="otPipelineSection">
       <div class="ot-stats surface c4" id="otStats"></div>
       <div class="ot-toolbar">
@@ -217,22 +238,6 @@
 
     <div id="otTemplatesSection" style="display:none;">
 
-      <div class="ot-panel open surface c6" id="aiPromptPanel">
-        <h3>AI caption prompt</h3>
-        <label for="aiClipInput">What happens in the clip</label>
-        <textarea id="aiClipInput" rows="2" placeholder="e.g. Diego steals Ramses' spot on the cat tree and Ramses just stares"></textarea>
-        <label>Starring</label>
-        <div id="aiCatRow"></div>
-        <label style="margin-top:12px;">Vibe</label>
-        <div class="chip-row" id="aiVibeRow" role="group" aria-label="Vibe"></div>
-        <div class="ai-actions">
-          <button type="button" id="aiCopyBtn">Copy prompt</button>
-          <button type="button" class="ghost" id="aiPreviewBtn">Show prompt</button>
-        </div>
-        <pre class="ai-prompt-preview" id="aiPromptPreview" hidden></pre>
-        <p class="settings-hint">Paste it into ChatGPT, Claude or Gemini for 10 lines in our voice. Leave the clip blank to describe it there instead.</p>
-      </div>
-
       <div class="ot-panel open surface c4">
         <h3>Fill in for</h3>
         <div class="ot-grid2">
@@ -263,16 +268,11 @@
       </div>
 
       <div class="ot-panel open surface c3">
-        <h3>Caption templates</h3>
+        <h3>Sponsored caption lines</h3>
         <button type="button" id="tplGenerateCaptionsBtn">Fill in captions below</button>
         <div id="tplCaptionOutput" style="margin-top:14px;"></div>
       </div>
 
-      <div class="ot-panel open surface c5">
-        <h3>Carousel idea bank</h3>
-        <input id="tplCarouselFilter" placeholder="Search ideas or pillars (e.g. litter, grooming, exotic)...">
-        <div id="tplCarouselOutput" style="margin-top:14px;"></div>
-      </div>
     </div>
 
     <div id="otTasksSection" style="display:none;">
@@ -326,6 +326,8 @@
 <script src="js/clips.js"></script>
 <script src="js/home.js"></script>
 <script src="js/stats.js"></script>
+<script src="js/bank.js"></script>
+<script src="js/library.js"></script>
 <script src="js/calendar.js"></script>
 <script src="js/brands.js"></script>
 <script src="js/templates.js"></script>

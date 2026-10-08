@@ -1,4 +1,4 @@
-// Card rendering (deck, list, open card) and the pick-out / put-back animation.
+// Card rendering (full cards, compact rows, the open card) and the pick-out / put-back animation.
 
 let catSvgSeq = 0;
 
@@ -52,109 +52,106 @@ function catStackHtml(cats) {
     list.map(c => '<span class="cat-avatar">' + catAvatarSvg(c) + '</span>').join('') + '</div>';
 }
 
-// Editor shown inside a picked-out card. The card's own header (cats, date, status) sits above it.
+// A small round pillar badge: icon + name
+function pillarChipHtml(key) {
+  const p = pillarOf(key);
+  return '<span class="pillar-tag">' + pillarIconSvg(p.key) + '<span>' + escapeHtml(p.label) + '</span></span>';
+}
+
+function fieldLabel(text) {
+  const el = document.createElement('div');
+  el.className = 'field-label';
+  el.textContent = text;
+  return el;
+}
+
+// Editor shown inside a picked-out card. The card's own header (cats, date, pillar) sits above it.
 function buildFullCard(clip) {
   const card = document.createElement('div');
   card.className = 'card';
   card.setAttribute('data-highlight-id', clip.id);
-  if (!clip.selectedTones) clip.selectedTones = ['Deadpan nature-doc'];
 
-  // The caption itself
-  const top = document.createElement('div');
-  top.className = 'card-top';
+  // The caption itself: edit in place, saved when you leave the box
   const descWrap = document.createElement('div');
   descWrap.className = 'card-desc-wrap';
-  const desc = document.createElement('div');
-  desc.className = 'card-desc';
-  desc.textContent = clip.desc;
+  const desc = document.createElement('textarea');
+  desc.className = 'card-desc card-desc-edit';
+  desc.rows = 2;
+  desc.value = clip.desc;
+  desc.setAttribute('aria-label', 'Caption');
+  const grow = () => { desc.style.height = 'auto'; desc.style.height = desc.scrollHeight + 'px'; };
+  desc.addEventListener('input', grow);
+  desc.addEventListener('change', () => editClipText(clip.id, desc.value));
+  requestAnimationFrame(grow);
   descWrap.appendChild(desc);
   const descCopyBtn = document.createElement('button');
   descCopyBtn.className = 'desc-copy-btn';
-  descCopyBtn.title = 'Copy caption';
+  descCopyBtn.title = 'Copy caption + hashtags';
   descCopyBtn.innerHTML = NAV_ICONS.copy;
-  descCopyBtn.onclick = (e) => { e.stopPropagation(); copyWithIconFeedback(clip.desc, descCopyBtn); };
+  descCopyBtn.onclick = (e) => {
+    e.stopPropagation();
+    const tags = hashtagsFor('Instagram');
+    copyWithIconFeedback(desc.value.trim() + (tags ? '\n\n' + tags : ''), descCopyBtn);
+  };
   descWrap.appendChild(descCopyBtn);
-  top.appendChild(descWrap);
-  card.appendChild(top);
+  card.appendChild(descWrap);
 
-  // Who's in it
-  const starLabel = document.createElement('div');
-  starLabel.className = 'field-label';
-  starLabel.style.marginTop = '16px';
-  starLabel.textContent = 'Starring';
-  card.appendChild(starLabel);
+  card.appendChild(fieldLabel('Stage'));
+  card.appendChild(buildStageToggle(clip.status, (s) => updateStatus(clip.id, s)));
+
+  card.appendChild(fieldLabel('Pillar'));
+  const pillarRow = document.createElement('div');
+  fillPillarPicker(pillarRow, clip.pillar, (key) => setClipPillar(clip.id, key || clip.pillar));
+  card.appendChild(pillarRow);
+
+  card.appendChild(fieldLabel('Starring'));
   const catRow = document.createElement('div');
-  fillCatPicker(catRow, clip.catTags || [], cat => toggleClipCat(clip.id, cat));
+  fillCatPicker(catRow, clip.catTags, cat => toggleClipCat(clip.id, cat));
   card.appendChild(catRow);
 
-  const dateLabel = document.createElement('div');
-  dateLabel.className = 'field-label';
-  dateLabel.style.marginTop = '16px';
-  dateLabel.textContent = 'Post date';
-  card.appendChild(dateLabel);
+  card.appendChild(fieldLabel(clip.status === 'posted' ? 'Posted on' : 'Post date'));
   card.appendChild(buildDateChip(clip.scheduledDate, (v) => { setScheduledDate(clip.id, v); refreshOpenModal(); }));
 
-  // Tones, then the button that uses them, then the options it produced
-  const toneLabel = document.createElement('div');
-  toneLabel.className = 'field-label';
-  toneLabel.style.marginTop = '16px';
-  toneLabel.textContent = 'Tone (pick one or more)';
-  card.appendChild(toneLabel);
-  const toneRow = document.createElement('div');
-  toneRow.className = 'tone-row';
-  TONES.forEach(tone => toneRow.appendChild(buildToneChip(tone, clip.selectedTones.includes(tone), () => { toggleTone(clip.id, tone); refreshOpenModal(); })));
-  card.appendChild(toneRow);
-
-  const genRow = document.createElement('div');
-  genRow.className = 'card-bottom-row';
-  const genBtn = document.createElement('button');
-  genBtn.className = 'gen-caption-btn';
-  genBtn.textContent = clip.captions ? 'Shuffle captions' : 'Draft captions';
-  genBtn.onclick = () => generateCaptions(clip.id);
-  genRow.appendChild(genBtn);
-  card.appendChild(genRow);
-
-  if (clip.captions) {
+  // Lines saved with older versions of the app
+  const caps = (clip.captions && clip.captions.captions) || [];
+  if (caps.length) {
+    card.appendChild(fieldLabel('Saved lines'));
     const box = document.createElement('div');
     box.className = 'captions-box';
-    const usedTones = clip.captionTones || [];
-    // Always the current sets from Settings, so editing them applies to every card
-    const igHashtags = hashtagsFor('Instagram');
-    const ttHashtags = hashtagsFor('TikTok');
-    (clip.captions.captions || []).forEach((cap, i) => {
-      const optDiv = document.createElement('div');
-      optDiv.className = 'caption-opt';
-      const topRow = document.createElement('div');
-      topRow.className = 'caption-opt-top';
-      const tag = document.createElement('span');
-      tag.className = 'copy-tag';
-      tag.textContent = 'Option ' + (i + 1) + (usedTones[i] ? ' | ' + usedTones[i] : '');
-      const copyBtnGroup = document.createElement('div');
-      copyBtnGroup.className = 'platform-copy-group';
-      const igCopyBtn = document.createElement('button');
-      igCopyBtn.className = 'platform-copy-btn';
-      igCopyBtn.title = 'Copy with Instagram hashtags';
-      igCopyBtn.innerHTML = NAV_ICONS.instagram;
-      igCopyBtn.onclick = () => copyWithIconFeedback(igHashtags ? (cap + '\n\n' + igHashtags) : cap, igCopyBtn);
-      const ttCopyBtn = document.createElement('button');
-      ttCopyBtn.className = 'platform-copy-btn';
-      ttCopyBtn.title = 'Copy with TikTok hashtags';
-      ttCopyBtn.innerHTML = NAV_ICONS.tiktok;
-      ttCopyBtn.onclick = () => copyWithIconFeedback(ttHashtags ? (cap + '\n\n' + ttHashtags) : cap, ttCopyBtn);
-      copyBtnGroup.appendChild(igCopyBtn);
-      copyBtnGroup.appendChild(ttCopyBtn);
-      topRow.appendChild(tag);
-      topRow.appendChild(copyBtnGroup);
-      optDiv.appendChild(topRow);
-      const capText = document.createElement('div');
-      capText.textContent = cap;
-      optDiv.appendChild(capText);
-      box.appendChild(optDiv);
+    caps.forEach((cap) => {
+      const opt = document.createElement('div');
+      opt.className = 'caption-opt';
+      const text = document.createElement('div');
+      text.className = 'caption-opt-text';
+      text.textContent = cap;
+      const copy = document.createElement('button');
+      copy.className = 'platform-copy-btn';
+      copy.title = 'Copy with hashtags';
+      copy.innerHTML = NAV_ICONS.copy;
+      copy.onclick = () => { const t = hashtagsFor('Instagram'); copyWithIconFeedback(t ? cap + '\n\n' + t : cap, copy); };
+      opt.appendChild(text);
+      opt.appendChild(copy);
+      box.appendChild(opt);
     });
     card.appendChild(box);
   }
 
-  const brandRow = buildBrandInlineSelect(clip.brandId, (id) => { clip.brandId = id; saveClips(clip.id); render(); });
+  // Not happy with the line? Hand it to an AI chat in our voice
+  const ai = document.createElement('div');
+  ai.className = 'card-ai';
+  const aiBtn = document.createElement('button');
+  aiBtn.type = 'button';
+  aiBtn.className = 'ghost card-ai-btn';
+  aiBtn.textContent = 'Copy AI prompt for this';
+  aiBtn.onclick = () => copyText(aiPromptForClip(clip), aiBtn);
+  ai.appendChild(aiBtn);
+  const aiHint = document.createElement('span');
+  aiHint.className = 'card-ai-hint';
+  aiHint.textContent = 'Paste in any AI chat for 10 more lines in our voice';
+  ai.appendChild(aiHint);
+  card.appendChild(ai);
+
+  const brandRow = buildBrandInlineSelect(clip.brandId, (id) => { clip.brandId = id; saveClips(); render(); });
   brandRow.classList.add('card-brand-row');
   card.appendChild(brandRow);
 
@@ -175,124 +172,23 @@ function buildFullCard(clip) {
   return card;
 }
 
-function buildListTile(clip) {
-  const tile = document.createElement('div');
-  tile.className = 'list-tile';
-  tile.setAttribute('data-highlight-id', clip.id);
-
-  if (selectMode) {
-    if (selectedClipIds.has(clip.id)) tile.classList.add('selected');
-    const check = document.createElement('div');
-    check.className = 'tile-select-check';
-    check.innerHTML = NAV_ICONS.checkSquare;
-    tile.appendChild(check);
-  }
-
-  const stamp = document.createElement('div');
-  stamp.className = 'stamp ' + clip.status;
-  stamp.textContent = STATUS_LABELS[clip.status];
-  tile.appendChild(stamp);
-
-  const copyBtn = document.createElement('button');
-  copyBtn.className = 'tile-copy-btn';
-  copyBtn.title = 'Quick copy';
-  copyBtn.innerHTML = NAV_ICONS.copy;
-  copyBtn.onclick = (e) => {
-    e.stopPropagation();
-    let textToCopy = clip.desc;
-    if (clip.captions && clip.captions.captions && clip.captions.captions[0]) {
-      const tags = clip.platform === 'TikTok'
-        ? hashtagsFor('TikTok')
-        : hashtagsFor('Instagram');
-      textToCopy = clip.captions.captions[0] + (tags ? '\n\n' + tags : '');
-    }
-    copyWithIconFeedback(textToCopy, copyBtn);
-  };
-  tile.appendChild(copyBtn);
-
-  const desc = document.createElement('div');
-  desc.className = 'list-tile-desc';
-  desc.textContent = clip.desc;
-  tile.appendChild(desc);
-
-  if (clip.brandId) {
-    const b = brands.find(x => x.id === clip.brandId);
-    if (b) {
-      const brandTag = document.createElement('div');
-      brandTag.style.cssText = 'font-family:\'Space Mono\',monospace; font-size:9.5px; color:var(--moss-dark); margin-top:-4px; margin-bottom:6px;';
-      brandTag.textContent = '🏷 ' + b.name;
-      tile.insertBefore(brandTag, desc.nextSibling);
-    }
-  }
-
-  if (clip.catTags && clip.catTags.length) {
-    const catTag = document.createElement('div');
-    catTag.style.cssText = 'font-family:\'Space Mono\',monospace; font-size:9.5px; color:var(--ink-soft); margin-top:-4px; margin-bottom:6px;';
-    catTag.textContent = '🐾 ' + clip.catTags.join(', ');
-    tile.insertBefore(catTag, desc.nextSibling);
-  }
-
-  if (clip.archived) {
-    const archivedTag = document.createElement('div');
-    archivedTag.style.cssText = 'font-family:\'Space Mono\',monospace; font-size:9px; color:var(--ink-soft); margin-top:4px;';
-    archivedTag.textContent = '📦 archived';
-    tile.appendChild(archivedTag);
-  }
-
-  const footer = document.createElement('div');
-  footer.className = 'list-tile-footer';
-  let footerText;
-  if (clip.scheduledDate) {
-    footerText = '📅 ' + formatDateLong(clip.scheduledDate);
-  } else if (clip.captions) {
-    footerText = '💬 tap to see all captions';
-  } else if (clip.status === 'posted') {
-    footerText = ''; // e.g. imported history: when it was logged says nothing about when it went up
-  } else {
-    footerText = timeAgo(clip.created);
-  }
-  footer.textContent = footerText;
-  tile.appendChild(footer);
-
-  makePressable(tile, clip.desc || 'Untitled card');
-  tile.onclick = () => {
-    if (selectMode) {
-      toggleClipSelection(clip.id);
-    } else {
-      openCardModal(clip.id);
-    }
-  };
-  return tile;
-}
-
-// Each clip gets a stable card color (0–6) from its id, so it looks the same in the deck,
-// the calendar and when focused.
+// Each clip's card colour comes from its pillar, so it looks the same everywhere.
 function clipColorIndex(clip) {
-  let h = 0;
-  for (const ch of String(clip.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return h % 7;
+  return pillarOf(clip.pillar).color;
 }
 
-let suppressCardClick = false;
-
-// Wallet-style card for the stacked Home view. `index` drives how far down it sticks.
-function buildStackCard(clip, index, colorIdx) {
+// Full-size coloured card (Home's up next, the plan). Tapping it picks it out.
+function buildStackCard(clip) {
+  const colorIdx = clipColorIndex(clip);
   const card = document.createElement('div');
-  card.className = 'stack-card c' + colorIdx;
+  card.className = 'stack-card flat c' + colorIdx;
   card.dataset.color = colorIdx;
   card.setAttribute('data-highlight-id', clip.id);
-  // Each card sticks 10px lower than the last, so no two deck cards rest on the same spot.
-  card.style.setProperty('--stack-off', (Math.min(index, DECK_MAX - 1) * 10) + 'px');
-  if (selectMode && selectedClipIds.has(clip.id)) card.classList.add('selected');
-  // Keep its slot empty if this card is currently picked out (the deck re-renders on edits)
   if (document.getElementById('cardModalOverlay').dataset.clipId === clip.id) card.classList.add('picked');
 
-  const caps = (clip.captions && clip.captions.captions) || [];
   const brand = clip.brandId ? brands.find(b => b.id === clip.brandId) : null;
-
   card.appendChild(buildStackHead(clip));
 
-  // The caption itself, once, readable in full
   const body = document.createElement('div');
   body.className = 'stack-body';
   const bodyText = document.createElement('div');
@@ -301,18 +197,14 @@ function buildStackCard(clip, index, colorIdx) {
   body.appendChild(bodyText);
   card.appendChild(body);
 
-  // Small tags for everything else; the header's right side already shows date or caption count
   const foot = document.createElement('div');
   foot.className = 'stack-foot';
   const tagWrap = document.createElement('div');
   tagWrap.className = 'stack-foot-tags';
   const tags = [];
   if (isOverdue(clip)) tags.push('⚠ Overdue');
-  if (caps.length && clip.scheduledDate) tags.push(caps.length + ' captions');
-  if (!caps.length && clip.status !== 'posted') tags.push('No captions yet');
   if (brand) tags.push('🏷 ' + brand.name);
   if (clip.archived) tags.push('Archived');
-  if (!tags.length && clip.status !== 'posted') tags.push('Logged ' + timeAgo(clip.created));
   tags.forEach(t => {
     const chip = document.createElement('span');
     chip.className = 'stack-tag' + (t.startsWith('⚠') ? ' warn' : '');
@@ -323,111 +215,82 @@ function buildStackCard(clip, index, colorIdx) {
 
   const copyBtn = document.createElement('button');
   copyBtn.className = 'stack-copy-btn';
-  copyBtn.title = caps.length ? 'Copy caption + hashtags' : 'Copy description';
+  copyBtn.title = 'Copy caption + hashtags';
   copyBtn.innerHTML = NAV_ICONS.copy;
   copyBtn.onclick = (e) => {
     e.stopPropagation();
-    let text = clip.desc;
-    if (caps.length) {
-      // Same post everywhere now, so quick copy uses the Instagram hashtag set
-      const tagsText = hashtagsFor('Instagram');
-      text = caps[0] + (tagsText ? '\n\n' + tagsText : '');
-    }
-    copyWithIconFeedback(text, copyBtn);
+    const tagsText = hashtagsFor('Instagram');
+    copyWithIconFeedback(clip.desc + (tagsText ? '\n\n' + tagsText : ''), copyBtn);
   };
   foot.appendChild(copyBtn);
   card.appendChild(foot);
 
-  card.onclick = () => {
-    if (suppressCardClick) { suppressCardClick = false; return; }
-    if (selectMode) toggleClipSelection(clip.id);
-    else openCardModal(clip.id, card);
-  };
-  // Long-press a card to start selecting (replaces the old header button)
-  let pressTimer = null;
-  const cancelPress = () => { clearTimeout(pressTimer); pressTimer = null; };
-  card.addEventListener('pointerdown', (e) => {
-    if (selectMode || e.button > 0) return;
-    pressTimer = setTimeout(() => {
-      // The deck re-renders below, so the release's click may land on the new card element
-      suppressCardClick = true;
-      document.addEventListener('pointerup', () => setTimeout(() => { suppressCardClick = false; }, 60), { once: true });
-      if (navigator.vibrate) navigator.vibrate(15);
-      toggleQuickFilter(null);
-      toggleSelectMode();
-      toggleClipSelection(clip.id);
-    }, 550);
-  });
-  ['pointerup', 'pointerleave', 'pointercancel', 'pointermove'].forEach(ev => card.addEventListener(ev, (e) => {
-    if (ev === 'pointermove' && Math.abs(e.movementY) + Math.abs(e.movementX) < 3) return;
-    cancelPress();
-  }));
-  card.addEventListener('contextmenu', (e) => e.preventDefault());
+  card.onclick = () => openCardModal(clip.id, card);
   makePressable(card, clip.desc || 'Untitled card');
   return card;
 }
 
-// Icon + status/platform kicker + title + date/count — shared by deck cards and the focused card.
-function buildStackHead(clip, editable) {
-  const caps = (clip.captions && clip.captions.captions) || [];
+// Cats + date on top, pillar underneath. Shared by full cards and the open card.
+function buildStackHead(clip) {
   let sideLabel, sideValue;
   if (clip.scheduledDate) {
     const [y, m, d] = clip.scheduledDate.split('-').map(Number);
-    sideLabel = 'Posts';
+    sideLabel = clip.status === 'posted' ? 'Posted' : 'Posts';
     sideValue = new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   } else if (clip.status === 'posted') {
     // e.g. imported history: no date, so say where it went up rather than when it was logged
     sideLabel = 'Posted on';
     sideValue = clip.platform === 'Both' ? 'IG + TikTok' : clip.platform;
-  } else if (caps.length) {
-    sideLabel = 'Captions';
-    sideValue = String(caps.length);
   } else {
-    sideLabel = 'Logged';
-    const days = Math.floor((Date.now() - new Date(clip.created).getTime()) / 86400000);
-    sideValue = days <= 0 ? 'Today' : days + 'd';
+    sideLabel = STATUS_LABELS[clip.status];
+    sideValue = 'No date';
   }
 
-  // Cats on the left, date / caption count on the right, status chip underneath.
-  // In the open card (editable) the status chip is the one place to change status.
   const wrap = document.createElement('div');
   wrap.className = 'stack-headwrap';
   const head = document.createElement('div');
   head.className = 'stack-head';
   head.innerHTML = catStackHtml(clip.catTags) +
     '<div class="stack-side">' +
-      '<div class="stack-side-label">' + sideLabel + '</div>' +
+      '<div class="stack-side-label">' + escapeHtml(sideLabel) + '</div>' +
       '<div class="stack-side-value">' + escapeHtml(sideValue) + '</div>' +
     '</div>';
   wrap.appendChild(head);
-
-  let chip;
-  if (editable) {
-    chip = document.createElement('label');
-    chip.className = 'status-chip status-chip-edit ' + clip.status;
-    chip.title = 'Change status';
-    const sel = document.createElement('select');
-    STATUSES.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s;
-      opt.textContent = STATUS_LABELS[s];
-      if (s === clip.status) opt.selected = true;
-      sel.appendChild(opt);
-    });
-    sel.onchange = () => { updateStatus(clip.id, sel.value); refreshOpenModal(); };
-    // Looks like the plain chip; an invisible native select on top opens the phone's picker
-    chip.innerHTML = '<span class="status-dot"></span>' + escapeHtml(STATUS_LABELS[clip.status] || clip.status) + '<span class="status-caret">▾</span>';
-    chip.appendChild(sel);
-  } else {
-    chip = document.createElement('span');
-    chip.className = 'status-chip ' + clip.status;
-    chip.innerHTML = '<span class="status-dot"></span>' + escapeHtml(STATUS_LABELS[clip.status] || clip.status);
-  }
-  wrap.appendChild(chip);
+  wrap.insertAdjacentHTML('beforeend', pillarChipHtml(clip.pillar));
   return wrap;
 }
 
-// ===== Focused card: tapping a deck card "picks it out" =====
+// Compact row: bank folders and search results. Shows the line, cats and date at a glance.
+function buildClipRow(clip, opts) {
+  const o = opts || {};
+  const row = document.createElement('div');
+  row.className = 'clip-row c' + clipColorIndex(clip) + (clip.status === 'posted' ? ' posted' : '');
+  row.setAttribute('data-highlight-id', clip.id);
+  const dots = clip.catTags.map(c => '<span class="cat-dot" title="' + escapeHtml(c) + '" style="--cat-color:' + CAT_PROFILES[c].bg + '"></span>').join('');
+  const meta = [];
+  if (o.showStage) meta.push(STATUS_LABELS[clip.status]);
+  if (clip.scheduledDate) meta.push((isOverdue(clip) ? '⚠ ' : '') + formatDateLong(clip.scheduledDate));
+  if (clip.archived) meta.push('Archived');
+  row.innerHTML =
+    '<span class="clip-row-strip" aria-hidden="true"></span>' +
+    '<span class="clip-row-main">' +
+      '<span class="clip-row-text">' + escapeHtml(clip.desc || 'Untitled') + '</span>' +
+      '<span class="clip-row-meta">' + (dots ? '<span class="clip-row-cats">' + dots + '</span>' : '') +
+        (meta.length ? '<span>' + escapeHtml(meta.join(' · ')) + '</span>' : '') + '</span>' +
+    '</span>';
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.className = 'clip-row-copy';
+  copy.title = 'Copy caption';
+  copy.innerHTML = NAV_ICONS.copy;
+  copy.onclick = (e) => { e.stopPropagation(); copyWithIconFeedback(clip.desc, copy); };
+  row.appendChild(copy);
+  row.onclick = () => openCardModal(clip.id, row);
+  makePressable(row, clip.desc || 'Untitled card');
+  return row;
+}
+
+// ===== Focused card: tapping a card "picks it out" =====
 // The card grows from its slot in the deck into the centre of the screen. FLIP: measure the deck
 // card and the final card, then animate a transform (uniform scale, so text isn't squashed) plus a
 // clip-path that unfolds the part of the card that wasn't visible in the deck.
@@ -459,7 +322,7 @@ function fillFocusCard(box, clip) {
   closeBtn.title = 'Put it back';
   closeBtn.onclick = () => closeCardModal();
   box.appendChild(closeBtn);
-  box.appendChild(buildStackHead(clip, true));
+  box.appendChild(buildStackHead(clip));
   box.appendChild(buildFullCard(clip));
 }
 
@@ -472,9 +335,7 @@ function openCardModal(id, sourceEl) {
 
   const alreadyOpen = overlay.classList.contains('open') && overlay.dataset.clipId === id;
   const keepScroll = box.scrollTop;
-  let colorIdx = clipColorIndex(clip);
-  if (sourceEl && sourceEl.dataset.color != null) colorIdx = Number(sourceEl.dataset.color);
-  else if (alreadyOpen && box.dataset.color != null) colorIdx = Number(box.dataset.color);
+  const colorIdx = clipColorIndex(clip);
   box.className = 'modal-box focus-card surface c' + colorIdx;
   box.dataset.color = colorIdx;
   fillFocusCard(box, clip);
@@ -487,7 +348,8 @@ function openCardModal(id, sourceEl) {
   document.documentElement.classList.add('focus-open');
   box.scrollTop = 0;
 
-  const fromDeck = sourceEl && sourceEl.classList.contains('stack-card');
+  // Full cards and library tiles grow out of their spot; rows just fade in
+  const fromDeck = sourceEl && (sourceEl.classList.contains('stack-card') || sourceEl.classList.contains('lib-tile'));
   if (fromDeck && !prefersReducedMotion()) {
     const from = sourceEl.getBoundingClientRect();
     const to = box.getBoundingClientRect();
@@ -514,13 +376,14 @@ function closeCardModal(skipFlyBack) {
     overlay.classList.remove('open', 'closing');
     overlay.removeAttribute('data-clip-id');
     document.documentElement.classList.remove('focus-open');
-    document.querySelectorAll('.stack-card.picked').forEach(el => el.classList.remove('picked'));
+    document.querySelectorAll('.picked').forEach(el => el.classList.remove('picked'));
     if (anim) anim.cancel();
   };
   overlay.classList.add('closing');
 
   // The deck may have re-rendered while the card was open, so look up its slot now.
-  const target = id && document.querySelector('#cardList .stack-card[data-highlight-id="' + CSS.escape(id) + '"], #cardOverflowList .stack-card[data-highlight-id="' + CSS.escape(id) + '"]');
+  const sel = '[data-highlight-id="' + CSS.escape(id || '') + '"]';
+  const target = id && document.querySelector('.app-view:not([hidden]) .stack-card' + sel + ', .app-view:not([hidden]) .lib-tile' + sel);
   const from = target ? target.getBoundingClientRect() : null;
   const slotVisible = from && from.height > 0 && from.bottom > 0 && from.top < window.innerHeight;
   if (!skipFlyBack && slotVisible && !prefersReducedMotion()) {

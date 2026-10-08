@@ -72,11 +72,18 @@ function renderQuickAddBrands() {
 // status shows, picked with tabs. Wider screens show every column side by side.
 let brandTab = 'researching';
 
+let brandTabPicked = false;
+
 function renderBrandBoard() {
   const board = document.getElementById('otBoard');
   if (!board) return;
   const section = document.getElementById('otPipelineSection');
   const pipeline = brands.filter(b => !isPinnedBrand(b));
+  // Don't open on an empty tab when another one has brands in it
+  if (!brandTabPicked && !pipeline.some(b => b.status === brandTab)) {
+    const first = BRAND_STATUSES.find(c => pipeline.some(b => b.status === c.key));
+    if (first) brandTab = first.key;
+  }
 
   // Pinned notes (strategy reminders) sit above the board instead of inside a column
   document.getElementById('otPinned').innerHTML = brands.filter(isPinnedBrand).map(b => `
@@ -111,7 +118,7 @@ function renderBrandBoard() {
     `;
   }).join('');
 
-  section.querySelectorAll('[data-brand-tab]').forEach(b => b.addEventListener('click', () => { brandTab = b.dataset.brandTab; renderBrandBoard(); }));
+  section.querySelectorAll('[data-brand-tab]').forEach(b => b.addEventListener('click', () => { brandTab = b.dataset.brandTab; brandTabPicked = true; renderBrandBoard(); }));
   section.querySelectorAll('[data-brand-edit]').forEach(b => b.addEventListener('click', () => openBrandEdit(b.dataset.brandEdit)));
   section.querySelectorAll('[data-brand-del]').forEach(b => b.addEventListener('click', () => deleteBrand(b.dataset.brandDel)));
   section.querySelectorAll('[data-brand-followup]').forEach(b => b.addEventListener('click', () => goToFollowUpPitch(b.dataset.brandFollowup)));
@@ -184,12 +191,25 @@ function resetBrandForm() {
   document.getElementById('ot-f-status').value = 'researching';
 }
 
-// ===== Outreach / Templates / Tasks sub-view (now three top-level nav destinations) =====
+// ===== Outreach: one page with three tabs =====
+const OUTREACH_TABS = [['brands', 'Brands'], ['pitches', 'Pitches'], ['checklist', 'Checklist']];
 
-function switchOutreachSubView(view) {
-  document.getElementById('otPipelineSection').style.display = view === 'pipeline' ? '' : 'none';
-  document.getElementById('otTemplatesSection').style.display = view === 'templates' ? '' : 'none';
-  document.getElementById('otTasksSection').style.display = view === 'tasks' ? '' : 'none';
+function renderOutreachTabs() {
+  const bar = document.getElementById('otSubTabs');
+  bar.innerHTML = '';
+  OUTREACH_TABS.forEach(([key, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', outreachTab === key ? 'true' : 'false');
+    b.className = 'seg-tab' + (outreachTab === key ? ' active' : '');
+    b.textContent = label;
+    b.onclick = () => { outreachTab = key; render(); };
+    bar.appendChild(b);
+  });
+  document.getElementById('otPipelineSection').style.display = outreachTab === 'brands' ? '' : 'none';
+  document.getElementById('otTemplatesSection').style.display = outreachTab === 'pitches' ? '' : 'none';
+  document.getElementById('otTasksSection').style.display = outreachTab === 'checklist' ? '' : 'none';
 }
 
 function saveBrandForm() {

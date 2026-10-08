@@ -164,7 +164,9 @@ function normalizeClip(c) {
   return {
     id: safeId(c.id, uid),
     desc: str(c.desc, 2000),
-    status: STATUSES.includes(c.status) ? c.status : 'idea',
+    status: STATUSES.includes(c.status) ? c.status : LEGACY_STATUS[c.status] || 'idea',
+    // Sorted by keywords the first time it's seen; after that it's whatever was picked
+    pillar: PILLAR_KEYS.includes(c.pillar) ? c.pillar : inferPillar(str(c.desc) + ' ' + ((c.captions && Array.isArray(c.captions.captions) && c.captions.captions[0]) || '')),
     created: safeIso(c.created),
     scheduledDate: safeDay(c.scheduledDate),
     selectedTones: tones.length ? tones : ['Deadpan nature-doc'],

@@ -1,10 +1,7 @@
 // Startup: runs once every other file has loaded.
 
-renderNewClipTones();
-renderNewClipDateRow();
-renderNewClipCats();
+renderEntrySheet();
 loadTheme();
 loadAll();
 initTemplatesSection();
-renderLayoutToggle();
 syncHeaderSpacing();

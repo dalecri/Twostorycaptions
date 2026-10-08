@@ -1,278 +1,51 @@
-// Home: render loop, header and nav, search and status chips, ordering, multi-select, sticky header.
+// Render loop, header and bottom bar, global search, and the Home view.
+
+const VIEW_IDS = { home: 'homeView', bank: 'bankView', plan: 'calendarView', library: 'libraryView', outreach: 'outreachView', search: 'searchView' };
+
+function goTo(view) {
+  if (searchOpen) closeSearch();
+  currentView = view;
+  window.scrollTo(0, 0);
+  render();
+}
 
 function render() {
-  const mobile = isMobile();
-  document.body.classList.toggle('view-calendar-full', currentView === 'calendar' && mobile);
+  const searching = searchOpen && !!searchQuery;
+  const active = searching ? 'search' : currentView;
+  document.body.classList.toggle('view-calendar-full', active === 'plan' && isMobile());
   if (typeof syncHeaderSpacing === 'function') requestAnimationFrame(syncHeaderSpacing);
 
   renderHeaderNav();
-  const pageTitles = { grid: 'TwoStoryTails', calendar: 'Calendar', outreach: 'Brands', templates: 'Templates', tasks: 'Tasks' };
-  document.getElementById('pageTitle').textContent = pageTitles[currentView] || 'TwoStoryTails';
+  const titles = { home: 'TwoStoryTails', bank: 'Caption bank', plan: 'Plan', library: 'Library', outreach: 'Outreach', search: 'Search' };
+  document.getElementById('pageTitle').textContent = titles[active] || 'TwoStoryTails';
+  renderSearchPanel();
 
-  const isOutreachFamily = currentView === 'outreach' || currentView === 'templates' || currentView === 'tasks';
-  document.getElementById('outreachView').style.display = isOutreachFamily ? 'block' : 'none';
+  Object.entries(VIEW_IDS).forEach(([view, id]) => { document.getElementById(id).hidden = view !== active; });
+  const viewChanged = active !== lastAnimatedView;
+  lastAnimatedView = active;
 
-  const showList = currentView === 'grid';
-  const showClipFilters = showList || currentView === 'calendar';
-  document.getElementById('headerFilterIcons').style.display = showClipFilters ? 'flex' : 'none';
-  const calBtn = document.getElementById('calendarToggleBtn');
-  const homeIcon = gridLayoutMode === 'list' ? NAV_ICONS.list : NAV_ICONS.stack;
-  calBtn.innerHTML = currentView === 'calendar' ? homeIcon : NAV_ICONS.calendar;
-  calBtn.title = currentView === 'calendar' ? 'Back to captions' : 'Calendar view';
-  if (!showClipFilters) {
-    activeQuickFilter = null;
-  }
-  if (!showList && selectMode) {
-    selectMode = false;
-    selectedClipIds.clear();
-    document.getElementById('selectionBar').style.display = 'none';
-  }
-  renderQuickFilterPanel();
-  if (showClipFilters) renderStatusFilterSelect();
+  if (active === 'home') renderHome();
+  else if (active === 'bank') renderBank();
+  else if (active === 'library') renderLibrary();
+  else if (active === 'plan') renderCalendar();
+  else if (active === 'search') renderSearchResults();
+  else if (active === 'outreach') { renderOutreachTabs(); renderOutreach(); }
 
-  const viewChanged = currentView !== lastAnimatedView;
-  lastAnimatedView = currentView;
-
-  if (currentView !== 'grid') document.getElementById('homeStats').hidden = true;
-  if (currentView !== 'grid') document.getElementById('cardOverflow').hidden = true;
-  if (isOutreachFamily) {
-    document.getElementById('cardList').style.display = 'none';
-    document.getElementById('calendarView').style.display = 'none';
-    switchOutreachSubView(currentView === 'outreach' ? 'pipeline' : currentView);
-    renderOutreach();
-    if (viewChanged) playViewAnim(document.getElementById('outreachView'));
-    return;
-  }
-
-  document.getElementById('cardList').style.display = showList ? (gridLayoutMode === 'stack' ? 'block' : 'grid') : 'none';
-  document.getElementById('calendarView').style.display = currentView === 'calendar' ? 'block' : 'none';
-
-  if (currentView === 'calendar') {
-    renderCalendar();
-      refreshOpenModal();
-    if (viewChanged) playViewAnim(document.getElementById('calendarView'));
-    return;
-  }
-
-  renderHomeStats();
-  renderCardListOnly();
   refreshOpenModal();
-  if (viewChanged) playViewAnim(document.getElementById('cardList'));
-}
-
-// One row of status chips under the search box (cats and brands are found by searching)
-function renderStatusFilterSelect() {
-  const row = document.getElementById('filterRow');
-  if (!row) return;
-  const active = clips.filter(c => !c.archived);
-  const archivedCount = clips.length - active.length;
-  const options = [['all', 'All', active.length]]
-    .concat(STATUSES.map(st => [st, STATUS_LABELS[st], active.filter(c => c.status === st).length]));
-  if (archivedCount || activeFilter === 'archived') options.push(['archived', 'Archived', archivedCount]);
-  row.innerHTML = '';
-  options.forEach(([key, label, n]) => {
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = 'chip' + (activeFilter === key ? ' selected' : '');
-    chip.setAttribute('aria-pressed', activeFilter === key ? 'true' : 'false');
-    chip.innerHTML = escapeHtml(label) + ' <span class="chip-count">' + n + '</span>';
-    chip.onclick = () => { activeFilter = key; render(); };
-    row.appendChild(chip);
-  });
-}
-
-function toggleQuickFilter(type) {
-  activeQuickFilter = activeQuickFilter === type ? null : type;
-  renderQuickFilterPanel();
-  if (activeQuickFilter === 'search') {
-    setTimeout(() => document.getElementById('searchInput').focus(), 50);
-  }
-}
-
-function renderQuickFilterPanel() {
-  const panel = document.getElementById('quickFilterPanel');
-  panel.hidden = !activeQuickFilter;
-  document.getElementById('searchToggleBtn').classList.toggle('filter-icon-active', !!activeQuickFilter);
-}
-
-function getFilteredClips() {
-  let list = clips;
-  if (activeFilter === 'archived') {
-    list = list.filter(c => c.archived);
-  } else {
-    list = list.filter(c => !c.archived);
-    if (activeFilter !== 'all') list = list.filter(c => c.status === activeFilter);
-  }
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    list = list.filter(c => {
-      if (c.desc && c.desc.toLowerCase().includes(q)) return true;
-      if ((c.catTags || []).some(cat => cat.toLowerCase().includes(q))) return true;
-      const brand = c.brandId && brands.find(b => b.id === c.brandId);
-      if (brand && brand.name.toLowerCase().includes(q)) return true;
-      if (c.captions) {
-        if (c.captions.hook && c.captions.hook.toLowerCase().includes(q)) return true;
-        if (Array.isArray(c.captions.captions) && c.captions.captions.some(cap => cap.toLowerCase().includes(q))) return true;
-      }
-      return false;
-    });
-  }
-  return list;
-}
-
-function isOverdue(clip) {
-  return clip.status !== 'posted' && !!clip.scheduledDate && clip.scheduledDate < localToday();
-}
-
-// Home answers "what do I post next?": dated posts soonest first (overdue on top), then
-// captioned, filmed and ideas, with posted ones last (newest first).
-function upNextRank(clip) {
-  if (clip.status === 'posted') return 4;
-  if (clip.scheduledDate) return 0;
-  return { captioned: 1, filmed: 2 }[clip.status] || 3;
-}
-
-function sortUpNext(list) {
-  return list
-    .map((clip, i) => ({ clip, i, rank: upNextRank(clip) }))
-    .sort((a, b) => {
-      if (a.rank !== b.rank) return a.rank - b.rank;
-      if (a.rank === 0) return a.clip.scheduledDate.localeCompare(b.clip.scheduledDate);
-      if (a.rank === 4) return (b.clip.scheduledDate || '').localeCompare(a.clip.scheduledDate || '') || a.i - b.i;
-      return a.i - b.i;
-    })
-    .map(x => x.clip);
-}
-
-// The deck only holds the most relevant cards. Every card in it is sticky, and once there are
-// too many piled on the same spot phones can't layer them and the deck glitches. The rest
-// show underneath as the same cards, laid out one after another.
-const DECK_MAX = 10;
-
-function renderCardListOnly() {
-  const list = document.getElementById('cardList');
-  if (!list) return;
-  list.innerHTML = '';
-  const overflow = document.getElementById('cardOverflow');
-  const overflowList = document.getElementById('cardOverflowList');
-  overflowList.innerHTML = '';
-  overflow.hidden = true;
-  list.className = 'cardlist-' + gridLayoutMode;
-  if (list.style.display !== 'none') list.style.display = gridLayoutMode === 'stack' ? 'block' : 'grid';
-  const filtered = sortUpNext(getFilteredClips());
-
-  if (filtered.length === 0) {
-    if (searchQuery || activeFilter !== 'all') {
-      list.innerHTML = '<div class="empty-state">Nothing matches that search/filter.</div>';
-    } else {
-      list.innerHTML = '<div class="empty-state">No captions logged yet. The field is quiet.</div>';
-    }
-  } else {
-    let prevColor = -1;
-    filtered.forEach((clip, i) => {
-      if (gridLayoutMode === 'list') { list.appendChild(buildListTile(clip)); return; }
-      // Stable color per clip, nudged when it would match the card right above it
-      let color = clipColorIndex(clip);
-      if (color === prevColor) color = (color + 1) % 7;
-      prevColor = color;
-      const card = buildStackCard(clip, i, color);
-      // Past the deck: same card, laid out flat instead of piling up
-      if (i >= DECK_MAX) { card.classList.add('flat'); overflowList.appendChild(card); return; }
-      list.appendChild(card);
-    });
-    if (overflowList.children.length) {
-      overflow.hidden = false;
-      document.getElementById('cardOverflowLabel').textContent = 'More cards · ' + overflowList.children.length;
-    }
-    syncStackTop();
-  }
-}
-
-// ===== Mass select / delete =====
-
-function toggleSelectMode() {
-  selectMode = !selectMode;
-  if (!selectMode) selectedClipIds.clear();
-  document.getElementById('selectionBar').style.display = selectMode ? 'flex' : 'none';
-  renderSelectionBar();
-  renderHomeStats();
-  renderCardListOnly();
-}
-
-function toggleClipSelection(id) {
-  if (selectedClipIds.has(id)) selectedClipIds.delete(id); else selectedClipIds.add(id);
-  renderSelectionBar();
-  renderCardListOnly();
-}
-
-function renderSelectionBar() {
-  const countEl = document.getElementById('selectionCount');
-  const deleteBtn = document.getElementById('deleteSelectedBtn');
-  const bulkStatusSelect = document.getElementById('bulkStatusSelect');
-  const bulkArchiveBtn = document.getElementById('bulkArchiveBtn');
-  if (!countEl) return;
-  const n = selectedClipIds.size;
-  countEl.textContent = n + ' selected';
-  deleteBtn.disabled = n === 0;
-  if (bulkStatusSelect) bulkStatusSelect.disabled = n === 0;
-  if (bulkArchiveBtn) bulkArchiveBtn.disabled = n === 0;
-}
-
-function selectAllVisible() {
-  getFilteredClips().forEach(c => selectedClipIds.add(c.id));
-  renderSelectionBar();
-  renderCardListOnly();
-}
-
-async function bulkSetStatus(status) {
-  const ids = Array.from(selectedClipIds);
-  if (!ids.length || !status) return;
-  ids.forEach(id => {
-    const c = clips.find(c => c.id === id);
-    if (c) c.status = status;
-  });
-  render();
-  await Promise.all(ids.map(id => saveClips(id)));
-  document.getElementById('bulkStatusSelect').value = '';
-}
-
-async function bulkArchiveSelected() {
-  const ids = Array.from(selectedClipIds);
-  if (!ids.length) return;
-  const changed = clips.filter(c => ids.includes(c.id) && !c.archived);
-  changed.forEach(c => { c.archived = true; });
-  exitSelectMode();
-  render();
-  saveClips();
-  showToast(changed.length + ' card' + (changed.length === 1 ? '' : 's') + ' archived', {
-    onUndo: () => { changed.forEach(c => { c.archived = false; }); saveClips(); render(); }
-  });
-}
-
-async function deleteSelectedClips() {
-  const ids = Array.from(selectedClipIds);
-  if (!ids.length) return;
-  exitSelectMode();
-  removeWithUndo(clips, ids, ids.length + ' card' + (ids.length === 1 ? '' : 's') + ' deleted', saveClips, render);
-}
-
-function exitSelectMode() {
-  selectedClipIds.clear();
-  selectMode = false;
-  document.getElementById('selectionBar').style.display = 'none';
+  if (viewChanged) playViewAnim(document.getElementById(VIEW_IDS[active]));
 }
 
 function renderHeaderNav() {
   const nav = document.getElementById('headerNav');
   if (!nav) return;
   nav.innerHTML = '';
-  ['grid','outreach', '__add__', 'templates','tasks'].forEach(v => {
+  ['home', 'bank', '__add__', 'plan', 'library'].forEach(v => {
     if (v === '__add__') {
       const addBtn = document.createElement('button');
       addBtn.className = 'nav-add-btn';
       addBtn.id = 'fabAddBtn';
-      addBtn.setAttribute('aria-label', 'Add');
-      addBtn.title = 'Add';
+      addBtn.setAttribute('aria-label', 'New caption');
+      addBtn.title = 'New caption';
       addBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
       addBtn.onclick = handleFabAddClick;
       nav.appendChild(addBtn);
@@ -280,69 +53,208 @@ function renderHeaderNav() {
     }
     const btn = document.createElement('button');
     btn.className = currentView === v ? 'active' : '';
+    btn.dataset.view = v;
     btn.title = VIEW_META[v].label;
     btn.innerHTML = VIEW_META[v].icon + '<span class="nav-label">' + VIEW_META[v].navLabel + '</span>';
-    btn.onclick = () => { currentView = v; render(); };
+    btn.onclick = () => {
+      // Tapping Bank again from inside a folder goes back to the folders
+      if (v === 'bank' && currentView === 'bank') bankPillar = '';
+      goTo(v);
+    };
     nav.appendChild(btn);
   });
 }
 
-document.getElementById('searchIcon').innerHTML = NAV_ICONS.search;
+// ===== Search: one box in the header that looks through everything =====
 
-document.getElementById('calendarToggleBtn').addEventListener('click', () => {
-  currentView = currentView === 'calendar' ? 'grid' : 'calendar';
+function renderSearchPanel() {
+  document.getElementById('quickFilterPanel').hidden = !searchOpen;
+  document.getElementById('searchToggleBtn').classList.toggle('filter-icon-active', searchOpen);
+}
+
+function openSearch() {
+  searchOpen = true;
   render();
-});
+  setTimeout(() => document.getElementById('searchInput').focus(), 50);
+}
+
+function closeSearch() {
+  searchOpen = false;
+  searchQuery = '';
+  document.getElementById('searchInput').value = '';
+}
+
+function clipMatches(c, q) {
+  if (c.desc.toLowerCase().includes(q)) return true;
+  if (c.catTags.some(cat => cat.toLowerCase().includes(q))) return true;
+  if (pillarOf(c.pillar).label.toLowerCase().includes(q)) return true;
+  const brand = c.brandId && brands.find(b => b.id === c.brandId);
+  if (brand && brand.name.toLowerCase().includes(q)) return true;
+  return !!(c.captions && c.captions.captions.some(cap => cap.toLowerCase().includes(q)));
+}
+
+const SEARCH_LIMIT = 50;
+
+function renderSearchResults() {
+  const el = document.getElementById('searchView');
+  const q = searchQuery.toLowerCase();
+  const order = { idea: 0, planned: 1, posted: 2 };
+  const hits = clips.filter(c => clipMatches(c, q))
+    .sort((a, b) => (a.archived - b.archived) || (order[a.status] - order[b.status]));
+  const brandHits = brands.filter(b => !isPinnedBrand(b) && b.name.toLowerCase().includes(q));
+  el.innerHTML = '';
+  const head = document.createElement('div');
+  head.className = 'block-head';
+  head.innerHTML = '<h2 class="block-title">' + hits.length + ' caption' + (hits.length === 1 ? '' : 's') + '</h2>';
+  el.appendChild(head);
+  if (!hits.length && !brandHits.length) {
+    el.insertAdjacentHTML('beforeend', '<div class="empty-state">Nothing matches "' + escapeHtml(searchQuery) + '".</div>');
+    return;
+  }
+  const list = document.createElement('div');
+  list.className = 'clip-rows';
+  hits.slice(0, SEARCH_LIMIT).forEach(c => list.appendChild(buildClipRow(c, { showStage: true })));
+  el.appendChild(list);
+  if (hits.length > SEARCH_LIMIT) el.insertAdjacentHTML('beforeend', '<p class="list-note">Showing the first ' + SEARCH_LIMIT + '. Keep typing to narrow it down.</p>');
+  if (brandHits.length) {
+    const bh = document.createElement('div');
+    bh.className = 'block-head';
+    bh.innerHTML = '<h2 class="block-title">Brands</h2>';
+    el.appendChild(bh);
+    brandHits.forEach(b => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ghost search-brand';
+      btn.textContent = b.name + ' · ' + ((BRAND_STATUSES.find(x => x.key === b.status) || {}).label || '');
+      btn.onclick = () => { outreachTab = 'brands'; brandTab = b.status; goTo('outreach'); };
+      el.appendChild(btn);
+    });
+  }
+}
+
+document.getElementById('searchIcon').innerHTML = NAV_ICONS.search;
 
 document.getElementById('searchToggleBtn').innerHTML = NAV_ICONS.search;
 
-document.getElementById('searchToggleBtn').addEventListener('click', () => toggleQuickFilter('search'));
-
-// Home layout lives in Settings: Deck (stacked cards) / List
-function renderLayoutToggle() {
-  const row = document.getElementById('settingsLayoutRow');
-  if (!row) return;
-  const labels = { stack: 'Deck', list: 'List' };
-  row.innerHTML = '';
-  LAYOUT_MODES.forEach(mode => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = mode === gridLayoutMode ? '' : 'ghost';
-    btn.textContent = labels[mode];
-    btn.onclick = () => {
-      gridLayoutMode = mode;
-      try { localStorage.setItem('ttt-layout-mode-v2', gridLayoutMode); } catch (e) {}
-      renderLayoutToggle();
-      render();
-    };
-    row.appendChild(btn);
-  });
-}
-
-document.getElementById('selectAllBtn').addEventListener('click', selectAllVisible);
-
-document.getElementById('cancelSelectBtn').addEventListener('click', toggleSelectMode);
-
-document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedClips);
-
-STATUSES.forEach(s => {
-  const opt = document.createElement('option');
-  opt.value = s;
-  opt.textContent = STATUS_LABELS[s];
-  document.getElementById('bulkStatusSelect').appendChild(opt);
+document.getElementById('searchToggleBtn').addEventListener('click', () => {
+  if (searchOpen) { closeSearch(); render(); } else openSearch();
 });
-
-document.getElementById('bulkStatusSelect').addEventListener('change', (e) => bulkSetStatus(e.target.value));
-
-document.getElementById('bulkArchiveBtn').addEventListener('click', bulkArchiveSelected);
 
 document.getElementById('searchInput').addEventListener('input', (e) => {
   searchQuery = e.target.value.trim();
-  renderHomeStats();
-  renderCardListOnly();
+  render();
 });
 
-window.addEventListener('resize', () => { render(); syncHeaderSpacing(); });
+// ===== Home: this week, up next, one idea from the bank, outreach =====
+
+function isOverdue(clip) {
+  return clip.status !== 'posted' && !!clip.scheduledDate && clip.scheduledDate < localToday();
+}
+
+// Planned posts, dated ones soonest first (so overdue ones lead), then undated ones
+function plannedQueue() {
+  return clips.filter(c => !c.archived && c.status === 'planned')
+    .sort((a, b) => {
+      if (!!a.scheduledDate !== !!b.scheduledDate) return a.scheduledDate ? -1 : 1;
+      return (a.scheduledDate || '').localeCompare(b.scheduledDate || '');
+    });
+}
+
+function bankIdeas(pillar) {
+  return clips.filter(c => !c.archived && c.status === 'idea' && (!pillar || c.pillar === pillar));
+}
+
+function renderHome() {
+  renderHomeStats();
+  renderUpNext();
+  renderCaptionOfTheDay();
+  renderOutreachCard();
+}
+
+const UP_NEXT_MAX = 3;
+
+function renderUpNext() {
+  const el = document.getElementById('upNextList');
+  el.innerHTML = '';
+  const queue = plannedQueue();
+  if (!queue.length) {
+    el.innerHTML = '<div class="empty-card">Nothing planned yet. Pick something from the bank below, or tap + to add one.</div>';
+  } else {
+    queue.slice(0, UP_NEXT_MAX).forEach(c => el.appendChild(buildStackCard(c)));
+  }
+  const more = queue.length - UP_NEXT_MAX;
+  const btn = document.getElementById('upNextAllBtn');
+  btn.textContent = more > 0 ? '+' + more + ' more on the plan ›' : 'See plan ›';
+}
+
+// One idea a day from the bank, the same one all day until you shuffle
+let cotdShuffle = 0;
+
+function captionOfTheDay() {
+  const ideas = bankIdeas();
+  if (!ideas.length) return null;
+  let h = 0;
+  for (const ch of localToday()) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return ideas[(h + cotdShuffle) % ideas.length];
+}
+
+function renderCaptionOfTheDay() {
+  const el = document.getElementById('cotdCard');
+  const clip = captionOfTheDay();
+  if (!clip) {
+    el.innerHTML = '<div class="empty-card">The bank is empty. Tap + whenever a line pops into your head.</div>';
+    return;
+  }
+  const n = bankIdeas().length;
+  el.innerHTML = '';
+  const card = document.createElement('div');
+  card.className = 'cotd surface c' + clipColorIndex(clip);
+  card.innerHTML =
+    '<div class="cotd-top">' + pillarChipHtml(clip.pillar) + '<span class="cotd-count">' + n + ' in the bank</span></div>' +
+    '<p class="cotd-text">' + escapeHtml(clip.desc) + '</p>' +
+    '<div class="cotd-actions">' +
+      '<button type="button" class="ghost" data-act="shuffle">Shuffle</button>' +
+      '<button type="button" class="ghost" data-act="copy">Copy</button>' +
+      '<button type="button" data-act="plan">Plan it</button>' +
+    '</div>';
+  card.querySelector('[data-act="shuffle"]').onclick = () => {
+    cotdShuffle++;
+    renderCaptionOfTheDay();
+    const fresh = document.querySelector('#cotdCard .cotd');
+    if (fresh && !prefersReducedMotion()) fresh.animate([{ transform: 'rotate(-2deg) scale(0.96)', opacity: 0.4 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.2,.9,.25,1)' });
+  };
+  card.querySelector('[data-act="copy"]').onclick = (e) => copyText(clip.desc, e.currentTarget);
+  card.querySelector('[data-act="plan"]').onclick = () => openCardModal(clip.id);
+  el.appendChild(card);
+}
+
+function renderOutreachCard() {
+  const el = document.getElementById('outreachCard');
+  const pipeline = brands.filter(b => !isPinnedBrand(b));
+  const waiting = pipeline.filter(b => b.status === 'waiting');
+  const due = waiting.filter(b => (daysSince(b.date || b.updatedAt) || 0) >= 14).length;
+  const openTasks = tasks.filter(t => !t.done).length;
+  const bits = [waiting.length + ' waiting to hear back', openTasks + ' to-do' + (openTasks === 1 ? '' : 's')];
+  el.innerHTML =
+    '<span class="outreach-card-icon">' + NAV_ICONS.outreach + '</span>' +
+    '<span class="outreach-card-main"><span class="card-kicker">Brand outreach</span>' +
+    '<span class="outreach-card-line">' + escapeHtml(bits.join(' · ')) + '</span>' +
+    (due ? '<span class="outreach-card-due">⏰ ' + due + ' follow-up' + (due === 1 ? '' : 's') + ' due</span>' : '') +
+    '</span><span class="outreach-card-go">›</span>';
+}
+
+document.getElementById('outreachCard').addEventListener('click', () => goTo('outreach'));
+
+document.getElementById('upNextAllBtn').addEventListener('click', () => goTo('plan'));
+
+// Only re-render when crossing the phone/desktop line: the keyboard opening also fires resize,
+// and a re-render then would rebuild (and blur) whatever is being typed in
+let wasMobile = isMobile();
+
+window.addEventListener('resize', () => {
+  syncHeaderSpacing();
+  if (isMobile() !== wasMobile) { wasMobile = isMobile(); render(); }
+});
 
 // ===== Fixed header: reserve space for it below, and hide/show based on scroll direction =====
 
@@ -351,30 +263,6 @@ function syncHeaderSpacing() {
   const wrap = document.querySelector('.wrap');
   if (!header || !wrap) return;
   wrap.style.setProperty('padding-top', (header.offsetHeight + 14) + 'px', 'important');
-  syncStackTop();
-}
-
-// Height of the phone's status bar area (0 in a normal browser). Capacitor provides it as a CSS
-// variable, which JS can't read through env(), so measure an element sized with it.
-function safeTopPx() {
-  let probe = document.getElementById('safeTopProbe');
-  if (!probe) {
-    probe = document.createElement('div');
-    probe.id = 'safeTopProbe';
-    probe.style.cssText = 'position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:var(--safe-top);';
-    document.body.appendChild(probe);
-  }
-  return probe.offsetHeight;
-}
-
-// Stacked cards pile up just under the header, or at the very top while the header is scrolled away.
-function syncStackTop() {
-  const header = document.getElementById('mainHeader');
-  const list = document.getElementById('cardList');
-  if (!header || !list) return;
-  const hidden = header.classList.contains('header-hidden');
-  // When the header slides away, cards pile up just under the status bar instead
-  list.style.setProperty('--stack-top', (hidden ? safeTopPx() + 8 : header.offsetHeight + 10) + 'px');
 }
 
 window.addEventListener('load', syncHeaderSpacing);
@@ -389,11 +277,10 @@ window.addEventListener('scroll', () => {
   const y = window.scrollY;
   if (y <= 0) {
     header.classList.remove('header-hidden');
-  } else if (y > lastScrollY && y > header.offsetHeight && !activeQuickFilter) {
+  } else if (y > lastScrollY && y > header.offsetHeight && !searchOpen) {
     header.classList.add('header-hidden');
   } else if (y < lastScrollY) {
     header.classList.remove('header-hidden');
   }
   lastScrollY = y;
-  syncStackTop();
 }, { passive: true });

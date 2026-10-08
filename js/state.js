@@ -2,29 +2,29 @@
 
 let clips = [];
 
-let activeFilter = 'all';
-
 let tplContext = { brand: '', product: '', category: '', duration: '', name: 'Cris', cat: '', upstairsCat: '', downstairsCat: '' };
 
 let searchQuery = '';
 
-let activeQuickFilter = null;
+let searchOpen = false;
 
-let gridLayoutMode = 'stack';
+let currentView = 'home';
 
- // 'stack' | 'list'
-// v2 key so everyone lands on the new stacked home once; a saved 'grid' (since removed) falls back to the deck
-try { gridLayoutMode = localStorage.getItem('ttt-layout-mode-v2') || 'stack'; } catch (e) {}
+// Bank: which pillar folder is open ('' = the folder grid)
+let bankPillar = '';
 
-if (!LAYOUT_MODES.includes(gridLayoutMode)) gridLayoutMode = 'stack';
+// Library filters and how many tiles are showing
+let libraryCat = '';
+let libraryPillar = '';
+let libraryArchived = false;
+let libraryShown = 30;
 
-let selectMode = false;
+// Outreach sub-tab: 'brands' | 'pitches' | 'checklist'
+let outreachTab = 'brands';
 
-let selectedClipIds = new Set();
-
-let newClipTones = ['Deadpan nature-doc'];
-
-let currentView = 'grid';
+// New-card sheet
+let newClipPillar = '';
+let newClipStatus = '';
 
 let lastAnimatedView = null;
 

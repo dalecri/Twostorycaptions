@@ -1,8 +1,12 @@
-// App-wide constants: statuses, tones, icons, cats, themes.
+// App-wide constants: stages, pillars, icons, cats, themes.
 
-const STATUSES = ['idea','filmed','captioned','scheduled','posted'];
+// Three stages: in the bank, on the plan, in the library
+const STATUSES = ['idea', 'planned', 'posted'];
 
-const STATUS_LABELS = { idea:'Idea', filmed:'Filmed', captioned:'Captioned', scheduled:'Scheduled', posted:'Posted' };
+const STATUS_LABELS = { idea: 'Idea', planned: 'Planned', posted: 'Posted' };
+
+// Older backups used five stages; everything between idea and posted is "planned" now
+const LEGACY_STATUS = { filmed: 'planned', captioned: 'planned', scheduled: 'planned' };
 
 const TONES = ['Deadpan nature-doc', 'Funny', 'Educational', 'Meme-style', 'Relatable', 'Multi-cat tie-in', 'Wholesome'];
 
@@ -32,16 +36,54 @@ const NAV_ICONS = {
 
 const CATS = ['Cali', 'Neo', 'Ramses', 'Diego'];
 
-const VIEW_META = {
-  grid: { label: 'Grid view', navLabel: 'Home', icon: NAV_ICONS.grid },
-  calendar: { label: 'Calendar view', navLabel: 'Calendar', icon: NAV_ICONS.calendar },
-  outreach: { label: 'Outreach view', navLabel: 'Brands', icon: NAV_ICONS.outreach },
-  templates: { label: 'Templates view', navLabel: 'Templates', icon: NAV_ICONS.copy },
-  tasks: { label: 'Tasks view', navLabel: 'Tasks', icon: NAV_ICONS.checkSquare }
-};
+// Content pillars: every caption lives in one. `color` is the card palette class (c0–c6), so a
+// caption looks the same in the bank, on the plan and in the library.
+// `match` sorts captions that don't have a pillar yet (checked top to bottom, vibes catches the rest).
+const PILLARS = [
+  { key: 'food', label: 'Food & treats', color: 2,
+    match: /food|\bfed\b|feed|breakfast|treat|snack|dinner|hungry|bowl|takis|eating|biscuit/i,
+    icon: '<path d="M3 11h18a9 9 0 0 1-18 0Z"></path><path d="M7 7c0-1.5 1-1.5 1-3"></path><path d="M12 7c0-1.5 1-1.5 1-3"></path><path d="M17 7c0-1.5 1-1.5 1-3"></path>' },
+  { key: 'freeloaders', label: 'No bills, no job', color: 6,
+    match: /\bbills?\b|\bjobs?\b|\bwork|\brent\b|wifi|password|savings|money|shift|jobless|influencer|email|maids|house,|spoiled|without kids|feet pics/i,
+    icon: '<rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path><line x1="2" y1="13" x2="22" y2="13"></line>' },
+  { key: 'siblings', label: 'Sibling chaos', color: 3,
+    match: /brother|multi-cat|multiple cats|2 cats?\b|second cat|share|cats have|cats when|intrusive|first cat|sync|neighbourhood|households/i,
+    icon: '<circle cx="8" cy="12" r="5"></circle><circle cx="16" cy="12" r="5"></circle>' },
+  { key: 'love', label: 'Love & cuddles', color: 1,
+    match: /chosen|therapy|\blove|cuddl|codependent|emotionally|mama|support|charm|person\b|showed up|patience|waiting all day|daddy|\bdad\b|back rubs/i,
+    icon: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>' },
+  { key: 'chaos', label: 'Chaos & audacity', color: 4,
+    match: /audacity|insane|toxic|chaos|zoomies|[356] ?am\b|meow|plotting|eye-contact|personal space|annoy|\bnotes\b|demands/i,
+    icon: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>' },
+  { key: 'care', label: 'Cat care tips', color: 0,
+    match: /signs|\bcues\b|habits|setups|decoding|thinking of getting|domestic cats|nap spots|how we manage|\btail|litter|potty/i,
+    icon: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path>' },
+  { key: 'vibes', label: 'Just vibes', color: 5, match: null,
+    icon: '<path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2Z"></path><path d="M19 17l.7 2.3L22 20l-2.3.7L19 23l-.7-2.3L16 20l2.3-.7Z"></path>' }
+];
 
- // null | 'search' | 'select'
-const LAYOUT_MODES = ['stack', 'list'];
+const PILLAR_KEYS = PILLARS.map(p => p.key);
+
+function pillarOf(key) { return PILLARS.find(p => p.key === key) || PILLARS[PILLARS.length - 1]; }
+
+function inferPillar(text) {
+  const t = String(text || '');
+  const hit = PILLARS.find(p => p.match && p.match.test(t));
+  return hit ? hit.key : 'vibes';
+}
+
+function pillarIconSvg(key) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + pillarOf(key).icon + '</svg>';
+}
+
+// Bottom bar: Home, Bank, +, Plan, Library. Outreach and search are reached from Home and the header.
+const VIEW_META = {
+  home: { label: 'Home', navLabel: 'Home', icon: NAV_ICONS.grid },
+  bank: { label: 'Caption bank', navLabel: 'Bank', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>' },
+  plan: { label: 'Plan', navLabel: 'Plan', icon: NAV_ICONS.calendar },
+  library: { label: 'Library', navLabel: 'Library', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5"></rect><rect x="9.5" y="3" width="5" height="5"></rect><rect x="16" y="3" width="5" height="5"></rect><rect x="3" y="9.5" width="5" height="5"></rect><rect x="9.5" y="9.5" width="5" height="5"></rect><rect x="16" y="9.5" width="5" height="5"></rect><rect x="3" y="16" width="5" height="5"></rect><rect x="9.5" y="16" width="5" height="5"></rect><rect x="16" y="16" width="5" height="5"></rect></svg>' },
+  outreach: { label: 'Outreach', navLabel: 'Outreach', icon: NAV_ICONS.outreach }
+};
 
 const BRAND_STATUSES = [
   { key: 'researching', label: 'Researching' },
@@ -102,17 +144,6 @@ const THEMES = {
       '--stamp-scheduled': '#A97E1F', '--stamp-posted': '#8A6616', '--spark': '#C99A2E', '--spark-dark': '#8A6616'
     }
   }
-};
-
-// Same line-icon style as the nav; each tone gets its own so the row reads at a glance
-const TONE_ICON_PATHS = {
-  'Deadpan nature-doc': '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>',
-  'Funny': '<circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line>',
-  'Educational': '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path>',
-  'Meme-style': '<rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"></path>',
-  'Relatable': '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>',
-  'Multi-cat tie-in': '<circle cx="8" cy="12" r="5"></circle><circle cx="16" cy="12" r="5"></circle>',
-  'Wholesome': '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>'
 };
 
 // ===== Cat profiles =====
