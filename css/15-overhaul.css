@@ -128,11 +128,10 @@
   position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
   min-height: 132px; padding: 14px 14px 12px; border: none; border-radius: 18px; text-align: left;
   text-transform: none; letter-spacing: 0; font-weight: 400; filter: none; transform: none;
-  box-shadow: 0 10px 22px -18px rgba(0,0,0,0.6); transition: transform 0.15s ease;
 }
-.pillar-folder:active { transform: scale(0.97); }
+.pillar-folder:active { filter: brightness(0.95); }
 .pillar-folder:last-child:nth-child(odd) { grid-column: 1 / -1; min-height: 110px; }
-.pillar-folder.empty { opacity: 0.7; }
+.pillar-folder.empty .pillar-folder-count, .pillar-folder.empty .pillar-folder-peek { color: color-mix(in srgb, var(--card-ink) 50%, transparent); opacity: 1; }
 .pillar-folder-icon svg { width: 24px; height: 24px; }
 .pillar-folder-count { position: absolute; top: 10px; right: 14px; font-family: 'Space Mono', monospace; font-size: 28px; font-weight: 700; line-height: 1; }
 .pillar-folder-label { margin-top: auto; font-size: 15px; font-weight: 700; }
@@ -260,11 +259,10 @@
   text-transform: none; letter-spacing: 0; filter: none; transform: none; box-shadow: none;
 }
 .cat-pick .cat-avatar {
-  width: 46px; height: 46px; margin-bottom: 4px; opacity: 0.45; filter: grayscale(1);
-  box-shadow: none; transition: opacity 0.15s ease, filter 0.15s ease, transform 0.15s ease;
+  width: 46px; height: 46px; margin-bottom: 4px; box-shadow: none;
 }
 .cat-pick.on { border-color: var(--card-ink, var(--ink)); background: color-mix(in srgb, #FFFFFF 60%, transparent); }
-.cat-pick.on .cat-avatar { opacity: 1; filter: none; transform: scale(1.06); }
+.cat-pick.on .cat-avatar { transform: scale(1.06); }
 .cat-pick-name { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
 .cat-pick-sub { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.4px; opacity: 0.6; }
 .cat-pick:not(.on) .cat-pick-name { opacity: 0.6; }
@@ -360,3 +358,17 @@
   box-shadow: 0 6px 14px -8px rgba(0,0,0,0.45);
 }
 #calendarView.cal-mode-day .cal-tray { margin-bottom: 18px; }
+
+/* The open card clears the phone's status bar */
+#cardModalOverlay { padding-top: calc(16px + var(--safe-top)); padding-bottom: calc(16px + var(--safe-bottom)); }
+#cardModalBox.focus-card { max-height: calc(100dvh - 32px - var(--safe-top) - var(--safe-bottom)); }
+
+/* Day view: no arrow row; swipe the week strip instead */
+.day-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.day-strip { touch-action: pan-y; }
+
+/* Android's WebView left folder tiles half-painted after the page fade-in, so these pages
+   appear without it and the tiles skip the button hover/press transitions */
+#bankView.view-anim, #libraryView.view-anim { animation: none; }
+.pillar-folder, .lib-tile { transition: none; }
+.pillar-folder:active, .lib-tile:active { transform: none; }
