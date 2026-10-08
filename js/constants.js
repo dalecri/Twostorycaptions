@@ -93,6 +93,7 @@ const BRAND_STATUSES = [
   { key: 'passed', label: 'Passed' }
 ];
 
+// One look: Marina. (Other themes were dropped to keep things simple.)
 const THEMES = {
   marina: {
     label: 'Marina',
@@ -102,46 +103,6 @@ const THEMES = {
       '--moss': '#0059FF', '--moss-dark': '#0043C3', '--rust': '#FF651E', '--line': '#D6E6FF',
       '--stamp-idea': '#D6E6FF', '--stamp-filmed': '#0059FF', '--stamp-captioned': '#FFA801',
       '--stamp-scheduled': '#FF651E', '--stamp-posted': '#0043C3', '--spark': '#FF651E', '--spark-dark': '#C94A0E'
-    }
-  },
-  lamp: {
-    label: 'Lamp',
-    swatches: ['#1F150E', '#E8873A'],
-    vars: {
-      '--paper': '#1F150E', '--paper-light': '#2A1E14', '--ink': '#F2E6D6', '--ink-soft': '#B99B7C',
-      '--moss': '#E8873A', '--moss-dark': '#C96B22', '--rust': '#C65D42', '--line': '#4A3521',
-      '--stamp-idea': '#5C4A36', '--stamp-filmed': '#8A6440', '--stamp-captioned': '#B97A3E',
-      '--stamp-scheduled': '#D98A3A', '--stamp-posted': '#F2A355', '--spark': '#E8873A', '--spark-dark': '#C96B22'
-    }
-  },
-  moon: {
-    label: 'Moon',
-    swatches: ['#1E1826', '#B9A9D9'],
-    vars: {
-      '--paper': '#1E1826', '--paper-light': '#2A2233', '--ink': '#EDE7F2', '--ink-soft': '#9B8FA8',
-      '--moss': '#B9A9D9', '--moss-dark': '#8F7CC4', '--rust': '#C46E8A', '--line': '#3D3448',
-      '--stamp-idea': '#4A4056', '--stamp-filmed': '#6B5E82', '--stamp-captioned': '#8B7BA8',
-      '--stamp-scheduled': '#A595C4', '--stamp-posted': '#CBB8EE', '--spark': '#B9A9D9', '--spark-dark': '#8F7CC4'
-    }
-  },
-  dawn: {
-    label: 'Dawn',
-    swatches: ['#E9F1F6', '#3C7FA6'],
-    vars: {
-      '--paper': '#E9F1F6', '--paper-light': '#FFFFFF', '--ink': '#1E3A4A', '--ink-soft': '#5A7E8F',
-      '--moss': '#3C7FA6', '--moss-dark': '#2A5F80', '--rust': '#C45A4A', '--line': '#C3DBE6',
-      '--stamp-idea': '#AEC7D4', '--stamp-filmed': '#8CB0C4', '--stamp-captioned': '#5F93AE',
-      '--stamp-scheduled': '#3C7FA6', '--stamp-posted': '#2A5F80', '--spark': '#3C7FA6', '--spark-dark': '#2A5F80'
-    }
-  },
-  sun: {
-    label: 'Sun',
-    swatches: ['#F4EDDB', '#C99A2E'],
-    vars: {
-      '--paper': '#F4EDDB', '--paper-light': '#FFFBF0', '--ink': '#3A3226', '--ink-soft': '#8A7A56',
-      '--moss': '#C99A2E', '--moss-dark': '#8A6616', '--rust': '#B5543C', '--line': '#DCCB9C',
-      '--stamp-idea': '#D6C28A', '--stamp-filmed': '#C9A45C', '--stamp-captioned': '#C99A2E',
-      '--stamp-scheduled': '#A97E1F', '--stamp-posted': '#8A6616', '--spark': '#C99A2E', '--spark-dark': '#8A6616'
     }
   }
 };

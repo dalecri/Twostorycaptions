@@ -90,19 +90,23 @@ function buildBrandInlineSelect(selectedId, onChange) {
   return label;
 }
 
-// Tap-to-toggle cat profiles (new-caption sheet and the open card)
+// Starring: the four cats as avatars, greyed out until picked. Picked ones also show at the
+// top of the card.
 function fillCatPicker(container, selected, onToggle) {
   container.innerHTML = '';
-  container.classList.add('chip-row');
+  container.classList.remove('chip-row');
+  container.classList.add('cat-picker');
   CATS.forEach(cat => {
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = 'chip cat-chip' + (selected.includes(cat) ? ' selected' : '');
-    chip.setAttribute('aria-pressed', selected.includes(cat) ? 'true' : 'false');
-    chip.style.setProperty('--cat-color', (CAT_PROFILES[cat] || {}).bg || '#CCCCCC');
-    chip.innerHTML = '<span class="cat-dot" aria-hidden="true"></span>' + escapeHtml(cat);
-    chip.onclick = () => onToggle(cat);
-    container.appendChild(chip);
+    const on = selected.includes(cat);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cat-pick' + (on ? ' on' : '');
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.innerHTML = '<span class="cat-avatar">' + catAvatarSvg(cat) + '</span>' +
+      '<span class="cat-pick-name">' + escapeHtml(cat) + '</span>' +
+      '<span class="cat-pick-sub">' + escapeHtml(CAT_PROFILES[cat].breed) + '</span>';
+    btn.onclick = () => onToggle(cat);
+    container.appendChild(btn);
   });
 }
 

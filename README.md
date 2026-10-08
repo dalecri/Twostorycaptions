@@ -4,7 +4,7 @@ Caption home for the TwoStoryTails cat account. Runs offline; everything is stor
 
 - **Home**: this week's goal and streak, posts per cat, the next 3 planned posts, one idea from the bank, outreach at a glance
 - **Bank**: unposted ideas sorted into 7 pillars (folders), with shuffle and an AI prompt for fresh lines
-- **Plan**: week/month calendar, drag a card onto a day
+- **Plan**: day timeline (default on phones), week and month views, drag a card onto a day
 - **Library**: everything posted, as a 3-across grid, filtered by cat or pillar
 - **Outreach** (from Home): brands, pitches and the checklist
 
@@ -42,12 +42,12 @@ The files are classic scripts that share one global scope, loaded in this order:
 | `stats.js` | Home stats card |
 | `bank.js` | Caption bank: pillar folders, shuffle, suggestions |
 | `library.js` | Posted grid with cat/pillar filters |
-| `calendar.js` | Plan: week/month views, tray, drag to schedule |
+| `calendar.js` | Plan: day/week/month views, tray, drag to schedule |
 | `brands.js` | Outreach tabs and the brands board |
 | `templates.js` | Pitches, sponsored caption lines, AI prompt panel |
 | `tasks.js` | Outreach checklist |
 | `reminders.js` | Phone reminders (Android app only) |
-| `settings.js` | Settings sheet, theme, backups |
+| `settings.js` | Settings sheet, Marina colours, backups |
 | `onboarding.js` | First-launch intro |
 | `main.js` | Startup, runs last |
 
