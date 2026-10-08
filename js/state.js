@@ -30,8 +30,6 @@ let lastAnimatedView = null;
 
 let calMonthOffset = 0;
 
-let currentTheme = 'marina';
-
 let newClipCats = [];
 
 let brands = [];

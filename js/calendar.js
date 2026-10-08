@@ -1,11 +1,19 @@
-// Plan: week and month views, a tray of undated posts (and bank ideas on request), drag to schedule.
+// Plan: day, week and month views, a tray of undated posts (and bank ideas on request), drag to schedule.
 
-// ===== Calendar: week view (default on phones) or month grid, both Monday-first like the
-// weekly goal. Unscheduled cards sit in a tray and can be dragged onto a day; in week view,
-// planned cards can be dragged to another day.
+// ===== Day view (default on phones): a week strip to pick the day and that day's posts on a
+// timeline. Week and month views list or grid the posts. All are Monday-first like the weekly goal.
+// Undated cards sit in a tray and can be dragged onto a day.
+const CAL_VIEWS = [['day', 'Day'], ['week', 'Week'], ['month', 'Month']];
+
 let calView = 'month';
 
-try { calView = localStorage.getItem('tsc-cal-view') || (window.matchMedia('(max-width: 600px)').matches ? 'week' : 'month'); } catch (e) {}
+// v2 key so everyone on a phone lands on the new day view once
+try { calView = localStorage.getItem('tsc-cal-view-v2') || (window.matchMedia('(max-width: 600px)').matches ? 'day' : 'month'); } catch (e) {}
+
+if (!CAL_VIEWS.some(([v]) => v === calView)) calView = 'day';
+
+// The day open in day view
+let calDay = '';
 
 let calWeekOffset = 0;
 
@@ -24,6 +32,32 @@ function calItemHtml(c, showDate) {
     '</div>';
 }
 
+// One day's posts on a timeline. The next one to post is the big highlighted card.
+function dayTimelineHtml(posts, day) {
+  const label = parseDay(day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const addBar = '<button type="button" class="day-add" id="dayAddBtn"><span>Add on ' + escapeHtml(label) + '</span><span class="day-add-plus" aria-hidden="true">+</span></button>';
+  if (!posts.length) {
+    return '<div class="day-empty">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>' +
+      '<p>Nothing on this day yet.</p><p class="day-empty-sub">Drag something from the tray onto a day above, or add one.</p></div>' + addBar;
+  }
+  const featured = posts.find(c => c.status !== 'posted');
+  const grip = '<span class="drag-handle" title="Drag onto a day" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>';
+  return '<div class="timeline">' + posts.map(c => {
+    const big = c === featured;
+    const posted = c.status === 'posted';
+    const p = pillarOf(c.pillar);
+    return '<div class="tl-row' + (big ? ' featured' : '') + (posted ? ' done' : '') + '">' +
+      '<span class="tl-node" aria-hidden="true">' + (posted ? '✓' : '') + '</span>' +
+      '<div class="tl-card' + (big ? ' surface c' + p.color : '') + '" data-clip-id="' + escapeHtml(c.id) + '">' +
+        '<div class="tl-top"><span class="tl-pillar">' + pillarIconSvg(p.key) + escapeHtml(p.label) + '</span>' +
+          '<span class="tl-stage">' + escapeHtml(STATUS_LABELS[c.status]) + '</span></div>' +
+        '<div class="tl-text">' + escapeHtml(c.desc || 'Untitled') + '</div>' +
+        '<div class="tl-foot">' + (c.catTags.length ? catStackHtml(c.catTags) : '<span></span>') + (posted ? '' : grip) + '</div>' +
+      '</div></div>';
+  }).join('') + '</div>' + addBar;
+}
+
 function renderCalendar() {
   const container = document.getElementById('calendarView');
   const today = localToday();
@@ -33,8 +67,29 @@ function renderCalendar() {
   // Tray: planned posts without a day. Bank ideas can be pulled in from the button.
   const unscheduled = visible.filter(c => !c.scheduledDate && c.status === 'planned');
 
-  let title, body;
-  if (calView === 'week') {
+  let title, body, dayTop = '';
+  if (!calDay) calDay = today;
+  if (calView === 'day') {
+    const monday = mondayOf(calDay);
+    const fmt = (d, opts) => parseDay(d).toLocaleDateString('en-US', opts);
+    title = fmt(calDay, { month: 'long', year: 'numeric' });
+    const rel = { [today]: 'Today', [addDays(today, 1)]: 'Tomorrow', [addDays(today, -1)]: 'Yesterday' }[calDay];
+    dayTop = '<div class="day-head">' +
+        '<div class="day-head-date">' + escapeHtml(fmt(calDay, { month: 'long', day: 'numeric', year: 'numeric' })) + '</div>' +
+        '<div class="day-head-title">' + escapeHtml(rel || fmt(calDay, { weekday: 'long' })) + '</div>' +
+      '</div><div class="day-strip" role="group" aria-label="Pick a day">';
+    for (let i = 0; i < 7; i++) {
+      const day = addDays(monday, i);
+      const n = (byDate[day] || []).length;
+      dayTop += '<button type="button" class="day-strip-day' + (day === calDay ? ' selected' : '') + (day === today ? ' today' : '') +
+        (POSTING_DAYS.includes(i) ? ' posting' : '') + '" data-date="' + day + '" aria-pressed="' + (day === calDay) + '">' +
+        '<span class="day-strip-name">' + fmt(day, { weekday: 'short' }) + '</span>' +
+        '<span class="day-strip-num">' + parseDay(day).getDate() + '</span>' +
+        '<span class="day-strip-dot' + (n ? ' on' : '') + '"></span></button>';
+    }
+    dayTop += '</div>';
+    body = dayTimelineHtml(byDate[calDay] || [], calDay);
+  } else if (calView === 'week') {
     const monday = addDays(mondayOf(today), calWeekOffset * 7);
     const sunday = addDays(monday, 6);
     const fmt = (d, opts) => parseDay(d).toLocaleDateString('en-US', opts);
@@ -83,10 +138,11 @@ function renderCalendar() {
   let html = '<div class="cal-header">' +
     '<h2>' + escapeHtml(title) + '</h2>' +
     '<div class="chip-row cal-view-toggle" role="group" aria-label="Calendar view">' +
-      ['week', 'month'].map(v => '<button type="button" class="chip' + (calView === v ? ' selected' : '') + '" aria-pressed="' + (calView === v) + '" data-cal-view="' + v + '">' + (v === 'week' ? 'Week' : 'Month') + '</button>').join('') +
+      CAL_VIEWS.map(([v, label]) => '<button type="button" class="chip' + (calView === v ? ' selected' : '') + '" aria-pressed="' + (calView === v) + '" data-cal-view="' + v + '">' + label + '</button>').join('') +
     '</div>' +
   '</div>' +
   '<div class="nav-btns cal-nav"><button id="calPrev" aria-label="Previous">‹</button><button id="calToday">Today</button><button id="calNext" aria-label="Next">›</button></div>';
+  html += dayTop;
   const trayIdeas = calTrayIdeas ? bankIdeas().slice(0, 12) : [];
   const trayItems = unscheduled.concat(trayIdeas);
   html += '<div class="cal-tray"><div class="cal-tray-head"><span class="cal-tray-label">' +
@@ -94,20 +150,27 @@ function renderCalendar() {
     '<button type="button" class="link-btn" id="calTrayIdeasBtn">' + (calTrayIdeas ? 'Hide bank' : '+ From the bank') + '</button></div>' +
     (trayItems.length ? '<div class="cal-tray-items">' + trayItems.map(c => calItemHtml(c)).join('') + '</div>' : '') + '</div>';
   container.innerHTML = html + body;
-  container.classList.toggle('cal-mode-week', calView === 'week');
+  container.classList.toggle('cal-mode-week', calView === 'week' || calView === 'day');
+  container.classList.toggle('cal-mode-day', calView === 'day');
 
-  const step = (dir) => { if (calView === 'week') calWeekOffset += dir; else calMonthOffset += dir; renderCalendar(); };
+  // Day view: the arrows move a week, keeping the weekday
+  const step = (dir) => {
+    if (calView === 'day') calDay = addDays(calDay, dir * 7);
+    else if (calView === 'week') calWeekOffset += dir;
+    else calMonthOffset += dir;
+    renderCalendar();
+  };
   document.getElementById('calPrev').onclick = () => step(-1);
   document.getElementById('calNext').onclick = () => step(1);
-  document.getElementById('calToday').onclick = () => { calWeekOffset = 0; calMonthOffset = 0; renderCalendar(); };
+  document.getElementById('calToday').onclick = () => { calWeekOffset = 0; calMonthOffset = 0; calDay = today; renderCalendar(); };
   document.getElementById('calTrayIdeasBtn').onclick = () => { calTrayIdeas = !calTrayIdeas; renderCalendar(); };
   container.querySelectorAll('[data-cal-view]').forEach(b => b.onclick = () => {
     calView = b.dataset.calView;
-    try { localStorage.setItem('tsc-cal-view', calView); } catch (e) {}
+    try { localStorage.setItem('tsc-cal-view-v2', calView); } catch (e) {}
     renderCalendar();
   });
 
-  container.querySelectorAll('.cal-post, .cal-item').forEach(el => {
+  container.querySelectorAll('.cal-post, .cal-item, .tl-card').forEach(el => {
     makePressable(el, el.querySelector('.cal-item-text') ? el.querySelector('.cal-item-text').textContent : el.textContent);
     el.onclick = (e) => { e.stopPropagation(); if (!calDragJustEnded) openCardModal(el.dataset.clipId); };
   });
@@ -118,6 +181,13 @@ function renderCalendar() {
       openEntrySheet({ date: cell.dataset.date });
     };
   });
+  // In day view, tapping a day in the strip opens that day (it's still a drop target for dragging)
+  container.querySelectorAll('.day-strip-day').forEach(b => {
+    b.title = formatDateLong(b.dataset.date);
+    b.onclick = () => { if (!calDragJustEnded) { calDay = b.dataset.date; renderCalendar(); } };
+  });
+  const addOn = document.getElementById('dayAddBtn');
+  if (addOn) addOn.onclick = () => openEntrySheet({ date: calDay });
   container.querySelectorAll('.drag-handle').forEach(h => h.addEventListener('pointerdown', startCalendarDrag));
 }
 

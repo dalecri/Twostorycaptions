@@ -202,7 +202,6 @@ function buildStackCard(clip) {
   const tagWrap = document.createElement('div');
   tagWrap.className = 'stack-foot-tags';
   const tags = [];
-  if (isOverdue(clip)) tags.push('⚠ Overdue');
   if (brand) tags.push('🏷 ' + brand.name);
   if (clip.archived) tags.push('Archived');
   tags.forEach(t => {
@@ -230,33 +229,39 @@ function buildStackCard(clip) {
   return card;
 }
 
-// Cats + date on top, pillar underneath. Shared by full cards and the open card.
-function buildStackHead(clip) {
-  let sideLabel, sideValue;
+// Date on the top left ("11 Wednesday"), starring cats on the top right, a dotted line, then
+// the pillar. Shared by full cards and the open card.
+function cardDateParts(clip) {
   if (clip.scheduledDate) {
-    const [y, m, d] = clip.scheduledDate.split('-').map(Number);
-    sideLabel = clip.status === 'posted' ? 'Posted' : 'Posts';
-    sideValue = new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  } else if (clip.status === 'posted') {
-    // e.g. imported history: no date, so say where it went up rather than when it was logged
-    sideLabel = 'Posted on';
-    sideValue = clip.platform === 'Both' ? 'IG + TikTok' : clip.platform;
-  } else {
-    sideLabel = STATUS_LABELS[clip.status];
-    sideValue = 'No date';
+    const d = parseDay(clip.scheduledDate);
+    const month = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    const when = clip.status === 'posted' ? 'Posted' : isOverdue(clip) ? 'Overdue' : clip.scheduledDate === localToday() ? 'Posts today' : 'Posts';
+    return { num: String(d.getDate()), word: d.toLocaleDateString('en-US', { weekday: 'long' }), sub: month + ' · ' + when, warn: isOverdue(clip) };
   }
+  if (clip.status === 'posted') {
+    // e.g. imported history: no date, so say where it went up
+    return { num: '', word: 'Posted', sub: clip.platform === 'Both' ? 'On IG + TikTok' : 'On ' + clip.platform };
+  }
+  return clip.status === 'idea'
+    ? { num: '', word: 'Someday', sub: 'In the bank' }
+    : { num: '', word: 'No day yet', sub: 'Planned' };
+}
 
+function buildStackHead(clip) {
+  const dp = cardDateParts(clip);
   const wrap = document.createElement('div');
   wrap.className = 'stack-headwrap';
-  const head = document.createElement('div');
-  head.className = 'stack-head';
-  head.innerHTML = catStackHtml(clip.catTags) +
-    '<div class="stack-side">' +
-      '<div class="stack-side-label">' + escapeHtml(sideLabel) + '</div>' +
-      '<div class="stack-side-value">' + escapeHtml(sideValue) + '</div>' +
-    '</div>';
-  wrap.appendChild(head);
-  wrap.insertAdjacentHTML('beforeend', pillarChipHtml(clip.pillar));
+  wrap.innerHTML =
+    '<div class="card-datehead">' +
+      '<div class="card-date">' +
+        '<div class="card-date-main">' + (dp.num ? '<span class="card-date-num">' + dp.num + '</span>' : '') +
+          '<span class="card-date-word">' + escapeHtml(dp.word) + '</span></div>' +
+        '<div class="card-date-sub' + (dp.warn ? ' warn' : '') + '">' + escapeHtml(dp.sub) + '</div>' +
+      '</div>' +
+      catStackHtml(clip.catTags) +
+    '</div>' +
+    '<div class="card-dots" aria-hidden="true"></div>' +
+    pillarChipHtml(clip.pillar);
   return wrap;
 }
 

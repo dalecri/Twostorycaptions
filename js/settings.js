@@ -1,4 +1,4 @@
-// Settings sheet: theme, goal, hashtags, backups (export / import).
+// Settings sheet: goal, hashtags, reminders, backups (export / import). Applies the Marina look.
 
 // Android status bar icons: dark on light themes, light on dark ones (Capacitor SystemBars)
 function syncStatusBarStyle(background) {
@@ -11,49 +11,17 @@ function syncStatusBarStyle(background) {
   try { bars.setStyle({ style: light ? 'LIGHT' : 'DARK' }); } catch (e) {}
 }
 
-function applyTheme(name, skipSave) {
-  if (!THEMES[name]) name = 'marina';
-  currentTheme = name;
-  const theme = THEMES[name];
+function applyTheme() {
+  const theme = THEMES.marina;
   syncStatusBarStyle(theme.vars['--paper']);
   const root = document.documentElement.style;
   Object.entries(theme.vars).forEach(([k, v]) => root.setProperty(k, v));
   const metaThemeColor = document.querySelector('meta[name="theme-color"]');
   if (metaThemeColor) metaThemeColor.setAttribute('content', theme.vars['--paper']);
-  if (!skipSave) {
-    try { localStorage.setItem('ttt-theme', name); } catch (e) {}
-  }
-  renderThemePicker();
-}
-
-function renderThemePicker() {
-  const grid = document.getElementById('settingsThemeGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  Object.keys(THEMES).forEach(key => {
-    const theme = THEMES[key];
-    const card = document.createElement('div');
-    card.className = 'settings-theme-card' + (currentTheme === key ? ' selected' : '');
-    const pair = document.createElement('div');
-    pair.className = 'theme-swatch-pair';
-    theme.swatches.forEach(hex => {
-      const sw = document.createElement('div');
-      sw.style.background = hex;
-      pair.appendChild(sw);
-    });
-    const label = document.createElement('span');
-    label.className = 'theme-option-label';
-    label.textContent = theme.label;
-    card.appendChild(pair);
-    card.appendChild(label);
-    card.onclick = () => applyTheme(key);
-    grid.appendChild(card);
-  });
 }
 
 function openSettingsModal() {
   document.getElementById('settingsModalOverlay').classList.add('open');
-  renderThemePicker();
   renderSettingsPrefs();
 }
 
@@ -201,7 +169,6 @@ document.getElementById('importBtn').addEventListener('click', () => document.ge
 document.getElementById('importFileInput').addEventListener('change', handleImportFile);
 
 function loadTheme() {
-  let saved = 'marina';
-  try { saved = localStorage.getItem('ttt-theme') || 'marina'; } catch (e) {}
-  applyTheme(saved, true);
+  try { localStorage.removeItem('ttt-theme'); } catch (e) {}
+  applyTheme();
 }
