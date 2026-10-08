@@ -1,4 +1,4 @@
-// Editable content: starter cards and brands, caption and pitch templates, carousel ideas, offline caption lines.
+// Editable content: starter cards and brands, caption and pitch templates, carousel ideas, AI prompt.
 
 // Example captions shown on first load so the grid isn't empty — real entries replace these naturally as you add your own.
 const SEED_CLIPS = [
@@ -275,47 +275,7 @@ const SEED_TASKS = [
   'Follow up on any pitch that\'s gone quiet for 1–2 weeks using the follow-up template'
 ];
 
-// Offline caption drafts: a few lines per tone, with the tagged cat dropped in.
-// Shuffling picks different lines each time so "Shuffle" actually gives you something new.
-const OFFLINE_CAPTIONS = {
-  'Deadpan nature-doc': [
-    'Observed: [CAT] pauses mid-task, assesses the room, and resumes as if nothing occurred.',
-    'Here we see [CAT] in the natural habitat, conserving energy for reasons science cannot explain.',
-    'A rare sighting. [CAT] has chosen violence, and the household must adapt.'
-  ],
-  'Funny': [
-    'The audacity. The confidence. The complete lack of remorse from [CAT].',
-    '[CAT] said "trust the process" and the process was chaos.',
-    'nobody asked [CAT] to do this. [CAT] did it anyway.'
-  ],
-  'Educational': [
-    'Cats do this to reset their sense of territory. [CAT] is not being dramatic, just thorough.',
-    'Fun fact: slow blinks are a sign of trust. [CAT] has blinked at us zero times today.',
-    'Cats spend up to half their waking hours grooming. [CAT] is clearly going for a record.'
-  ],
-  'Meme-style': [
-    'no thoughts. just vibes. and [CAT].',
-    '[CAT] when the food bowl is 3% empty:',
-    'me: we have a calm evening planned. [CAT]: we do not.'
-  ],
-  'Relatable': [
-    'when you do something unhinged and immediately act like it never happened (ft. [CAT])',
-    'pov: you sat down for one second and [CAT] has decided you are furniture now',
-    'anyone else\'s cat have a full schedule of nonsense or just [CAT]?'
-  ],
-  'Multi-cat tie-in': [
-    'Upstairs causes the chaos. Downstairs watches from a safe distance, judging silently.',
-    'Two floors, four cats, zero agreement on anything.',
-    'One floor is thriving. The other floor is [CAT].'
-  ],
-  'Wholesome': [
-    'Just a small, ordinary moment with [CAT] that made the whole day better.',
-    '[CAT] doesn\'t know it, but this is the best part of our day.',
-    'Soft paws, loud heart. Thank you, [CAT].'
-  ]
-};
-
-// Prompt for writing new on-screen lines with any AI chat (Templates > AI caption prompt).
+// Prompt for writing new on-screen lines with any AI chat (Bank > AI prompt, and each open card).
 // Built from our Instagram history: voice, formats, cat personalities and best performers.
 // {{CLIP}}, {{CATS}} and {{VIBE}} are filled in from the panel.
 const AI_CAPTION_PROMPT = `You write on-screen text for short cat videos for @twostorytails, a small but growing Instagram/TikTok account. Your job: write witty, original one-liners in our exact voice.

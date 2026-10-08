@@ -7,19 +7,19 @@ const BIG_ICON = svg => svg.replace('<svg ', '<svg class="ob-icon" ');
 
 const ONBOARDING_SLIDES = [
   { color: 'c3', kicker: 'Welcome', title: 'Two floors, four cats, one plan',
-    text: 'Plan posts for Cali and Neo downstairs and Ramses and Diego upstairs. Everything stays on this phone. No account needed.',
+    text: 'Your home for every TwoStoryTails caption: the ones you\'ve posted, the ones you\'re saving, and what\'s going up next. It all stays on this phone.',
     art: () => '<div class="ob-cats">' + CATS.map(c => '<span class="cat-avatar">' + catAvatarSvg(c) + '</span>').join('') + '</div>' },
-  { color: 'c6', kicker: 'Step 1', title: 'Log a clip',
-    text: 'Tap + to jot down a moment. Tag who\'s starring, pick a tone, and add a post date if you know it.',
-    art: () => '<span class="ob-plus">+</span>' },
-  { color: 'c1', kicker: 'Step 2', title: 'Draft captions',
-    text: 'Open a card and tap Draft captions. Shuffle for new ones, then copy with Instagram or TikTok hashtags.',
-    art: () => BIG_ICON(NAV_ICONS.copy) },
-  { color: 'c0', kicker: 'Step 3', title: 'Plan and pitch',
-    text: 'Home shows what\'s next, overdue posts first. Tap a calendar day to plan one, and use Brands and Templates for outreach.',
+  { color: 'c6', kicker: 'Bank', title: 'Save every idea',
+    text: 'Tap + when a line pops into your head. It lands in the Bank, sorted into one of seven pillars like Food & treats or Sibling chaos.',
+    art: () => BIG_ICON(VIEW_META.bank.icon) },
+  { color: 'c1', kicker: 'Plan', title: 'Give it a day',
+    text: 'Open an idea and pick a date, or drag it onto a day in Plan. Home shows the next few and how your week is going.',
     art: () => BIG_ICON(NAV_ICONS.calendar) },
-  { color: 'c2', kicker: 'Good to know', title: 'Two handy tricks',
-    text: 'Long-press a card to select several at once. And export a backup from Settings now and then, since your data only lives on this device.',
+  { color: 'c0', kicker: 'Library', title: 'Your posted grid',
+    text: 'Posted captions live in the Library, like your profile grid. Tap a cat or a pillar to see just those.',
+    art: () => BIG_ICON(VIEW_META.library.icon) },
+  { color: 'c2', kicker: 'Good to know', title: 'Stuck for a line?',
+    text: 'Every card has an AI prompt in our voice, and brand outreach lives behind the card at the bottom of Home. Export a backup from Settings now and then.',
     art: () => BIG_ICON(NAV_ICONS.paw) }
 ];
 

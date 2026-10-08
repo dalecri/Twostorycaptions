@@ -1,4 +1,4 @@
-// Shared form controls: date chips and picker, quiet brand select, tone and cat chips.
+// Shared form controls: date chips and picker, quiet brand select, cat and pillar chips.
 
 // A chip that opens the phone's own date picker. One hidden <input type="date"> is reused and
 // placed over the tapped chip so the picker anchors there.
@@ -90,19 +90,6 @@ function buildBrandInlineSelect(selectedId, onChange) {
   return label;
 }
 
-function buildToneChip(tone, selected, onToggle) {
-  const chip = document.createElement('button');
-  chip.type = 'button';
-  chip.className = 'tone-chip' + (selected ? ' selected' : '');
-  chip.setAttribute('aria-pressed', selected ? 'true' : 'false');
-  const icon = TONE_ICON_PATHS[tone]
-    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + TONE_ICON_PATHS[tone] + '</svg>'
-    : '';
-  chip.innerHTML = icon + '<span>' + escapeHtml(tone) + '</span>';
-  chip.onclick = onToggle;
-  return chip;
-}
-
 // Tap-to-toggle cat profiles (new-caption sheet and the open card)
 function fillCatPicker(container, selected, onToggle) {
   container.innerHTML = '';
@@ -117,4 +104,38 @@ function fillCatPicker(container, selected, onToggle) {
     chip.onclick = () => onToggle(cat);
     container.appendChild(chip);
   });
+}
+
+// One-pick pillar chips, each in its own card colour. Tapping the selected one clears it.
+function fillPillarPicker(container, selected, onPick) {
+  container.innerHTML = '';
+  container.classList.add('chip-row', 'pillar-row');
+  PILLARS.forEach(p => {
+    const on = selected === p.key;
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip pillar-chip c' + p.color + (on ? ' selected' : '');
+    chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    chip.innerHTML = pillarIconSvg(p.key) + '<span>' + escapeHtml(p.label) + '</span>';
+    chip.onclick = () => onPick(on ? '' : p.key);
+    container.appendChild(chip);
+  });
+}
+
+// Idea / Planned / Posted as one segmented control
+function buildStageToggle(value, onPick) {
+  const wrap = document.createElement('div');
+  wrap.className = 'stage-toggle';
+  wrap.setAttribute('role', 'group');
+  wrap.setAttribute('aria-label', 'Stage');
+  STATUSES.forEach(s => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'stage-btn ' + s + (value === s ? ' selected' : '');
+    b.setAttribute('aria-pressed', value === s ? 'true' : 'false');
+    b.textContent = STATUS_LABELS[s];
+    b.onclick = () => { if (value !== s) onPick(s); };
+    wrap.appendChild(b);
+  });
+  return wrap;
 }

@@ -171,8 +171,6 @@ function renderReminderSettings() {
   plugin.addListener('localNotificationActionPerformed', (ev) => {
     const extra = (ev && ev.notification && ev.notification.extra) || {};
     if (extra.clipId && clips.some(c => c.id === extra.clipId)) {
-      currentView = 'grid';
-      render();
       openCardModal(extra.clipId);
     } else if (extra.brandId && brands.some(b => b.id === extra.brandId)) {
       goToFollowUpPitch(extra.brandId);

@@ -1,4 +1,4 @@
-// Home stats card: weekly goal, streak, per-cat counts and the neglected-cat nudge.
+// Home stats card: weekly goal, streak, per-cat counts (tap one for their posts) and the neglected-cat nudge.
 
 function computeStats() {
   const today = localToday();
@@ -42,9 +42,6 @@ function computeStats() {
 
 function renderHomeStats() {
   const el = document.getElementById('homeStats');
-  const show = currentView === 'grid' && !searchQuery && activeFilter === 'all' && !selectMode && clips.length > 0;
-  el.hidden = !show;
-  if (!show) return;
   const st = computeStats();
   const left = Math.max(0, st.goal - st.thisWeek);
   const goalLine = left === 0 ? 'Goal hit. Nice work!' : left + ' more to hit your goal';
@@ -71,14 +68,18 @@ function renderHomeStats() {
         <span class="hs-dot${d.posted ? ' posted' : d.planned ? ' planned' : ''}"></span><span class="hs-letter">${d.letter}</span></div>`).join('')}
     </div>
     <div class="hs-cats">
-      ${st.cats.map(c => `<span class="hs-cat" title="${escapeHtml(c.cat)} starred in ${c.count} post${c.count === 1 ? '' : 's'}"><span class="cat-dot" style="--cat-color:${CAT_PROFILES[c.cat].bg}"></span>${escapeHtml(c.cat)} <strong>${c.count}</strong></span>`).join('')}
+      ${st.cats.map(c => `<button type="button" class="hs-cat" data-cat="${escapeHtml(c.cat)}" title="See ${escapeHtml(c.cat)}'s ${c.count} post${c.count === 1 ? '' : 's'}"><span class="cat-dot" style="--cat-color:${CAT_PROFILES[c.cat].bg}"></span>${escapeHtml(c.cat)} <strong>${c.count}</strong></button>`).join('')}
     </div>
     ${nudge ? `<button type="button" class="hs-nudge" data-cat="${escapeHtml(n.cat)}"><span>${escapeHtml(nudge)}</span><span class="hs-nudge-cta">Plan one ›</span></button>` : ''}
   `;
   const btn = el.querySelector('.hs-nudge');
-  if (btn) btn.onclick = () => {
-    newClipCats = [btn.dataset.cat];
-    renderNewClipCats();
-    openEntrySheet();
-  };
+  if (btn) btn.onclick = () => openEntrySheet({ cats: [btn.dataset.cat] });
+  // A cat's count opens the library showing just their posts
+  el.querySelectorAll('.hs-cat').forEach(b => b.addEventListener('click', () => {
+    libraryCat = b.dataset.cat;
+    libraryPillar = '';
+    libraryArchived = false;
+    libraryShown = LIBRARY_PAGE;
+    goTo('library');
+  }));
 }

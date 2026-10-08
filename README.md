@@ -1,7 +1,15 @@
 # TwoStoryCaptions
 
-Caption planner for the TwoStoryTails cat account: log clips, draft captions, plan posts on a
-calendar, and track brand outreach. Runs offline; everything is stored on the device.
+Caption home for the TwoStoryTails cat account. Runs offline; everything is stored on the device.
+
+- **Home**: this week's goal and streak, posts per cat, the next 3 planned posts, one idea from the bank, outreach at a glance
+- **Bank**: unposted ideas sorted into 7 pillars (folders), with shuffle and an AI prompt for fresh lines
+- **Plan**: week/month calendar, drag a card onto a day
+- **Library**: everything posted, as a 3-across grid, filtered by cat or pillar
+- **Outreach** (from Home): brands, pitches and the checklist
+
+Every caption has one of three stages (Idea, Planned, Posted) and one pillar. Pillars are defined in
+`js/constants.js` (`PILLARS`); captions without one are sorted by keywords.
 
 It's a plain web app (no framework or bundler) that also ships as an Android app via Capacitor.
 
@@ -22,19 +30,21 @@ The files are classic scripts that share one global scope, loaded in this order:
 
 | File | What's in it |
 | --- | --- |
-| `constants.js` | Statuses, tones, icons, cats, themes |
-| `content.js` | Editable content: starter cards and brands, caption/pitch templates, carousel ideas, offline caption lines |
+| `constants.js` | Stages, pillars, icons, cats, themes |
+| `content.js` | Editable content: starter cards and brands, caption/pitch templates, carousel ideas, AI prompt |
 | `utils.js` | Helpers: escaping, dates, clipboard, toasts with Undo, accessibility |
 | `state.js` | In-memory app state |
 | `storage.js` | Saving/loading on the device, preferences, validation of stored or imported data |
-| `controls.js` | Shared controls: date chips and picker, brand line, tone and cat chips |
-| `cards.js` | Deck, list and open-card rendering, pick-out animation |
-| `clips.js` | Add sheet and card actions (create, tag, schedule, archive, delete, draft captions) |
-| `home.js` | Render loop, header/nav, search, ordering, multi-select |
+| `controls.js` | Shared controls: date chips and picker, brand line, cat and pillar chips, stage toggle |
+| `cards.js` | Full cards, compact rows, the open card, pick-out animation |
+| `clips.js` | Add sheet and card actions (create, edit, tag, stage, schedule, archive, delete) |
+| `home.js` | Render loop, header/nav, search, Home view |
 | `stats.js` | Home stats card |
-| `calendar.js` | Week/month views, unscheduled tray, drag to schedule |
-| `brands.js` | Brands board |
-| `templates.js` | Pitch and caption templates, carousel ideas |
+| `bank.js` | Caption bank: pillar folders, shuffle, suggestions |
+| `library.js` | Posted grid with cat/pillar filters |
+| `calendar.js` | Plan: week/month views, tray, drag to schedule |
+| `brands.js` | Outreach tabs and the brands board |
+| `templates.js` | Pitches, sponsored caption lines, AI prompt panel |
 | `tasks.js` | Outreach checklist |
 | `reminders.js` | Phone reminders (Android app only) |
 | `settings.js` | Settings sheet, theme, backups |

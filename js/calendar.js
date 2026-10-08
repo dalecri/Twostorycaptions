@@ -1,4 +1,4 @@
-// Calendar: week and month views, unscheduled tray, drag to schedule.
+// Plan: week and month views, a tray of undated posts (and bank ideas on request), drag to schedule.
 
 // ===== Calendar: week view (default on phones) or month grid, both Monday-first like the
 // weekly goal. Unscheduled cards sit in a tray and can be dragged onto a day; in week view,
@@ -8,6 +8,9 @@ let calView = 'month';
 try { calView = localStorage.getItem('tsc-cal-view') || (window.matchMedia('(max-width: 600px)').matches ? 'week' : 'month'); } catch (e) {}
 
 let calWeekOffset = 0;
+
+// Shows a few bank ideas in the tray so they can be dragged straight onto a day
+let calTrayIdeas = false;
 
 const POSTING_DAYS = [0, 2, 4];
 
@@ -24,10 +27,11 @@ function calItemHtml(c, showDate) {
 function renderCalendar() {
   const container = document.getElementById('calendarView');
   const today = localToday();
-  const visible = getFilteredClips();
+  const visible = clips.filter(c => !c.archived);
   const byDate = {};
   visible.forEach(c => { if (c.scheduledDate) (byDate[c.scheduledDate] = byDate[c.scheduledDate] || []).push(c); });
-  const unscheduled = visible.filter(c => !c.scheduledDate && c.status !== 'posted');
+  // Tray: planned posts without a day. Bank ideas can be pulled in from the button.
+  const unscheduled = visible.filter(c => !c.scheduledDate && c.status === 'planned');
 
   let title, body;
   if (calView === 'week') {
@@ -83,10 +87,12 @@ function renderCalendar() {
     '</div>' +
   '</div>' +
   '<div class="nav-btns cal-nav"><button id="calPrev" aria-label="Previous">‹</button><button id="calToday">Today</button><button id="calNext" aria-label="Next">›</button></div>';
-  if (unscheduled.length) {
-    html += '<div class="cal-tray"><div class="cal-tray-label">Unscheduled · drag onto a day</div>' +
-      '<div class="cal-tray-items">' + unscheduled.map(c => calItemHtml(c)).join('') + '</div></div>';
-  }
+  const trayIdeas = calTrayIdeas ? bankIdeas().slice(0, 12) : [];
+  const trayItems = unscheduled.concat(trayIdeas);
+  html += '<div class="cal-tray"><div class="cal-tray-head"><span class="cal-tray-label">' +
+    (trayItems.length ? 'No day yet · drag onto a day' : 'Everything planned has a day') + '</span>' +
+    '<button type="button" class="link-btn" id="calTrayIdeasBtn">' + (calTrayIdeas ? 'Hide bank' : '+ From the bank') + '</button></div>' +
+    (trayItems.length ? '<div class="cal-tray-items">' + trayItems.map(c => calItemHtml(c)).join('') + '</div>' : '') + '</div>';
   container.innerHTML = html + body;
   container.classList.toggle('cal-mode-week', calView === 'week');
 
@@ -94,6 +100,7 @@ function renderCalendar() {
   document.getElementById('calPrev').onclick = () => step(-1);
   document.getElementById('calNext').onclick = () => step(1);
   document.getElementById('calToday').onclick = () => { calWeekOffset = 0; calMonthOffset = 0; renderCalendar(); };
+  document.getElementById('calTrayIdeasBtn').onclick = () => { calTrayIdeas = !calTrayIdeas; renderCalendar(); };
   container.querySelectorAll('[data-cal-view]').forEach(b => b.onclick = () => {
     calView = b.dataset.calView;
     try { localStorage.setItem('tsc-cal-view', calView); } catch (e) {}
@@ -105,12 +112,10 @@ function renderCalendar() {
     el.onclick = (e) => { e.stopPropagation(); if (!calDragJustEnded) openCardModal(el.dataset.clipId); };
   });
   container.querySelectorAll('[data-date]').forEach(cell => {
-    cell.title = 'Log a clip for ' + formatDateLong(cell.dataset.date);
+    cell.title = 'Plan a post for ' + formatDateLong(cell.dataset.date);
     cell.onclick = () => {
       if (calDragJustEnded) return;
-      newClipDate = cell.dataset.date;
-      renderNewClipDateRow();
-      openEntrySheet();
+      openEntrySheet({ date: cell.dataset.date });
     };
   });
   container.querySelectorAll('.drag-handle').forEach(h => h.addEventListener('pointerdown', startCalendarDrag));
